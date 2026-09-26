@@ -105,6 +105,8 @@
   @media (max-width: 480px) { .form2 { grid-template-columns: minmax(0, 1fr); } }
 
   .ladder { display: grid; gap: 8px; }
+  .chapter { display: flex; justify-content: space-between; gap: 10px; padding-block: 8px 0; border-top: 2px solid var(--line); margin-top: 4px; }
+  .chapter:first-child { border-top: 0; margin-top: 0; padding-top: 0; }
   .rung { display: grid; grid-template-columns: 96px minmax(0, 1fr) auto; gap: 12px; align-items: center; background: var(--ink); border: 2px solid var(--line); padding: 6px; cursor: pointer; text-align: left; }
   .rung canvas { width: 96px; aspect-ratio: 16 / 9; image-rendering: pixelated; display: block; }
   .rung[aria-pressed="true"] { border-color: var(--accent); box-shadow: 0 0 0 2px var(--accent); }
@@ -298,7 +300,7 @@
       <div class="box stack">
         <div class="row between"><h2 id="career-title"></h2><span class="label" id="career-sub"></span></div>
         <div class="ladder" id="ladder"></div>
-        <p class="note small">Higher rungs need a higher rank (earn XP with clean lines, quizzes and drills) and cash for the trip. Replaying a scripted meeting pays 35%. Live meetings always pay in full.</p>
+        <p class="note small">Win a stop (deal meter 5 or more) to open the next one. A new chapter also needs the next rank, which three wins usually earn you. First wins pay bonus XP. Replaying a scripted meeting pays 35%; live meetings always pay in full.</p>
         <div class="row between"><h3>The competition</h3><span class="label" id="board-sub"></span></div>
         <div class="board" id="board"></div>
       </div>
@@ -440,9 +442,10 @@ const LANGS = {
   hi: { name: "Hindi", tts: "hi-IN", rom: "transliteration" },
   ru: { name: "Russian", tts: "ru-RU", rom: "transliteration" },
 };
-const STAKES = [600, 40000, 400000, 3000000, 25000000, 200000000];
-const FEES = [0, 400, 5000, 40000, 300000, 2000000];
-const RANK_XP = [0, 150, 450, 1000, 2000, 3500];
+/* Six chapters of three stops. Stakes and trip costs climb inside each chapter. */
+const STAKE_TABLE = [[600, 1500, 4000], [12000, 40000, 90000], [200000, 400000, 900000], [1800000, 3000000, 6000000], [12000000, 25000000, 50000000], [90000000, 200000000, 400000000]];
+const FEE_TABLE = [[0, 20, 60], [180, 400, 900], [2500, 5000, 10000], [25000, 40000, 80000], [150000, 300000, 600000], [1000000, 2000000, 4000000]];
+const RANK_XP = [0, 120, 320, 650, 1100, 1700];
 const START_CASH = 37;
 
 const P = {
@@ -620,6 +623,214 @@ const S_ZH2 = [
     { t: "太好了，那我先走了，还有一个会。", r: "Tài hǎo le, nà wǒ xiān zǒu le, hái yǒu yí ge huì.", q: "major", cat: "culture", better: "合作愉快！我先干为敬！", why: "Leaving right after the yes. You were only there for the money, and now she knows it." } ] },
 ];
 
+
+/* ---- New bespoke meetings (chapters 1 and 2) ---- */
+const S_ES0B = [
+  { npc: "¡Oye! Tengo quince minutos antes de la próxima inmersión. ¿Qué necesitas?", en: "Hey! I have fifteen minutes before the next dive. What do you need?", choices: [
+    { t: "Rápido: quiero vender tus inmersiones en mi app. Tú pones el precio.", en: "Quick: I want to sell your dives in my app. You set the price.", q: "good", why: "Short, tú, and he stays in control of price." },
+    { t: "Rápido: quiero vendar tus inmersiones en mi app.", q: "minor", cat: "vocabulary", better: "Quiero vender tus inmersiones.", why: "Vendar means to bandage. Vender is to sell." },
+    { t: "Primero déjame explicarte la historia de mi empresa…", q: "major", cat: "culture", better: "Rápido: quiero vender tus inmersiones en mi app.", why: "He said fifteen minutes. Get to it." } ] },
+  { npc: "¿Y cuánto te quedas tú?", en: "And how much do you keep?", choices: [
+    { t: "Un doce por ciento, y solo cuando alguien reserva.", en: "Twelve percent, and only when someone books.", q: "good", why: "A clear number tied to his success." },
+    { t: "Un doce por ciento, y solo cuando alguien reservará.", q: "minor", cat: "grammar", better: "…solo cuando alguien reserve.", why: "Cuando with a future meaning takes the subjunctive: reserve." },
+    { t: "Eso depende, ya veremos.", q: "major", cat: "clarity", better: "Un doce por ciento, solo cuando alguien reserva.", why: "Vague on price means no deal." } ] },
+  { npc: "Mucha gente se asusta con el mar. ¿Tu app ayuda con eso?", en: "Lots of people get scared of the sea. Does your app help with that?", choices: [
+    { t: "Sí, les mostramos videos de tu equipo y las condiciones del mar antes de reservar.", en: "Yes, we show them videos of your team and the sea conditions before they book.", q: "good", why: "You turned his worry into a feature." },
+    { t: "Sí, les mostramos videos de tu equipo antes que reservan.", q: "minor", cat: "grammar", better: "…antes de que reserven.", why: "Antes de que always takes the subjunctive." },
+    { t: "Si tienen miedo, que no buceen.", q: "major", cat: "culture", better: "Sí, les mostramos videos antes de reservar.", why: "You just told him to lose customers." } ] },
+  { npc: "Me gusta. ¡Vamos a probarlo este mes!", en: "I like it. Let's try it this month!", choices: [
+    { t: "¡Genial! Te mando el enlace hoy. ¡Buena inmersión!", en: "Great! I'll send you the link today. Have a good dive!", q: "good", why: "Next step locked, and a friendly send-off." },
+    { t: "¡Genial! Te mando el enlace hoy. ¡Buen inmersión!", q: "minor", cat: "grammar", better: "¡Buena inmersión!", why: "Inmersión is feminine." },
+    { t: "Perfecto, firmamos un contrato de tres años.", q: "major", cat: "register", better: "¡Genial! Te mando el enlace hoy.", why: "He said this month. Don't overreach." } ] },
+];
+const S_ES0C = [
+  { npc: "¡Mi amor, siéntate! ¿Pescado frito o camarones?", en: "Sweetheart, sit down! Fried fish or shrimp?", choices: [
+    { t: "¡Pescado frito, por favor! Me dijeron que aquí es el mejor de Aruba.", en: "Fried fish, please! They told me it's the best in Aruba here.", q: "good", why: "You ate first and praised her kitchen. She's yours." },
+    { t: "¡Pescado frito, por favor! Me dijeron que es el mejor de la Aruba.", q: "minor", cat: "grammar", better: "…el mejor de Aruba.", why: "No article before island names like Aruba." },
+    { t: "Solo quiero hablar de negocios.", q: "major", cat: "culture", better: "¡Pescado frito, por favor!", why: "At a fish shack, business comes after food. Always." } ] },
+  { npc: "¿Y qué quieres de una vieja como yo?", en: "And what do you want from an old lady like me?", choices: [
+    { t: "Que los turistas te encuentren. Te ponemos en mi app como parada obligatoria.", en: "For tourists to find you. We'll put you in my app as a must-stop.", q: "good", why: "Her benefit first, in one line." },
+    { t: "Que los turistas te encuentran.", q: "minor", cat: "grammar", better: "Que los turistas te encuentren.", why: "Wanting something to happen takes the subjunctive." },
+    { t: "Nada, solo el wifi.", q: "major", cat: "register", better: "Que los turistas te encuentren.", why: "A joke that sounds like you want something for free." } ] },
+  { npc: "No tengo tiempo para computadoras, mi amor.", en: "I don't have time for computers, love.", choices: [
+    { t: "No te preocupes, yo lo hago todo. Tú solo cocinas.", en: "Don't worry, I'll do everything. You just cook.", q: "good", why: "Zero work for her. That's the pitch." },
+    { t: "No te preocupas, yo lo hago todo.", q: "minor", cat: "grammar", better: "No te preocupes.", why: "Negative commands use the subjunctive." },
+    { t: "Deberías modernizarte.", q: "major", cat: "culture", better: "No te preocupes, yo lo hago todo.", why: "Lecturing a legend in her own kitchen." } ] },
+  { npc: "Bueno, bueno. ¡Pero tú vuelves a comer cada viernes!", en: "Fine, fine. But you come back to eat every Friday!", choices: [
+    { t: "¡Trato hecho! Cada viernes aquí estoy.", en: "Deal! Every Friday, I'm here.", q: "good", why: "You just joined the family." },
+    { t: "¡Trato hecho! Cada viernes aquí soy.", q: "minor", cat: "grammar", better: "Cada viernes aquí estoy.", why: "Location takes estar." },
+    { t: "Los viernes no puedo, tengo pilates.", q: "major", cat: "culture", better: "¡Trato hecho! Cada viernes aquí estoy.", why: "She offered you a family seat and you turned it down." } ] },
+];
+const S_ES1B = [
+  { npc: "Buenas tardes. Tengo entendido que usted trabajó con la señora Croes.", en: "Good afternoon. I understand you worked with Mrs. Croes.", choices: [
+    { t: "Así es, y sus reservas directas subieron un veinte por ciento.", en: "That's right, and her direct bookings rose twenty percent.", q: "good", why: "A reference and a number." },
+    { t: "Así es, y sus reservas directas subieron por veinte por ciento.", q: "minor", cat: "grammar", better: "…subieron un veinte por ciento.", why: "Subir un 20 %, not por." },
+    { t: "Sí, pero no me dejaron hacer bien mi trabajo.", q: "major", cat: "culture", better: "Así es, y sus reservas subieron un 20 %.", why: "Complaining about your last client to the next one." } ] },
+  { npc: "Nuestros huéspedes son muy exigentes. No quiero sorpresas.", en: "Our guests are very demanding. I don't want surprises.", choices: [
+    { t: "Por eso proponemos empezar solo con el servicio de conserjería.", en: "That's why we propose starting with the concierge service only.", q: "good", why: "Small, contained, low risk." },
+    { t: "Por eso proponemos de empezar con la conserjería.", q: "minor", cat: "grammar", better: "Proponemos empezar con la conserjería.", why: "Proponer takes the infinitive directly." },
+    { t: "Tranquilo, nunca hay problemas.", q: "major", cat: "register", better: "Proponemos empezar solo con la conserjería.", why: "Too casual for a GM, and it isn't an answer." } ] },
+  { npc: "¿Y el personal? No quiero que pierdan tiempo aprendiendo sistemas nuevos.", en: "And the staff? I don't want them wasting time learning new systems.", choices: [
+    { t: "Les damos una formación de una hora y soporte en español, inglés y papiamento.", en: "We give them a one-hour training and support in Spanish, English and Papiamento.", q: "good", why: "Papiamento support shows you know the island." },
+    { t: "Les damos una formación de un hora.", q: "minor", cat: "grammar", better: "…una formación de una hora.", why: "Hora is feminine." },
+    { t: "Si no saben usar el sistema, cambie de personal.", q: "major", cat: "culture", better: "Les damos una formación de una hora.", why: "Attacking his staff." } ] },
+  { npc: "De acuerdo. Hagamos una prueba en temporada baja.", en: "Agreed. Let's run a trial in low season.", choices: [
+    { t: "Perfecto. Le propongo empezar el primero de septiembre.", en: "Perfect. I propose starting on September first.", q: "good", why: "A concrete date inside his condition." },
+    { t: "Perfecto. Le propongo empezar el uno de Septiembre.", q: "minor", cat: "grammar", better: "…el primero de septiembre.", why: "Months are lowercase in Spanish." },
+    { t: "¿Temporada baja? Prefiero empezar en diciembre, cuando hay más dinero.", q: "major", cat: "culture", better: "Perfecto. Empezamos en septiembre.", why: "Testing in his busiest month means he carries the risk." } ] },
+];
+const S_ES1C = [
+  { npc: "Bienvenido a Curazao. ¿Es su primera vez en Willemstad?", en: "Welcome to Curaçao. Is it your first time in Willemstad?", choices: [
+    { t: "Sí, y las casas de colores del Handelskade son todavía más bonitas en persona.", en: "Yes, and the colorful houses of the Handelskade are even prettier in person.", q: "good", why: "A real local landmark and a compliment." },
+    { t: "Sí, y las casas de colores son todavía más bonitos en persona.", q: "minor", cat: "grammar", better: "…más bonitas en persona.", why: "Casas is feminine." },
+    { t: "Sí, pero prefiero Aruba.", q: "major", cat: "culture", better: "Sí, y las casas del Handelskade son preciosas.", why: "Never praise the neighbor island to Curaçao's tourism board." } ] },
+  { npc: "Queremos atraer turistas de Colombia. ¿Cómo nos ayuda?", en: "We want to attract tourists from Colombia. How do you help?", choices: [
+    { t: "Nuestra app ya tiene cien mil usuarios en Colombia. Podemos promocionar Curazao directamente.", en: "Our app already has 100,000 users in Colombia. We can promote Curaçao directly.", q: "good", why: "Numbers, reach, and a plan." },
+    { t: "Nuestra app ya tiene cien mil usuarios en Colombia. Podemos promocionar a Curazao.", q: "minor", cat: "grammar", better: "Podemos promocionar Curazao.", why: "No personal a before a place." },
+    { t: "No sé, la verdad. ¿Qué quieren ustedes?", q: "major", cat: "clarity", better: "Nuestra app tiene cien mil usuarios en Colombia.", why: "You came without a plan." } ] },
+  { npc: "El presupuesto es público. Todo debe ser transparente.", en: "The budget is public. Everything must be transparent.", choices: [
+    { t: "Por supuesto. Le enviaremos informes mensuales con todos los resultados.", en: "Of course. We'll send you monthly reports with all the results.", q: "good", why: "Transparency, offered before she has to ask." },
+    { t: "Por supuesto. Le enviaremos informes mensuales con todas los resultados.", q: "minor", cat: "grammar", better: "…con todos los resultados.", why: "Resultados is masculine." },
+    { t: "Podemos arreglar algo por debajo de la mesa.", q: "major", cat: "culture", better: "Le enviaremos informes mensuales.", why: "You just offered a bribe to a public official." } ] },
+  { npc: "Muy bien. Presentaré su propuesta al ministro.", en: "Very well. I'll present your proposal to the minister.", choices: [
+    { t: "Se lo agradezco mucho. Quedo a su disposición para cualquier pregunta.", en: "I'm very grateful. I'm at your disposal for any questions.", q: "good", why: "Formal, warm, and patient." },
+    { t: "Se lo agradezco mucho. Quedo a su disposición por cualquier pregunta.", q: "minor", cat: "grammar", better: "…para cualquier pregunta.", why: "A su disposición para, not por." },
+    { t: "¿Y cuándo me pagan?", q: "major", cat: "register", better: "Se lo agradezco mucho.", why: "Asking about payment before approval." } ] },
+];
+const S_ZH0B = [
+  { npc: "早！要喝什么？Kopi还是teh？", r: "Zǎo! Yào hē shénme? Kopi háishi teh?", en: "Morning! What'll you have? Coffee or tea?", choices: [
+    { t: "早，林伯！一杯kopi-o kosong，谢谢。", r: "Zǎo, Lín bó! Yì bēi kopi-o kosong, xièxie.", en: "Morning, Uncle Lim! A black coffee, no sugar, thanks.", q: "good", why: "Kopi-o kosong: black, no sugar. You ordered like a local." },
+    { t: "早，林先生！一杯咖啡，谢谢。", r: "Zǎo, Lín xiānsheng! Yì bēi kāfēi, xièxie.", q: "minor", cat: "register", better: "早，林伯！", why: "At a kopitiam he's 林伯, Uncle Lim, not 林先生." },
+    { t: "你们有燕麦拿铁吗？", r: "Nǐmen yǒu yànmài nátiě ma?", q: "major", cat: "culture", better: "一杯kopi-o kosong，谢谢。", why: "Oat latte at a 60-year-old kopitiam. He's still laughing." } ] },
+  { npc: "你要做什么生意？", r: "Nǐ yào zuò shénme shēngyì?", en: "What business do you want to do?", choices: [
+    { t: "我想帮您做一个积分卡，老客人喝十杯送一杯。", r: "Wǒ xiǎng bāng nín zuò yí ge jīfēn kǎ, lǎo kèrén hē shí bēi sòng yì bēi.", en: "I want to make you a loyalty card: regulars drink ten, get one free.", q: "good", why: "Simple, and it rewards his regulars." },
+    { t: "我想帮您做一个积分卡，老客人喝十杯送一个。", r: "…hē shí bēi sòng yí ge.", q: "minor", cat: "grammar", better: "喝十杯送一杯。", why: "Cups of coffee take 杯, not 个." },
+    { t: "我想把您的店改成网红咖啡店。", r: "Wǒ xiǎng bǎ nín de diàn gǎi chéng wǎnghóng kāfēi diàn.", q: "major", cat: "culture", better: "我想帮您做一个积分卡。", why: "Turning his kopitiam into an influencer café. He's offended." } ] },
+  { npc: "要不要钱的？", r: "Yào bu yào qián de?", en: "Does it cost money?", choices: [
+    { t: "第一年免费。以后一个月二十块。", r: "Dì yī nián miǎnfèi. Yǐhòu yí ge yuè èrshí kuài.", en: "Free the first year. After that, twenty dollars a month.", q: "good", why: "Nothing to lose for a year." },
+    { t: "第一个年免费。", r: "Dì yī ge nián miǎnfèi.", q: "minor", cat: "grammar", better: "第一年免费。", why: "年 takes no measure word." },
+    { t: "很便宜，才两百块一个月。", r: "Hěn piányi, cái liǎngbǎi kuài yí ge yuè.", q: "major", cat: "clarity", better: "第一年免费。以后一个月二十块。", why: "$200 a month is not cheap for a kopitiam." } ] },
+  { npc: "好，试试看。", r: "Hǎo, shìshi kàn.", en: "OK, let's give it a try.", choices: [
+    { t: "谢谢林伯！我下礼拜一早上来。", r: "Xièxie Lín bó! Wǒ xià lǐbài yī zǎoshang lái.", en: "Thanks, Uncle Lim! I'll come next Monday morning.", q: "good", why: "礼拜 is how Singapore uncles say week." },
+    { t: "谢谢林伯！我下礼拜一早上来了。", r: "…zǎoshang lái le.", q: "minor", cat: "grammar", better: "我下礼拜一早上来。", why: "了 on a future plan sounds like it already happened." },
+    { t: "太好了，那您现在把店关一下，我们开始装。", r: "Tài hǎo le, nà nín xiànzài bǎ diàn guān yíxià, wǒmen kāishǐ zhuāng.", q: "major", cat: "culture", better: "我下礼拜一早上来。", why: "Closing his shop during the breakfast rush. No." } ] },
+];
+const S_ZH0C = [
+  { npc: "欢迎光临！要喝珍奶吗？超好喝的！", r: "Huānyíng guānglín! Yào hē zhēnnǎi ma? Chāo hǎohē de!", en: "Welcome! Want bubble milk tea? It's super good!", choices: [
+    { t: "好啊！一杯珍奶，半糖少冰。", r: "Hǎo a! Yì bēi zhēnnǎi, bàn táng shǎo bīng.", en: "Sure! One bubble milk tea, half sugar, less ice.", q: "good", why: "半糖少冰: you ordered like a Taipei regular." },
+    { t: "好啊！一个珍奶。", r: "Hǎo a! Yí ge zhēnnǎi.", q: "minor", cat: "grammar", better: "一杯珍奶。", why: "Drinks take 杯." },
+    { t: "不要，太甜了，对身体不好。", r: "Bú yào, tài tián le, duì shēntǐ bù hǎo.", q: "major", cat: "culture", better: "好啊！一杯珍奶，半糖少冰。", why: "Lecturing the bubble tea guy about sugar." } ] },
+  { npc: "你来夜市做什么？", r: "Nǐ lái yèshì zuò shénme?", en: "What brings you to the night market?", choices: [
+    { t: "我想帮您在网上卖外带，观光客也能提前点。", r: "Wǒ xiǎng bāng nín zài wǎngshàng mài wàidài, guānguāngkè yě néng tíqián diǎn.", en: "I want to help you sell takeaway online, so tourists can order ahead.", q: "good", why: "观光客 is the Taiwanese word for tourists. Nice." },
+    { t: "我想帮您在网上卖外带，观光客能也提前点。", r: "…guānguāngkè néng yě tíqián diǎn.", q: "minor", cat: "grammar", better: "观光客也能提前点。", why: "也 goes before the modal: 也能." },
+    { t: "我来找便宜的东西。", r: "Wǒ lái zhǎo piányi de dōngxi.", q: "major", cat: "clarity", better: "我想帮您在网上卖外带。", why: "You came to pitch, not to bargain hunt." } ] },
+  { npc: "平台抽成很高耶。", r: "Píngtái chōuchéng hěn gāo ye.", en: "Platforms take a big cut, you know.", choices: [
+    { t: "我们只抽百分之五，比别的平台低很多。", r: "Wǒmen zhǐ chōu bǎi fēn zhī wǔ, bǐ bié de píngtái dī hěn duō.", en: "We only take five percent, much lower than other platforms.", q: "good", why: "A number that beats the competition." },
+    { t: "我们只抽百分之五，比别的平台很低。", r: "…bǐ bié de píngtái hěn dī.", q: "minor", cat: "grammar", better: "比别的平台低很多。", why: "比 comparisons can't take 很. Use 低很多." },
+    { t: "那是你的问题。", r: "Nà shì nǐ de wèntí.", q: "major", cat: "register", better: "我们只抽百分之五。", why: "Brushing off his concern." } ] },
+  { npc: "好啦，我们试一个月看看！", r: "Hǎo la, wǒmen shì yí ge yuè kànkan!", en: "Alright, let's try it for a month!", choices: [
+    { t: "太棒了！我明天晚上带传单过来。", r: "Tài bàng le! Wǒ míngtiān wǎnshang dài chuándān guòlái.", en: "Awesome! I'll bring flyers over tomorrow night.", q: "good", why: "Momentum, and you'll show up in person." },
+    { t: "太棒了！我明天晚上带过来传单。", r: "…dài guòlái chuándān.", q: "minor", cat: "grammar", better: "带传单过来。", why: "The object goes between 带 and 过来." },
+    { t: "一个月太短了，签一年吧。", r: "Yí ge yuè tài duǎn le, qiān yì nián ba.", q: "major", cat: "culture", better: "太棒了！我明天带传单过来。", why: "He agreed to a month. Take the win." } ] },
+];
+const S_ZH1B = [
+  { npc: "您好，欢迎来到星耀樟宜。瀑布很壮观吧？", r: "Nín hǎo, huānyíng lái dào Xīngyào Zhāngyí. Pùbù hěn zhuàngguān ba?", en: "Hello, welcome to Jewel Changi. The waterfall is spectacular, isn't it?", choices: [
+    { t: "非常壮观！王总，谢谢您抽时间见我。", r: "Fēicháng zhuàngguān! Wáng zǒng, xièxie nín chōu shíjiān jiàn wǒ.", en: "Spectacular! Director Wang, thank you for making time for me.", q: "good", why: "Admiration, title and gratitude in one breath." },
+    { t: "非常壮观！瑞秋，谢谢你见我。", r: "…Ruìqiū, xièxie nǐ jiàn wǒ.", q: "minor", cat: "register", better: "王总，谢谢您抽时间见我。", why: "First meeting: surname plus 总, and 您." },
+    { t: "还行吧，我见过更大的。", r: "Hái xíng ba, wǒ jiànguo gèng dà de.", q: "major", cat: "culture", better: "非常壮观！", why: "Shrugging at the pride of Singapore." } ] },
+  { npc: "我们每天有十万人流，你能带来什么？", r: "Wǒmen měitiān yǒu shí wàn rénliú, nǐ néng dài lái shénme?", en: "We get 100,000 visitors a day. What can you bring?", choices: [
+    { t: "我们能让转机旅客在手机上提前下单，平均消费提高百分之十五。", r: "Wǒmen néng ràng zhuǎnjī lǚkè zài shǒujī shang tíqián xiàdān, píngjūn xiāofèi tígāo bǎi fēn zhī shíwǔ.", en: "We let transit passengers pre-order on their phones; average spend rises fifteen percent.", q: "good", why: "Not more people: more spend per person." },
+    { t: "…平均消费提高十五百分。", r: "…tígāo shíwǔ bǎi fēn.", q: "minor", cat: "grammar", better: "提高百分之十五。", why: "百分之 comes first." },
+    { t: "更多的人。", r: "Gèng duō de rén.", q: "major", cat: "clarity", better: "平均消费提高百分之十五。", why: "She already has 100,000 a day." } ] },
+  { npc: "租户们不喜欢额外的费用。", r: "Zūhùmen bù xǐhuan éwài de fèiyòng.", en: "Tenants don't like extra fees.", choices: [
+    { t: "所以费用由我们和商场分担，租户不用多付。", r: "Suǒyǐ fèiyòng yóu wǒmen hé shāngchǎng fēndān, zūhù bú yòng duō fù.", en: "So we and the mall share the cost; tenants pay nothing extra.", q: "good", why: "You solved her problem with her tenants." },
+    { t: "所以费用由我们和商场分担，租户不要多付。", r: "…zūhù bú yào duō fù.", q: "minor", cat: "vocabulary", better: "租户不用多付。", why: "不用 is don't need to. 不要 is a command: don't." },
+    { t: "他们不喜欢就走吧。", r: "Tāmen bù xǐhuan jiù zǒu ba.", q: "major", cat: "culture", better: "费用由我们和商场分担。", why: "Telling a landlord to lose tenants." } ] },
+  { npc: "可以先在地下二层试行一个季度。", r: "Kěyǐ xiān zài dìxià èr céng shìxíng yí ge jìdù.", en: "We can pilot on basement level 2 for one quarter first.", choices: [
+    { t: "好的，王总。我下周把方案发给您。", r: "Hǎo de, Wáng zǒng. Wǒ xià zhōu bǎ fāng'àn fā gěi nín.", en: "Of course, Director Wang. I'll send you the plan next week.", q: "good", why: "Accepted her terms and owned the next step." },
+    { t: "好的。我下个周把方案发给您。", r: "…xià ge zhōu…", q: "minor", cat: "grammar", better: "我下周把方案发给您。", why: "Say 下周, or 下个星期. Not 下个周." },
+    { t: "地下？不能在一楼吗？", r: "Dìxià? Bù néng zài yī lóu ma?", q: "major", cat: "culture", better: "好的，王总。", why: "Haggling over floor space right after she said yes." } ] },
+];
+const S_ZH1C = [
+  { npc: "来，尝尝今年的明前龙井。", r: "Lái, chángchang jīnnián de míngqián Lóngjǐng.", en: "Come, try this year's pre-Qingming Longjing.", choices: [
+    { t: "（轻敲桌面两下）谢谢陈老板，好香！", r: "(taps the table twice) Xièxie Chén lǎobǎn, hǎo xiāng!", en: "(taps the table twice) Thank you, Boss Chen, what a fragrance!", q: "good", why: "Two taps thanks whoever pours. Old-school respect." },
+    { t: "谢谢，好喝。", r: "Xièxie, hǎohē.", q: "minor", cat: "culture", better: "谢谢陈老板，好香！", why: "Fine, but with fine tea you praise the aroma first." },
+    { t: "有没有冰的？", r: "Yǒu méiyǒu bīng de?", q: "major", cat: "culture", better: "谢谢陈老板，好香！", why: "Iced Longjing. He sets the pot down." } ] },
+  { npc: "我们的茶都出口欧洲，你能帮什么？", r: "Wǒmen de chá dōu chūkǒu Ōuzhōu, nǐ néng bāng shénme?", en: "Our tea all goes to Europe. What can you help with?", choices: [
+    { t: "我们能帮您直接卖给欧洲的高端酒店，不用经过中间商。", r: "Wǒmen néng bāng nín zhíjiē mài gěi Ōuzhōu de gāoduān jiǔdiàn, bú yòng jīngguò zhōngjiānshāng.", en: "We can help you sell directly to high-end European hotels, without middlemen.", q: "good", why: "Higher margins, clearly stated." },
+    { t: "我们能帮您直接卖给欧洲的高端饭店。", r: "…gāoduān fàndiàn.", q: "minor", cat: "vocabulary", better: "高端酒店", why: "On the mainland 饭店 often means a restaurant. Hotel is 酒店." },
+    { t: "中国茶在欧洲不太流行吧？", r: "Zhōngguó chá zài Ōuzhōu bú tài liúxíng ba?", q: "major", cat: "culture", better: "我们能帮您直接卖给欧洲的酒店。", why: "Telling a tea exporter nobody wants his tea." } ] },
+  { npc: "那个中间商跟我合作二十年了。", r: "Nàge zhōngjiānshāng gēn wǒ hézuò èrshí nián le.", en: "That middleman has worked with me for twenty years.", choices: [
+    { t: "明白，关系很重要。我们先只做新客户，不影响老朋友。", r: "Míngbai, guānxi hěn zhòngyào. Wǒmen xiān zhǐ zuò xīn kèhù, bù yǐngxiǎng lǎo péngyou.", en: "Understood, relationships matter. We'll start with new clients only and leave old friends alone.", q: "good", why: "You respected his 关系." },
+    { t: "明白。我们先只做新客户，不影响老的朋友。", r: "…lǎo de péngyou.", q: "minor", cat: "grammar", better: "不影响老朋友。", why: "老朋友 is a fixed word: old friend." },
+    { t: "他赚太多了，把他换掉吧。", r: "Tā zhuàn tài duō le, bǎ tā huàn diào ba.", q: "major", cat: "culture", better: "我们先只做新客户。", why: "Asking him to betray twenty years of 关系." } ] },
+  { npc: "好，这个思路不错。明年春茶一起试试。", r: "Hǎo, zhège sīlù búcuò. Míngnián chūnchá yìqǐ shìshi.", en: "Good, I like the approach. Let's try it with next year's spring tea.", choices: [
+    { t: "太好了，陈老板。以茶会友，合作愉快！", r: "Tài hǎo le, Chén lǎobǎn. Yǐ chá huì yǒu, hézuò yúkuài!", en: "Wonderful, Boss Chen. Friends through tea — to our partnership!", q: "good", why: "以茶会友: making friends over tea. He beams." },
+    { t: "太好了。明年我们一起试试看了。", r: "…shìshi kàn le.", q: "minor", cat: "grammar", better: "明年我们一起试试看。", why: "了 doesn't belong on a future plan." },
+    { t: "明年？我以为今年就能开始。", r: "Míngnián? Wǒ yǐwéi jīnnián jiù néng kāishǐ.", q: "major", cat: "culture", better: "太好了，合作愉快！", why: "Pushing the timeline after he committed." } ] },
+];
+
+/* ---- Negotiation bank: shared middle-game moves, so every location plays offline ---- */
+const BANK = {
+  es: [
+    { npc: "Cuénteme, ¿qué hace exactamente su empresa?", en: "Tell me, what exactly does your company do?", choices: [
+      { t: "Conectamos a los clientes con experiencias exclusivas y cobramos solo cuando hay una venta.", en: "We connect clients with exclusive experiences and only charge when there's a sale.", q: "good", why: "Clear model, aligned incentives." },
+      { t: "Conectamos a los clientes con experiencias exclusivas y cobramos solo cuando hay un venta.", q: "minor", cat: "grammar", better: "…cuando hay una venta.", why: "Venta is feminine." },
+      { t: "Somos como Uber pero para todo, básicamente.", q: "major", cat: "clarity", better: "Conectamos clientes con experiencias exclusivas.", why: "Vague comparisons make serious people tune out." } ] },
+    { npc: "Sus números son interesantes, pero ¿por qué ahora?", en: "Your numbers are interesting, but why now?", choices: [
+      { t: "Porque el mercado está creciendo y quien llegue primero se queda con los mejores socios.", en: "Because the market is growing, and whoever gets there first keeps the best partners.", q: "good", why: "Urgency without desperation." },
+      { t: "Porque el mercado crece y el primero que llegará tendrá los mejores socios.", q: "minor", cat: "grammar", better: "…quien llegue primero…", why: "A future reference in a relative clause takes the subjunctive: llegue." },
+      { t: "Porque necesitamos el dinero urgentemente.", q: "major", cat: "culture", better: "Porque el mercado está creciendo.", why: "Desperation lowers your price instantly." } ] },
+    { npc: "Me preocupa el riesgo. ¿Qué garantías me da?", en: "I'm worried about the risk. What guarantees do you give me?", choices: [
+      { t: "Le propongo una fase de prueba con objetivos claros. Si no los cumplimos, no paga.", en: "I propose a trial phase with clear targets. If we miss them, you don't pay.", q: "good", why: "Risk moved onto you, where it earns trust." },
+      { t: "Le propongo una fase de prueba. Si no cumplamos los objetivos, no paga.", q: "minor", cat: "grammar", better: "Si no cumplimos los objetivos…", why: "Present indicative after si, never subjunctive." },
+      { t: "Confíe en mí, nunca hemos fallado.", q: "major", cat: "clarity", better: "Le propongo una fase de prueba con objetivos claros.", why: "Blind trust is not a guarantee." } ] },
+    { npc: "El precio me parece alto.", en: "The price seems high to me.", choices: [
+      { t: "Entiendo. Si firmamos por dos años, podemos bajarlo un diez por ciento.", en: "I understand. If we sign for two years, we can bring it down ten percent.", q: "good", why: "A concession with a price tag." },
+      { t: "Entiendo. Si firmamos por dos años, podemos bajarlo de diez por ciento.", q: "minor", cat: "grammar", better: "…bajarlo un diez por ciento.", why: "Bajar un 10 %, not de." },
+      { t: "Es el precio. Lo toma o lo deja.", q: "major", cat: "culture", better: "Si firmamos por dos años, podemos bajarlo un 10 %.", why: "Ultimatums end relationships before they start." } ] },
+    { npc: "Tendría que consultarlo con mi junta directiva.", en: "I'd have to check with my board.", choices: [
+      { t: "Por supuesto. ¿Quiere que les prepare un resumen de una página?", en: "Of course. Would you like me to prepare a one-page summary for them?", q: "good", why: "You made their yes easier." },
+      { t: "Por supuesto. ¿Quiere que les preparo un resumen?", q: "minor", cat: "grammar", better: "¿Quiere que les prepare un resumen?", why: "Querer que takes the subjunctive." },
+      { t: "¿No puede decidir usted solo?", q: "major", cat: "culture", better: "¿Quiere que les prepare un resumen?", why: "Questioning their authority is an insult." } ] },
+    { npc: "Bueno, creo que podemos avanzar.", en: "Well, I think we can move forward.", choices: [
+      { t: "Excelente. Le envío el borrador del acuerdo hoy mismo. Ha sido un placer.", en: "Excellent. I'll send you the draft agreement today. It's been a pleasure.", q: "good", why: "Momentum and manners." },
+      { t: "Excelente. Le envío el borrador mañana. Ha sido una placer.", q: "minor", cat: "grammar", better: "Ha sido un placer.", why: "Placer is masculine." },
+      { t: "¡Por fin! Pensé que nunca iba a decir que sí.", q: "major", cat: "register", better: "Excelente. Ha sido un placer.", why: "Relief sounds like you doubted your own offer." } ] },
+  ],
+  zh: [
+    { npc: "请简单介绍一下你们的业务。", r: "Qǐng jiǎndān jièshào yíxià nǐmen de yèwù.", en: "Please briefly introduce your business.", choices: [
+      { t: "我们帮客户连接高端资源，只在成交以后收费。", r: "Wǒmen bāng kèhù liánjiē gāoduān zīyuán, zhǐ zài chéngjiāo yǐhòu shōufèi.", en: "We connect clients with premium resources and only charge after a deal closes.", q: "good", why: "Clear model, aligned incentives." },
+      { t: "我们帮客户连接高端资源，成交以后只收费。", r: "…chéngjiāo yǐhòu zhǐ shōufèi.", q: "minor", cat: "grammar", better: "只在成交以后收费。", why: "只 goes before what it limits." },
+      { t: "我们什么都做，差不多吧。", r: "Wǒmen shénme dōu zuò, chàbuduō ba.", q: "major", cat: "clarity", better: "我们只在成交以后收费。", why: "差不多 ('more or less') is the last thing an investor wants to hear." } ] },
+    { npc: "为什么是现在？", r: "Wèishénme shì xiànzài?", en: "Why now?", choices: [
+      { t: "因为市场正在快速增长，先进入的人能拿到最好的合作伙伴。", r: "Yīnwèi shìchǎng zhèngzài kuàisù zēngzhǎng, xiān jìnrù de rén néng ná dào zuì hǎo de hézuò huǒbàn.", en: "Because the market is growing fast, and whoever enters first gets the best partners.", q: "good", why: "Urgency without desperation." },
+      { t: "因为市场在增长得很快。", r: "Yīnwèi shìchǎng zài zēngzhǎng de hěn kuài.", q: "minor", cat: "grammar", better: "市场增长得很快。", why: "A 得 complement doesn't combine with progressive 在." },
+      { t: "因为我们很需要钱。", r: "Yīnwèi wǒmen hěn xūyào qián.", q: "major", cat: "culture", better: "因为市场正在快速增长。", why: "Desperation hands them the leverage." } ] },
+    { npc: "风险怎么控制？", r: "Fēngxiǎn zěnme kòngzhì?", en: "How do you control the risk?", choices: [
+      { t: "我们可以先试行三个月，达不到目标就不收费。", r: "Wǒmen kěyǐ xiān shìxíng sān ge yuè, dá bu dào mùbiāo jiù bù shōufèi.", en: "We can pilot for three months; if we miss the target, no fee.", q: "good", why: "A mechanism, not a promise." },
+      { t: "我们可以先试行三月，达不到目标就不收费。", r: "…shìxíng sānyuè…", q: "minor", cat: "grammar", better: "试行三个月", why: "三月 is March." },
+      { t: "放心，不会有问题的。", r: "Fàngxīn, bú huì yǒu wèntí de.", q: "major", cat: "clarity", better: "我们可以先试行三个月。", why: "放心 without a mechanism isn't risk control." } ] },
+    { npc: "价格有点高。", r: "Jiàgé yǒudiǎn gāo.", en: "The price is a bit high.", choices: [
+      { t: "理解。如果签两年，我们可以打九折。", r: "Lǐjiě. Rúguǒ qiān liǎng nián, wǒmen kěyǐ dǎ jiǔ zhé.", en: "Understood. If you sign for two years, we can take ten percent off.", q: "good", why: "打九折 means paying 90%: ten percent off." },
+      { t: "理解。如果签二年，我们可以打九折。", r: "…qiān èr nián…", q: "minor", cat: "grammar", better: "签两年", why: "Before a measure-like noun, two is 两, not 二." },
+      { t: "理解。如果签两年，我们可以打一折。", r: "…dǎ yī zhé.", q: "major", cat: "vocabulary", better: "打九折", why: "打一折 means they pay 10%. You just offered 90% off." } ] },
+    { npc: "我得跟董事会商量一下。", r: "Wǒ děi gēn dǒngshìhuì shāngliang yíxià.", en: "I have to discuss it with the board.", choices: [
+      { t: "当然。需要的话，我可以准备一页的简报。", r: "Dāngrán. Xūyào de huà, wǒ kěyǐ zhǔnbèi yí yè de jiǎnbào.", en: "Of course. If it helps, I can prepare a one-page brief.", q: "good", why: "You made their yes easier." },
+      { t: "当然。需要的话，我可以准备一张页的简报。", r: "…yì zhāng yè…", q: "minor", cat: "grammar", better: "一页的简报", why: "页 is itself the measure word." },
+      { t: "你自己不能决定吗？", r: "Nǐ zìjǐ bù néng juédìng ma?", q: "major", cat: "culture", better: "当然。我可以准备一页的简报。", why: "Questioning their authority costs them face." } ] },
+    { npc: "好，我觉得可以往前推进了。", r: "Hǎo, wǒ juéde kěyǐ wǎng qián tuījìn le.", en: "Good, I think we can move forward.", choices: [
+      { t: "太好了。我今天就把协议草稿发给您。合作愉快！", r: "Tài hǎo le. Wǒ jīntiān jiù bǎ xiéyì cǎogǎo fā gěi nín. Hézuò yúkuài!", en: "Great. I'll send you the draft agreement today. To our partnership!", q: "good", why: "Momentum and manners." },
+      { t: "太好了。我今天就发给您协议草稿了。", r: "…xiéyì cǎogǎo le.", q: "minor", cat: "grammar", better: "我今天就把协议草稿发给您。", why: "了 on a promise sounds like it's already done." },
+      { t: "终于！我还以为您不会同意呢。", r: "Zhōngyú! Wǒ hái yǐwéi nín bú huì tóngyì ne.", q: "major", cat: "register", better: "太好了，合作愉快！", why: "Relief sounds like you doubted your own offer." } ] },
+  ],
+};
+/* Opener builder: op(npc, english, [good, goodEn, why], [minor, category, better, why], [major, category, why], romanization of npc, {g, mi, ma} romanizations) */
+const op = (npc, en, g, mi, ma, r, rr = {}) => ({ npc, en, r, choices: [
+  { t: g[0], en: g[1], r: rr.g, q: "good", why: g[2] },
+  { t: mi[0], r: rr.mi, q: "minor", cat: mi[1], better: mi[2], why: mi[3] },
+  { t: ma[0], r: rr.ma, q: "major", cat: ma[1], better: g[0], why: ma[2] } ] });
+
 /* =========================================================
    CAREERS (one life per language)
    ========================================================= */
@@ -628,24 +839,104 @@ const CAREERS = {
     title: "La Ruta del Sol",
     ranks: ["Turista", "Mochilero", "Emprendedor", "Magnate", "Patrón", "Leyenda"],
     tiers: [
-      { id: "es0", title: "Rudy's beach bar", place: "Palm Beach, Aruba", clock: "13:10 AST", kind: "shack", npc: P.rudy, script: S_ES0,
+      { id: "es0", ch: 0, title: "Rudy's beach bar", place: "Palm Beach, Aruba", clock: "13:10 AST", kind: "shack", npc: P.rudy, script: S_ES0,
         who: { name: "Rudy Kock", role: "owner of Rudy's Bar & Snorkel", persona: "Laid-back joker. Uses tú straight away and hates being pitched like a suit. Mixes in Papiamento." },
         deal: "Get your tour-booking app on his bar counter.", goal: "Get a one-month trial." },
-      { id: "es1", city: "Oranjestad", title: "The yacht", place: "Off Oranjestad, Aruba", clock: "17:40 AST", kind: "deck", opts: { sky: "sunset", shore: "divi", deck: "teak" }, npc: P.valentina, script: S_ES1,
+      { id: "es0b", ch: 0, title: "The dive shop", place: "Arashi Beach, Aruba", clock: "08:45 AST", kind: "shack", opts: { dive: true }, npc: { hair: "#1b1411", skin: "#7a4a2e", jacket: "#1e5aa8", shirt: "#1e5aa8" }, script: S_ES0B,
+        who: { name: "Kenneth Tromp", role: "owner, Arashi Dive Center", persona: "Practical, tú, always between dives. Fifteen minutes, no fluff." },
+        deal: "Sell his dives through your app.", goal: "A one-month trial." },
+      { id: "es0c", ch: 0, title: "The fish shack", place: "Savaneta, Aruba", clock: "19:30 AST", kind: "shack", opts: { night: true }, npc: { hair: "#c9c9c9", skin: "#8d5a3b", jacket: "#f2c14e", shirt: "#f4f0e6", long: true }, script: S_ES0C,
+        who: { name: "Tía Maritza", role: "runs the island's favorite fried-fish counter", persona: "Calls everyone mi amor. Feeds you first, talks second, and remembers who didn't eat." },
+        deal: "Put her on your app as a must-stop.", goal: "Her blessing, and a standing Friday seat." },
+      { id: "es1", ch: 1, city: "Oranjestad", title: "The yacht", place: "Off Oranjestad, Aruba", clock: "17:40 AST", kind: "deck", opts: { sky: "sunset", shore: "divi", deck: "teak" }, npc: P.valentina, script: S_ES1,
         who: { name: "Valentina Croes", role: "owner, Croes Marina & Resorts", persona: "Warm, relationship-first. Expects small talk and usted until she offers tú. Sharp on money." },
         deal: "Put your platform into her marina and two beach hotels.", goal: "A 3-month pilot and a follow-up date." },
-      { id: "es2", city: "Cartagena", title: "The rooftop", place: "Cartagena, Colombia", clock: "19:05 COT", kind: "rooftop", npc: P.esteban, script: S_ES2,
+      { id: "es1b", ch: 1, title: "The pool bar", place: "Eagle Beach, Aruba", clock: "15:20 AST", kind: "villa", opts: { sky: "day", shore: "divi" }, npc: { hair: "#2a1a14", skin: "#a46b45", jacket: "#f4efe6", shirt: "#1c2656" }, script: S_ES1B,
+        who: { name: "Ricardo Kelly", role: "general manager, a boutique resort", persona: "Polished, formal usted, protective of his guests and his staff." },
+        deal: "Your concierge booking system in his resort.", goal: "A low-season trial with a start date." },
+      { id: "es1c", ch: 1, city: "Willemstad", title: "The waterfront", place: "Willemstad, Curaçao", clock: "10:00 AST", kind: "rooftop", opts: { day: true }, npc: { hair: "#1b1411", skin: "#8d5a3b", jacket: "#2f8f9d", shirt: "#f4f4f4", long: true }, script: S_ES1C,
+        who: { name: "Isabela Martina", role: "director, Curaçao Tourism Board", persona: "Formal, proud of her island, allergic to anything that looks like a favor." },
+        deal: "Promote Curaçao to your Colombian users.", goal: "She takes your proposal to the minister." },
+      { id: "es2", ch: 2, city: "Cartagena", title: "The rooftop", place: "Cartagena, Colombia", clock: "19:05 COT", kind: "rooftop", npc: P.esteban, script: S_ES2,
         who: { name: "Don Esteban Arango", role: "chairman, Grupo Arango Hoteles", persona: "Old-school Caribbean patriarch. Honorifics matter, dinners matter more, and he never talks price before the second drink." },
         deal: "Roll your platform out across his 14 hotels.", goal: "A two-hotel pilot and a dinner invitation." },
-      { id: "es3", city: "Madrid", title: "Planta 38", place: "Cuatro Torres, Madrid", clock: "11:30 CET", kind: "office", opts: { landmark: "cuatro", sky: "day" }, npc: P.madrid,
+      { id: "es2b", ch: 2, city: "Medellín", title: "The co-working", place: "El Poblado, Medellín", clock: "10:15 COT", kind: "office", opts: { sky: "day", hills: true }, npc: { hair: "#101014", skin: "#d9a57b", jacket: "#3f7a4a", shirt: "#101014" },
+        opener: () => op("¡Quiubo, parce! ¿Cómo vas? ¿Un tinto?", "Hey, buddy! How's it going? A coffee?",
+          ["¡Bien, parce! Sí, un tinto, gracias.", "Good, buddy! Yes, a coffee, thanks.", "Tinto is black coffee in Colombia, and you matched his paisa energy."],
+          ["Bien, gracias. Un vino tinto, por favor.", "vocabulary", "Un tinto, por favor.", "At ten in the morning in Medellín, tinto is coffee. You just ordered red wine."],
+          ["Buenos días, señor Mejía. Procedamos con la agenda.", "register", "Stiff formality with a hoodie-wearing founder reads as cold."]),
+        who: { name: "Santiago Mejía", role: "founder and angel investor", persona: "Fast paisa Spanish, says parce and bacano, tú from the first second, decides on gut feel." },
+        deal: "A seed check and his network in Medellín.", goal: "His investment and three intros." },
+      { id: "es2c", ch: 2, city: "Salento", title: "The coffee farm", place: "Salento, Eje Cafetero", clock: "07:30 COT", kind: "farm", npc: { hair: "#5a5a60", skin: "#b57d55", jacket: "#e8d14f", shirt: "#f4f0e6", long: true },
+        opener: () => op("Bienvenido a la finca. ¿Quiere probar el café de nuestra cosecha?", "Welcome to the farm. Would you like to try our harvest's coffee?",
+          ["Con mucho gusto, doña Rosalba. Huele delicioso.", "With pleasure, Doña Rosalba. It smells delicious.", "Doña plus first name is the respectful way to address her."],
+          ["Con mucho gusto, Rosalba.", "register", "Con mucho gusto, doña Rosalba.", "Without doña it's too familiar for the head of a cooperative."],
+          ["No, gracias, solo tomo café de cápsula.", "culture", "Turning down a coffee grower's coffee for pods. Brutal."]),
+        who: { name: "Doña Rosalba Gómez", role: "president, a 300-family coffee cooperative", persona: "Patient, usted, suspicious of city people who promise too much." },
+        deal: "Sell the cooperative's coffee directly to your hotel partners.", goal: "An exclusive first harvest." },
+      { id: "es3", ch: 3, city: "Madrid", title: "Planta 38", place: "Cuatro Torres, Madrid", clock: "11:30 CET", kind: "office", opts: { landmark: "cuatro", sky: "day" }, npc: P.madrid,
+        opener: () => op("Tengo veinte minutos. ¿Qué me traéis?", "I have twenty minutes. What have you got for me?",
+          ["Vamos al grano: os traemos un negocio que ya factura y crece un 30 % al año.", "Straight to the point: we're bringing you a business that already bills and grows 30% a year.", "Numbers first, and you answered her vosotros like a madrileño."],
+          ["Vamos al grano: traemos un negocio que ya factura muchos.", "grammar", "…que ya factura mucho.", "Mucho is an adverb here. No plural."],
+          ["Bueno, primero déjeme contarle cómo empezó todo…", "culture", "She said twenty minutes. Madrid investors want numbers first."]),
         who: { name: "Lucía Ferrer", role: "CEO, Ferrer Capital", persona: "Fast, blunt, peninsular Spanish with vosotros. Interrupts. Respects people who push back with data." },
         deal: "A €3M growth round for your company.", goal: "A term sheet before she leaves for lunch." },
-      { id: "es4", city: "Ibiza", title: "The villa", place: "Sant Josep, Ibiza", clock: "23:50 CEST", kind: "villa", opts: { shore: "vedra" }, npc: P.ibiza,
+      { id: "es3b", ch: 3, city: "Ciudad de México", title: "Lunch in Polanco", place: "Polanco, Mexico City", clock: "14:30 CST", kind: "office", opts: { landmark: "angel", sky: "day" }, npc: { hair: "#2a1a14", skin: "#c99870", jacket: "#262a33", shirt: "#f4f4f4" },
+        opener: () => op("Mucho gusto. Ahorita pedimos. ¿Le late un mezcal?", "Nice to meet you. We'll order in a moment. Fancy a mezcal?",
+          ["Mucho gusto, licenciado. Claro, un mezcal, gracias.", "Nice to meet you, licenciado. Sure, a mezcal, thanks.", "Titles like licenciado matter in Mexico, and you accepted the hospitality."],
+          ["Mucho gusto, Arturo. Claro, un mezcal.", "register", "Mucho gusto, licenciado.", "Skip the title with a Mexican executive and you sound too familiar."],
+          ["¿Ahorita? ¿O sea ahora mismo? Tengo prisa.", "culture", "Ahorita can mean now, soon or never. Pushing on it reads as rude."]),
+        who: { name: "Lic. Arturo Garza", role: "CEO, a Mexican hotel chain", persona: "Courteous, indirect, long lunches, decides after the digestivo." },
+        deal: "Your platform across 40 Mexican hotels.", goal: "A pilot in Tulum and Los Cabos." },
+      { id: "es3c", ch: 3, city: "Madrid", title: "The VIP box", place: "Santiago Bernabéu, Madrid", clock: "21:00 CET", kind: "stadium", npc: { hair: "#6b3b1f", skin: "#e8c09b", jacket: "#f4f4f4", shirt: "#1c2656" },
+        opener: () => op("¡Qué partido! ¿Eres del Madrid o del Atleti?", "What a game! Are you Real Madrid or Atlético?",
+          ["Hoy soy del Madrid, que para eso me has invitado.", "Today I'm Madrid, since you invited me.", "Diplomatic, funny, and you matched his tú."],
+          ["Hoy soy de Madrid.", "grammar", "Hoy soy del Madrid.", "Del Madrid is the club. De Madrid is just where someone's from."],
+          ["No me gusta el fútbol. ¿Hablamos de negocios?", "culture", "In his box, mid-match? Read the room."]),
+        who: { name: "Álvaro Sotomayor", role: "sports and hospitality investor", persona: "Charismatic, tú, mixes football and business, judges you by whether you celebrate the goals." },
+        deal: "Your platform for stadium hospitality across La Liga.", goal: "A handshake before the final whistle." },
+      { id: "es4", ch: 4, city: "Ibiza", title: "The villa", place: "Sant Josep, Ibiza", clock: "23:50 CEST", kind: "villa", opts: { shore: "vedra" }, npc: P.ibiza,
+        opener: () => op("¡Hombre! ¡Por fin! ¿Qué bebes? Aquí todo se cierra en la piscina.", "Hey, finally! What are you drinking? Everything gets closed by the pool here.",
+          ["Lo mismo que tú. Y si se cierra en la piscina, me tiro ahora mismo.", "Whatever you're having. And if deals close in the pool, I'm jumping in now.", "You kept up with him. That's the whole test."],
+          ["Lo mismo que usted.", "register", "Lo mismo que tú.", "Usted by the pool at midnight in Ibiza feels like a tax audit."],
+          ["Agua con gas. Mañana madrugo.", "culture", "He's testing whether you can keep up. Apparently you can't."]),
         who: { name: "Bruno Marí", role: "nightlife mogul, owner of six clubs", persona: "Charming, loud, half drunk, testing whether you can keep up. Deals happen by the pool, never at a table." },
-        deal: "Buy into his club empire for a $25M stake.", goal: "His handshake before sunrise." },
-      { id: "es5", title: "The island", place: "Los Roques, Venezuela", clock: "10:15 VET", kind: "deck", opts: { sky: "day", shore: "cays", deck: "teak" }, npc: P.roques, secret: true,
+        deal: "Buy into his club empire.", goal: "His handshake before sunrise." },
+      { id: "es4b", ch: 4, city: "Marbella", title: "The broker's yacht", place: "Puerto Banús, Marbella", clock: "18:10 CEST", kind: "deck", opts: { sky: "sunset", shore: "generic", deck: "teak" }, npc: { hair: "#101014", skin: "#e2b48c", jacket: "#f4f4f4", shirt: "#c0392b", long: true },
+        opener: () => op("Bienvenido a bordo. Este es el barco que acabo de venderle a un jeque. ¿Qué le parece?", "Welcome aboard. This is the boat I just sold to a sheikh. What do you think?",
+          ["Impresionante. Se nota que usted sabe vender barcos.", "Impressive. Clearly you know how to sell boats.", "Compliment the seller, not just the boat."],
+          ["Impresionante. Se nota que usted sabe vender barcas.", "vocabulary", "…vender barcos.", "Una barca is a little rowboat. On a superyacht, that's an insult."],
+          ["El mío es más grande.", "register", "A size contest with the broker who controls the charter market. Bold. Wrong."]),
+        who: { name: "Carmen de la Vega", role: "superyacht broker", persona: "Elegant, fast, formal until you prove you're a buyer, then ruthless and funny." },
+        deal: "Your platform for her whole charter fleet.", goal: "Exclusive rights on the Costa del Sol." },
+      { id: "es4c", ch: 4, city: "Buenos Aires", title: "The milonga", place: "San Telmo, Buenos Aires", clock: "01:30 ART", kind: "rooftop", opts: { night: true }, npc: { hair: "#c9c9c9", skin: "#e2b48c", jacket: "#101014", shirt: "#7a1f2b" },
+        opener: () => op("Che, ¿vos bailás tango o venís solo a mirar?", "Hey, do you dance tango or did you just come to watch?",
+          ["Vengo a aprender. Si vos me enseñás, yo invito la próxima botella.", "I came to learn. If you teach me, the next bottle's on me.", "Voseo like a porteño. He grins."],
+          ["Vengo a aprender. Si tú me enseñas…", "register", "Si vos me enseñás…", "In Buenos Aires vos replaces tú. You sound like a tourist."],
+          ["El tango es un poco anticuado, ¿no?", "culture", "Insulting tango in San Telmo. The music stops."]),
+        who: { name: "Facundo Ibarra", role: "agro-billionaire", persona: "Porteño, voseo, loves to argue, respects wit over deference." },
+        deal: "His family office's stake in your company.", goal: "A yes before the last tanda." },
+      { id: "es5", ch: 5, title: "The island", place: "Los Roques, Venezuela", clock: "10:15 VET", kind: "deck", opts: { sky: "day", shore: "cays", deck: "teak" }, npc: P.roques, secret: true,
+        opener: () => op("Bienvenido. Aquí no hay prisa. Siéntese.", "Welcome. There's no hurry here. Sit.",
+          ["Muchas gracias, señor. Es un honor que me haya recibido.", "Thank you very much, sir. It's an honor that you've received me.", "Es un honor que + subjunctive. Impeccable."],
+          ["Es un honor que me ha recibido.", "grammar", "…que me haya recibido.", "Es un honor que takes the subjunctive."],
+          ["Gracias. Voy a ser breve, tengo otra reunión.", "culture", "He flew you in by seaplane. There is no other meeting."]),
         who: { name: "El Señor", role: "a man whose name is never said", persona: "Soft-spoken, ultra-formal, watches everything. One wrong word and the seaplane leaves without you." },
-        deal: "Private capital for your next ten years: $200M.", goal: "Leave the island with his trust." },
+        deal: "Private capital for your next ten years.", goal: "Leave the island with his trust." },
+      { id: "es5b", ch: 5, city: "Punta del Este", title: "The mate at 40,000 feet", place: "Private jet to Punta del Este", clock: "16:00 UYT", kind: "jet", npc: { hair: "#6b3b1f", skin: "#e2b48c", jacket: "#262a33", shirt: "#f4f4f4" }, secret: true,
+        opener: () => op("Tomá, probá este mate. Acá arriba no hay señal, así que hablemos tranquilos.", "Here, try this mate. No signal up here, so let's talk calmly.",
+          ["Gracias. Muy rico. Contame qué buscás en un socio.", "Thanks. Delicious. Tell me what you look for in a partner.", "You took the mate, used voseo, and asked about him."],
+          ["Gracias. ¿Tiene azúcar?", "culture", "Gracias, muy rico.", "Asking for sugar in someone's mate is a small scandal in Uruguay."],
+          ["No, gracias, no comparto bebidas.", "culture", "Refusing the shared mate is refusing him."]),
+        who: { name: "Mateo Irigoyen", role: "Uruguayan shipping magnate", persona: "Calm, voseo, allergic to hurry, tests you with silence." },
+        deal: "A partnership across the Río de la Plata.", goal: "An invitation to his estancia." },
+      { id: "es5c", ch: 5, title: "The vault", place: "Panama City", clock: "22:40 EST", kind: "office", opts: { decor: "gold" }, npc: { hair: "#c9c9c9", skin: "#c99870", jacket: "#101014", shirt: "#f5c542" }, secret: true,
+        opener: () => op("Lo que se hable aquí, aquí se queda. ¿Entendido?", "What's said here stays here. Understood?",
+          ["Entendido, don Aurelio. Cuente con mi discreción.", "Understood, Don Aurelio. You can count on my discretion.", "Short, respectful, and it sounds true."],
+          ["Entendido. Cuente con mi discreción total, se lo prometo muchísimo.", "clarity", "Cuente con mi discreción.", "Over-promising discretion sounds like the opposite."],
+          ["Claro, aunque mi abogado tendrá que saberlo.", "culture", "You just told a private banker you'll repeat everything."]),
+        who: { name: "Don Aurelio Castro", role: "private banker to people who don't exist", persona: "Quiet, precise, formal, and he has already read your file." },
+        deal: "Park your fortune where nobody asks.", goal: "An account with no name on it." },
     ],
     circle: [
       { id: "mateo", name: "Mateo Salazar", g: "m", rank: 1, role: "yacht captain, Aruba", persona: "sun-bleached flirt, slow Caribbean Spanish, knows every rumor in the marina", pal: { hair: "#c7a46b", skin: "#b57d55", jacket: "#f4f4f4", shirt: "#1e5aa8" }, secret: "es1" },
@@ -669,24 +960,115 @@ const CAREERS = {
     title: "财富之路",
     ranks: ["游客 Tourist", "打工仔 Grinder", "老板 Boss", "大老板 Big boss", "土豪 Tuhao", "传奇 Legend"],
     tiers: [
-      { id: "zh0", title: "The hawker stall", place: "Maxwell Food Centre, Singapore", clock: "11:20 SGT", kind: "street", npc: P.auntie, script: S_ZH0,
+      { id: "zh0", ch: 0, title: "The hawker stall", place: "Maxwell Food Centre, Singapore", clock: "11:20 SGT", kind: "street", npc: P.auntie, script: S_ZH0,
         who: { name: "Auntie Tan 陈阿姨", role: "chicken rice stall, 31 years", persona: "Busy, blunt, secretly soft. Mixes Mandarin with Hokkien and Singlish lah. Judges you by whether you eat." },
         deal: "Get QR ordering on her stall.", goal: "An install date." },
-      { id: "zh1", city: ["新加坡", "Xīnjiāpō"], title: "The 42nd floor", place: "Marina Bay, Singapore", clock: "21:15 SGT", kind: "office", opts: { landmark: "mbs", rain: true, decor: "orchid" }, npc: P.lim, script: S_ZH1,
+      { id: "zh0b", ch: 0, title: "The kopitiam", place: "Tiong Bahru, Singapore", clock: "07:10 SGT", kind: "street", opts: { morning: true }, npc: { hair: "#c9c9c9", skin: "#e0b089", jacket: "#f4f4f4", shirt: "#f4f4f4" }, script: S_ZH0B,
+        who: { name: "Uncle Lim 林伯", role: "kopitiam owner since 1968", persona: "Gruff, funny, suspicious of anything with an app. Calls a week a 礼拜." },
+        deal: "A loyalty card for his regulars.", goal: "A start date." },
+      { id: "zh0c", ch: 0, city: ["台北", "Táiběi"], title: "The night market", place: "Shilin Night Market, Taipei", clock: "22:15 CST", kind: "street", opts: { night: true }, npc: { hair: "#101014", skin: "#e8bc95", jacket: "#52c7b8", shirt: "#f4f4f4" }, script: S_ZH0C,
+        who: { name: "Ah Ming 阿明", role: "bubble tea stall owner", persona: "Chatty Taiwanese Mandarin, says 超 and 耶, loves a bargain." },
+        deal: "Online pre-orders for tourists.", goal: "A one-month trial." },
+      { id: "zh1", ch: 1, title: "The 42nd floor", place: "Marina Bay, Singapore", clock: "21:15 SGT", kind: "office", opts: { landmark: "mbs", rain: true, decor: "orchid" }, npc: P.lim, script: S_ZH1,
         who: { name: "Lim Wei Jie 林伟杰", role: "Regional Director, Straits Logistics", persona: "Formal and indirect. Rarely says no outright. Values titles, face and hard numbers." },
         deal: "License your software across his six sites.", goal: "A pilot and a decision date." },
-      { id: "zh2", city: ["上海", "Shànghǎi"], title: "The banquet", place: "The Bund, Shanghai", clock: "20:00 CST", kind: "office", opts: { landmark: "pearl", table: "round", decor: "red" }, npc: P.zhao, script: S_ZH2,
+      { id: "zh1b", ch: 1, title: "The rain vortex", place: "Jewel Changi, Singapore", clock: "14:00 SGT", kind: "office", opts: { landmark: "vortex", sky: "day", decor: "orchid" }, npc: { hair: "#101014", skin: "#f0c8a4", jacket: "#1c2656", shirt: "#f4f4f4", long: true }, script: S_ZH1B,
+        who: { name: "Rachel Ong 王瑞秋", role: "retail director, Jewel Changi", persona: "Crisp, bilingual, all about spend per visitor, formal until the deal is done." },
+        deal: "Pre-ordering for transit passengers.", goal: "A one-quarter pilot." },
+      { id: "zh1c", ch: 1, city: ["杭州", "Hángzhōu"], title: "The tea house", place: "West Lake, Hangzhou", clock: "10:30 CST", kind: "teahouse", npc: { hair: "#5a5a60", skin: "#e2b48c", jacket: "#3f5a3a", shirt: "#f4f0e6" }, script: S_ZH1C,
+        who: { name: "Boss Chen 陈老板", role: "Longjing tea exporter, third generation", persona: "Slow, courteous, measures people by how they drink tea, loyal to old partners." },
+        deal: "Sell his tea direct to European hotels.", goal: "Next year's spring harvest." },
+      { id: "zh2", ch: 2, city: ["上海", "Shànghǎi"], title: "The banquet", place: "The Bund, Shanghai", clock: "20:00 CST", kind: "office", opts: { landmark: "pearl", table: "round", decor: "red" }, npc: P.zhao, script: S_ZH2,
         who: { name: "Zhao Min 赵敏", role: "Vice President, Huadong Capital", persona: "Polished Shanghainese executive. Business happens through toasts. Tests your etiquette before your numbers." },
         deal: "A national rollout across 60 warehouses.", goal: "An invitation to sign at HQ." },
-      { id: "zh3", city: ["香港", "Xiānggǎng"], title: "The junk", place: "Victoria Harbour, Hong Kong", clock: "20:00 HKT", kind: "deck", opts: { sky: "night", shore: "hk", deck: "junk" }, npc: P.hk,
+      { id: "zh2b", ch: 2, city: ["深圳", "Shēnzhèn"], title: "The factory floor", place: "Nanshan, Shenzhen", clock: "09:00 CST", kind: "office", opts: { landmark: "pingan", sky: "day" }, npc: { hair: "#101014", skin: "#e2b48c", jacket: "#3a3f4a", shirt: "#f4f4f4" },
+        opener: () => op("我很忙，直接说重点。", "I'm busy. Get to the point.",
+          ["好。我们能把您的出货时间缩短三天。", "Sure. We can cut your shipping time by three days.", "Shenzhen speed: one sentence, one number."],
+          ["好。我们能把您的出货时间缩短三个天。", "grammar", "缩短三天", "天 counts itself: 三天, no 个."],
+          ["我先讲一下我们公司的历史。", "culture", "He said the point, not the history."], "Wǒ hěn máng, zhíjiē shuō zhòngdiǎn.",
+          { g: "Hǎo. Wǒmen néng bǎ nín de chūhuò shíjiān suōduǎn sān tiān.", mi: "…suōduǎn sān ge tiān.", ma: "Wǒ xiān jiǎng yíxià wǒmen gōngsī de lìshǐ." }),
+        who: { name: "Huang Zong 黄总", role: "electronics factory owner", persona: "Direct, impatient, numbers only, hates being called anything but 黄总." },
+        deal: "Your logistics layer across his export lines.", goal: "A trial on one production line." },
+      { id: "zh2c", ch: 2, city: ["北京", "Běijīng"], title: "The courtyard", place: "Hutong siheyuan, Beijing", clock: "16:00 CST", kind: "teahouse", opts: { courtyard: true }, npc: { hair: "#c9c9c9", skin: "#ecc19b", jacket: "#2c3350", shirt: "#f4f0e6" },
+        opener: () => op("年轻人，你知道'欲速则不达'吗？", "Young one, do you know 'haste makes waste'?",
+          ["知道，钱教授。所以我们想先做一个小试点，慢慢来。", "Yes, Professor Qian. That's why we want a small pilot first, one step at a time.", "You understood the idiom and applied it."],
+          ["知道，钱老师。", "register", "知道，钱教授。", "He's a professor. 教授 is the higher title here."],
+          ["不知道，但我们时间不多。", "culture", "You just proved his idiom."], "Niánqīngrén, nǐ zhīdào 'yù sù zé bù dá' ma?",
+          { g: "Zhīdào, Qián jiàoshòu. Suǒyǐ wǒmen xiǎng xiān zuò yí ge xiǎo shìdiǎn, mànmàn lái.", mi: "Zhīdào, Qián lǎoshī.", ma: "Bù zhīdào, dàn wǒmen shíjiān bù duō." }),
+        who: { name: "Professor Qian 钱教授", role: "retired policy adviser", persona: "Speaks in idioms, tests patience, opens doors nobody else can." },
+        deal: "His introduction to three provincial governments.", goal: "One introduction letter." },
+      { id: "zh3", ch: 3, city: ["香港", "Xiānggǎng"], title: "The junk", place: "Victoria Harbour, Hong Kong", clock: "20:00 HKT", kind: "deck", opts: { sky: "night", shore: "hk", deck: "junk" }, npc: P.hk,
+        opener: () => op("Welcome aboard！你会说广东话吗？", "Welcome aboard! Do you speak Cantonese?",
+          ["只会一点点：'你好'和'多谢'！普通话可以吗？", "Only a little: 'hello' and 'thanks'! Is Mandarin OK?", "Humble, funny, and you knew the Cantonese thanks."],
+          ["不会。说普通话。", "register", "只会一点点。普通话可以吗？", "A bare command sounds rude. Ask."],
+          ["广东话是方言，没用。", "culture", "Calling his mother tongue useless. On his boat."], "Welcome aboard! Nǐ huì shuō Guǎngdōnghuà ma?",
+          { g: "Zhǐ huì yìdiǎndiǎn: 'néih hóu' hé 'dō jeh'! Pǔtōnghuà kěyǐ ma?", mi: "Bú huì. Shuō Pǔtōnghuà.", ma: "Guǎngdōnghuà shì fāngyán, méi yòng." }),
         who: { name: "Jason Leung 梁家俊", role: "shipping heir, Leung Holdings", persona: "Flashy, switches between Mandarin, Cantonese and English to test you. Respects confidence, hates flattery." },
-        deal: "Your platform on his fleet of 200 ships: $3M.", goal: "A handshake before the 8pm light show ends." },
-      { id: "zh4", city: ["澳门", "Àomén"], title: "The high-roller suite", place: "Cotai, Macau", clock: "02:40 CST", kind: "office", opts: { landmark: "lisboa", table: "round", decor: "gold" }, npc: P.macau,
+        deal: "Your platform on his fleet of 200 ships.", goal: "A handshake before the light show ends." },
+      { id: "zh3b", ch: 3, city: ["香港", "Xiānggǎng"], title: "The racecourse", place: "Happy Valley, Hong Kong", clock: "21:30 HKT", kind: "stadium", opts: { race: true }, npc: { hair: "#101014", skin: "#f0c8a4", jacket: "#b8892d", shirt: "#101014", long: true },
+        opener: () => op("你押哪匹马？", "Which horse are you betting on?",
+          ["八号，霍太。听说八是您的幸运数字。", "Number eight, Mrs. Fok. I hear eight is your lucky number.", "You did your homework, and 八 sounds like getting rich."],
+          ["八个号。", "grammar", "八号", "Numbers as labels take 号, no 个."],
+          ["四号，四号跑得最快。", "culture", "Four sounds like death. She moves her chair away."], "Nǐ yā nǎ pǐ mǎ?",
+          { g: "Bā hào, Huò tài. Tīngshuō bā shì nín de xìngyùn shùzì.", mi: "Bā ge hào.", ma: "Sì hào, sì hào pǎo de zuì kuài." }),
+        who: { name: "Mrs. Fok 霍太", role: "property matriarch and racehorse owner", persona: "Superstitious, sharp, tests you with small things before big ones." },
+        deal: "Your platform for her hotel portfolio.", goal: "An invitation to her box next race night." },
+      { id: "zh3c", ch: 3, city: ["台北", "Táiběi"], title: "The 89th floor", place: "Taipei 101", clock: "17:45 CST", kind: "office", opts: { landmark: "t101", sky: "day" }, npc: { hair: "#101014", skin: "#e2b48c", jacket: "#1c2656", shirt: "#f4f4f4" },
+        opener: () => op("从八十九楼看台北，感觉怎么样？", "How does Taipei look from the 89th floor?",
+          ["太美了。林先生，谢谢您邀请我来。", "Beautiful. Mr. Lin, thank you for inviting me.", "Warm and polite."],
+          ["太美丽。", "grammar", "太美了。", "太…了 frames the exclamation."],
+          ["还好，上海的楼更高。", "culture", "Comparing Taipei unfavorably to Shanghai, inside Taipei 101."], "Cóng bāshíjiǔ lóu kàn Táiběi, gǎnjué zěnmeyàng?",
+          { g: "Tài měi le. Lín xiānsheng, xièxie nín yāoqǐng wǒ lái.", mi: "Tài měilì.", ma: "Hái hǎo, Shànghǎi de lóu gèng gāo." }),
+        who: { name: "David Lin 林大卫", role: "semiconductor investor", persona: "Engineer turned billionaire, soft-spoken, allergic to hype." },
+        deal: "His fund leads your next round.", goal: "A term sheet by Friday." },
+      { id: "zh4", ch: 4, city: ["澳门", "Àomén"], title: "The high-roller suite", place: "Cotai, Macau", clock: "02:40 CST", kind: "office", opts: { landmark: "lisboa", table: "round", decor: "gold" }, npc: P.macau,
+        opener: () => op("来，坐。先玩一把再谈。", "Come, sit. Play a hand first, then we talk.",
+          ["恭敬不如从命，何太。", "Better to obey than to stand on ceremony, Madam Ho.", "A classic chengyu for accepting an invitation. She's charmed."],
+          ["好，玩一个把。", "grammar", "玩一把", "把 is the measure word itself."],
+          ["我不赌博，这是浪费钱。", "culture", "Judging the junket queen's business at her own table."], "Lái, zuò. Xiān wán yì bǎ zài tán.",
+          { g: "Gōngjìng bùrú cóngmìng, Hé tài.", mi: "Hǎo, wán yí ge bǎ.", ma: "Wǒ bù dǔbó, zhè shì làngfèi qián." }),
         who: { name: "Madam Ho 何太", role: "junket queen", persona: "Silky, superstitious (loves 8, hates 4), measures you by how you lose. Every sentence has a second meaning." },
-        deal: "Buy into her VIP rooms: $25M.", goal: "Walk out richer than you walked in." },
-      { id: "zh5", title: "41,000 feet", place: "Private jet over the South China Sea", clock: "??:?? UTC", kind: "jet", npc: P.jet, secret: true,
+        deal: "Buy into her VIP rooms.", goal: "Walk out richer than you walked in." },
+      { id: "zh4b", ch: 4, city: ["三亚", "Sānyà"], title: "The golf course", place: "Sanya, Hainan", clock: "08:10 CST", kind: "farm", opts: { golf: true }, npc: { hair: "#101014", skin: "#d9a57b", jacket: "#f4f4f4", shirt: "#e24b3b" },
+        opener: () => op("打一场吧？谁输谁请客。", "Play a round? Loser buys dinner.",
+          ["好！不过周老板球技那么好，我肯定请客了。", "Sure! Though with your game, Boss Zhou, dinner's definitely on me.", "Modesty plus flattery. Perfect."],
+          ["好！谁输谁请吃饭客。", "grammar", "谁输谁请客。", "请客 is one verb: to treat someone."],
+          ["我让你十杆。", "culture", "Offering the tycoon a handicap. Face lost instantly."], "Dǎ yì chǎng ba? Shéi shū shéi qǐngkè.",
+          { g: "Hǎo! Búguò Zhōu lǎobǎn qiújì nàme hǎo, wǒ kěndìng qǐngkè le.", mi: "Hǎo! Shéi shū shéi qǐng chīfàn kè.", ma: "Wǒ ràng nǐ shí gān." }),
+        who: { name: "Boss Zhou 周老板", role: "resort developer", persona: "Loud, competitive, generous with people who lose gracefully." },
+        deal: "Your platform across his island resorts.", goal: "Dinner, and his signature." },
+      { id: "zh4c", ch: 4, city: ["北京", "Běijīng"], title: "The private dining room", place: "CBD, Beijing", clock: "21:00 CST", kind: "office", opts: { landmark: "cctv", table: "round", decor: "red" }, npc: { hair: "#101014", skin: "#f0c8a4", jacket: "#101014", shirt: "#b8892d", long: true },
+        opener: () => op("这幅画，你看得出是谁的吗？", "Can you tell whose painting this is?",
+          ["我不敢乱说，但笔法很像齐白石。", "I wouldn't dare guess, but the brushwork looks like Qi Baishi.", "Humble and knowledgeable. Qi Baishi's shrimp are famous."],
+          ["我不敢乱说，但这张画很像齐白石。", "grammar", "这幅画", "Paintings take 幅."],
+          ["看不出来。多少钱买的？", "culture", "Asking a collector the price of her art, in front of her guests."], "Zhè fú huà, nǐ kàn de chū shì shéi de ma?",
+          { g: "Wǒ bù gǎn luàn shuō, dàn bǐfǎ hěn xiàng Qí Báishí.", mi: "…zhè zhāng huà hěn xiàng Qí Báishí.", ma: "Kàn bu chūlái. Duōshao qián mǎi de?" }),
+        who: { name: "Madam Song 宋女士", role: "art collector and state-enterprise board member", persona: "Cultured, formal, tests your depth with art before business." },
+        deal: "A seat at the table on a state infrastructure project.", goal: "Her introduction to the ministry." },
+      { id: "zh5", ch: 5, title: "41,000 feet", place: "Private jet over the South China Sea", clock: "??:?? UTC", kind: "jet", npc: P.jet, secret: true,
+        opener: () => op("……", "(He says nothing. He waits.)",
+          ["董事长，您请先说。", "Chairman, please, you speak first.", "Deference. He nods."],
+          ["董事长好。今天天气不错。", "culture", "董事长，您请先说。", "Small talk fills a silence he chose."],
+          ["那我先开始吧，我们公司……", "culture", "Filling his silence with a pitch."], "",
+          { g: "Dǒngshìzhǎng, nín qǐng xiān shuō.", mi: "Dǒngshìzhǎng hǎo. Jīntiān tiānqì búcuò.", ma: "Nà wǒ xiān kāishǐ ba, wǒmen gōngsī…" }),
         who: { name: "The Chairman 董事长", role: "his name isn't on any company", persona: "Speaks rarely, classical idioms, tests loyalty. Never says a number out loud." },
-        deal: "Become his partner: $200M.", goal: "Earn a second flight." },
+        deal: "Become his partner.", goal: "Earn a second flight." },
+      { id: "zh5b", ch: 5, city: ["丽江", "Lìjiāng"], title: "The mountain retreat", place: "Jade Dragon Snow Mountain, Lijiang", clock: "06:20 CST", kind: "teahouse", opts: { mountain: true }, npc: { hair: "#f4f4f4", skin: "#e2b48c", jacket: "#7a5a3a", shirt: "#f4f0e6" }, secret: true,
+        opener: () => op("山里的茶，慢慢喝。", "Mountain tea. Drink it slowly.",
+          ["谢谢老先生。好茶要慢慢品。", "Thank you, sir. Good tea should be savored slowly.", "You echoed his rhythm."],
+          ["谢谢老先生。好茶要慢慢地喝了。", "grammar", "好茶要慢慢品。", "了 doesn't fit a general truth."],
+          ["（一口喝完）再来一杯。", "culture", "He said slowly."], "Shān lǐ de chá, mànmàn hē.",
+          { g: "Xièxie lǎo xiānsheng. Hǎo chá yào mànmàn pǐn.", mi: "…mànmàn de hē le.", ma: "(downs it) Zài lái yì bēi." }),
+        who: { name: "The Old Master 老先生", role: "the Chairman's mentor", persona: "Barely speaks. Every word is a test of patience." },
+        deal: "His blessing, which is worth more than money.", goal: "Be invited back." },
+      { id: "zh5c", ch: 5, city: ["摩纳哥", "Mónàgē"], title: "The harbor", place: "Port Hercule, Monaco", clock: "12:30 CEST", kind: "deck", opts: { sky: "day", shore: "generic", deck: "teak" }, npc: { hair: "#101014", skin: "#e2b48c", jacket: "#f4f4f4", shirt: "#1c2656" }, secret: true,
+        opener: () => op("你的船停在哪里？", "Where's your boat moored?",
+          ["就在您旁边，吴先生。不过您的比我的漂亮多了。", "Right next to yours, Mr. Wu. Though yours is much prettier.", "Flattery that costs you nothing."],
+          ["就在您旁边。您的比我的很漂亮。", "grammar", "您的比我的漂亮多了。", "No 很 in 比 comparisons."],
+          ["那边，最大的那艘。", "register", "Bragging to a man with a bigger boat. He smiles thinly."], "Nǐ de chuán tíng zài nǎlǐ?",
+          { g: "Jiù zài nín pángbiān, Wú xiānsheng. Búguò nín de bǐ wǒ de piàoliang duō le.", mi: "Jiù zài nín pángbiān. Nín de bǐ wǒ de hěn piàoliang.", ma: "Nàbiān, zuì dà de nà sōu." }),
+        who: { name: "Mr. Wu 吴先生", role: "the richest man in the harbor", persona: "Amused by new money, respects quiet confidence." },
+        deal: "Co-invest in his European holdings.", goal: "Lunch on his boat." },
     ],
     circle: [
       { id: "kai", name: "Kai Chen 陈凯", g: "m", rank: 1, role: "chef, Keong Saik Road", persona: "cocky, feeds you, teases your tones, Singapore slang", pal: { hair: "#15151c", skin: "#e2b48c", jacket: "#f4f4f4", shirt: "#f4f4f4" }, secret: "zh0" },
@@ -707,6 +1089,26 @@ const CAREERS = {
     ports: ["ONE°15 Marina, Sentosa Cove", "Keppel Bay", "Aberdeen Marina Club, Hong Kong", "Sanya Serenity Marina", "Macau Fisherman's Wharf"],
   },
 };
+
+function finalizeCareer(c) {
+  if (!c || c._final) return c;
+  const n = c.tiers.length;
+  c.tiers.forEach((t, k) => { if (t.ch == null) t.ch = Math.min(5, Math.floor((k * 6) / n)); });
+  c.tiers.forEach((t) => { const same = c.tiers.filter((x) => x.ch === t.ch); t.pos = same.indexOf(t); t.stakes = STAKE_TABLE[t.ch][Math.min(2, t.pos)]; t.fee = FEE_TABLE[t.ch][Math.min(2, t.pos)]; if (t.ch === 5) t.secret = true; });
+  c._final = true;
+  return c;
+}
+Object.values(CAREERS).forEach(finalizeCareer);
+function scriptFor(t) {
+  if (!t) return null;
+  if (t.script) return t.script;
+  if (t._built) return t._built;
+  const lang = t.id.startsWith("zh") ? "zh" : t.id.startsWith("es") ? "es" : null;
+  if (!lang || !t.opener) return null;
+  const bank = BANK[lang], r = rng(hash(t.id)), mids = [0, 1, 2, 3, 4].sort(() => r() - 0.5).slice(0, 3).sort((a, b) => a - b);
+  t._built = [t.opener(), ...mids.map((k) => bank[k]), bank[5]];
+  return t._built;
+}
 
 /* Shop: same perks in every language, new names in each */
 const SHOP_BASE = [
@@ -905,6 +1307,7 @@ const today = () => new Date().toISOString().slice(0, 10);
 function newLife() { return { cash: START_CASH, xp: 0, owned: {}, paid: {}, mods: {}, cleared: {}, secrets: {}, chem: {}, chats: {}, deck: [], quiz: {}, meetings: 0, peak: 0, rivalBonus: {}, pos: 0 }; }
 function freshGame() { return { v: 2, lang: "es", pref: "everyone", mute: false, showEn: false, level: "intermediate", tier: {}, ach: {}, streak: { n: 0, last: "" }, langs: {}, careers: {}, packs: {}, updated: 0 }; }
 let G = (() => { try { const s = JSON.parse(localStorage.getItem(SAVE_KEY)); if (s && s.v === 2) return Object.assign(freshGame(), s); } catch {} return freshGame(); })();
+if (!G.layout18) { Object.keys(G.tier).forEach((k) => { G.tier[k] = Math.min(17, (G.tier[k] || 0) * 3); }); G.layout18 = true; }
 const life = (lang = G.lang) => { const L = (G.langs[lang] ||= newLife()); L.mods ||= {}; L.rivalBonus ||= {}; L.peak ||= 0; return L; };
 let cloud = null, cloudTimer = 0, cloudBusy = false, cloudDirty = false;
 function save() {
@@ -964,8 +1367,8 @@ function sfx(kind) {
    GAME RULES
    ========================================================= */
 let sample = null;
-const career = (lang = G.lang) => CAREERS[lang] || G.careers[lang] || null;
-const tierIdx = () => clamp(G.tier[G.lang] ?? 0, 0, 5);
+const career = (lang = G.lang) => CAREERS[lang] || finalizeCareer(G.careers[lang]) || null;
+const tierIdx = () => clamp(G.tier[G.lang] ?? 0, 0, (career()?.tiers.length || 1) - 1);
 const tier = () => career()?.tiers[tierIdx()];
 const rankOf = (xp) => RANK_XP.reduce((r, t, i) => (xp >= t ? i : r), 0);
 const rank = (lang = G.lang) => rankOf(life(lang).xp);
@@ -990,16 +1393,21 @@ function netWorth(lang = G.lang) {
   return L.cash + SHOP_BASE.reduce((s, it) => s + (L.owned[it.id] ? Math.round(((L.paid[it.id] || it.price) + (L.mods[it.id]?.spent || 0)) * 0.7) : 0), 0);
 }
 function streakMult() { return 1 + Math.min(Math.max(G.streak.n - 1, 0), 10) * 0.05; }
-function fee(i = tierIdx()) { return Math.round(FEES[i] * (1 - perks().fee)); }
+function fee(i = tierIdx()) { const t = career()?.tiers[i]; return t ? Math.round(t.fee * (1 - perks().fee)) : 0; }
 function secretUnlocked(lang = G.lang) { const c = career(lang); return perks(lang).secret || (c?.secrets || []).some((s) => s.unlock && life(lang).secrets[s.id]); }
+const won = (t, lang = G.lang) => (life(lang).cleared[t.id] ?? -1) >= 5;
 function tierLock(i, lang = G.lang) {
-  const t = career(lang).tiers[i];
+  const c = career(lang), t = c.tiers[i], L = life(lang);
   if (t.secret && !secretUnlocked(lang)) return "Invitation only";
-  if (rank(lang) < i) return "Needs rank: " + career(lang).ranks[i];
+  if (c.tiers.slice(i).some((x) => L.cleared[x.id] != null)) return "";
+  if (i === 0) return "";
+  const prev = c.tiers[i - 1];
+  if (t.pos === 0 && rank(lang) < t.ch) return "Needs rank: " + c.ranks[t.ch];
+  if (!won(prev, lang)) return "Win " + prev.title + " first";
   return "";
 }
 function intelFor(t) { return (career()?.secrets || []).filter((s) => s.tier === t.id && life().secrets[s.id]); }
-function hasScript(t = tier()) { return !!t?.script; }
+function hasScript(t = tier()) { return !!scriptFor(t); }
 function touchStreak() {
   const d = today(); if (G.streak.last === d) return;
   const y = new Date(Date.now() - 864e5).toISOString().slice(0, 10);
@@ -1067,7 +1475,8 @@ function standings(lang = G.lang) {
 }
 function rivalStatus(r, k) {
   const c = career(); if (!c) return r.vibe;
-  const tt = c.tiers[Math.min(5, Math.max(0, rank() + (r.ratio > 1 ? 1 : r.ratio > 0.6 ? 0 : -1)))];
+  const chN = Math.min(5, Math.max(0, rank() + (r.ratio > 1 ? 1 : r.ratio > 0.6 ? 0 : -1)));
+  const inCh = c.tiers.filter((x) => x.ch === chN), tt = inCh[(life().meetings + k) % inCh.length] || c.tiers[0];
   const acts = ["Just closed in", "Circling a deal in", "Seen partying in", "Flew into"];
   return (tt.secret && !secretUnlocked() ? "Somewhere you're not invited" : acts[(life().meetings + k) % acts.length] + " " + tt.place.split(",")[0]) + " · " + r.vibe;
 }
@@ -1240,7 +1649,8 @@ function drawShack(c, t, st) {
   const r = rng(11); for (let i = 0; i < 70; i++) R(c, r() * 192, 72 + r() * 36, 1, 1, "#e0c386");
   for (let i = 0; i < 16; i++) R(c, 168 - i * 0.9, 72 - i, 2, 1, "#5b4030");
   [[146, 54, 20], [142, 55, 22], [140, 57, 18], [145, 53, 12], [150, 52, 8]].forEach(([x, y, w]) => R(c, x, y, w, 2, "#4f7d3a"));
-  R(c, 120, 58, 1, 16, "#7a5a3a"); for (let i = 0; i < 7; i++) R(c, 110 + i * 3, 56 - (i < 4 ? i : 6 - i), 3, 2, i % 2 ? "#ffffff" : "#e24b3b");
+  if (st.opts?.dive) { R(c, 120, 50, 1, 24, "#c9c9c9"); R(c, 121, 50, 12, 8, "#e24b3b"); for (let i = 0; i < 12; i++) R(c, 121 + i, 50 + Math.floor(i * 0.66), 1, 1, "#ffffff"); R(c, 110, 66, 3, 8, "#f5c542"); R(c, 114, 66, 3, 8, "#f5c542"); }
+  else { R(c, 120, 58, 1, 16, "#7a5a3a"); for (let i = 0; i < 7; i++) R(c, 110 + i * 3, 56 - (i < 4 ? i : 6 - i), 3, 2, i % 2 ? "#ffffff" : "#e24b3b"); }
   R(c, 8, 34, 3, 44, "#6b4a2a"); R(c, 76, 34, 3, 44, "#6b4a2a");
   for (let y = 22; y < 36; y++) { const w = (y - 22) * 5 + 12; R(c, 44 - w / 2, y, w, 1, y % 3 ? "#caa15b" : "#a67c3c"); }
   R(c, 14, 44, 58, 2, "#8a5a33");
@@ -1251,6 +1661,12 @@ function drawShack(c, t, st) {
   drawPerson(c, 92, 60, st.you, t, st.speaking === "you", 1);
   R(c, 94, 74, 6, 2, "#8a5a33"); R(c, 96, 76, 2, 10, "#8a5a33");
   if (st.thinking) bubble(c, 46, 44, t);
+  if (st.opts?.night) {
+    c.fillStyle = "rgba(8,10,40,.55)"; c.fillRect(0, 0, 192, 108);
+    for (let dy = -4; dy <= 4; dy++) { const w = Math.floor(Math.sqrt(16 - dy * dy)); R(c, 160 - w, 12 + dy, w * 2 + 1, 1, "#f4f0dc"); }
+    for (let x = 8; x < 80; x += 6) { const y = 30 + Math.round(3 * Math.sin((x - 8) / 72 * Math.PI)); R(c, x, y, 2, 2, (Math.floor(t / 350) + x) % 24 ? "#ffd27a" : "#fff4c0"); }
+    c.fillStyle = "rgba(255,190,100,.12)"; c.fillRect(8, 34, 72, 50);
+  }
 }
 
 function drawStreet(c, t, st) {
@@ -1275,10 +1691,18 @@ function drawStreet(c, t, st) {
   R(c, 70, 76, 56, 4, "#e9e6de"); R(c, 72, 80, 52, 2, "#c7c2b5");
   R(c, 82, 73, 10, 3, "#f4f4f4"); R(c, 84, 71, 6, 2, "#f4d9a0"); R(c, 90, 72, 3, 2, "#e24b3b");
   R(c, 110, 74, 5, 2, "#ffffff"); R(c, 111, 73, 3, 1, "#7ab8d8");
+  const o = st.opts || {};
+  if (o.night) {
+    c.fillStyle = "rgba(10,10,40,.38)"; c.fillRect(0, 0, 192, 108);
+    for (let x = 0; x < 192; x += 1) { const y = 12 + Math.round(4 * Math.sin((x / 48) * Math.PI * 2)); if (x % 10 === 0) { R(c, x, y, 3, 4, (Math.floor(t / 350) + x) % 30 ? "#ff5f5f" : "#ffb0a0"); R(c, x + 1, y + 4, 1, 1, "#f5c542"); } }
+    if (o.warm) { c.fillStyle = "rgba(255,140,60,.10)"; c.fillRect(0, 40, 192, 68); }
+  } else if (o.morning) { c.fillStyle = "rgba(255,230,170,.14)"; c.fillRect(0, 0, 192, 108); for (let k = 0; k < 4; k++) R(c, 20 + k * 40, 18, 2, 44, "rgba(255,245,210,.22)"); }
 }
 
 function drawRooftop(c, t, st) {
-  bands(c, 0, 0, 192, 50, ["#3b2458", "#6a2d6a", "#a93f6d", "#e0655a", "#f59a57"]);
+  const o = st.opts || {};
+  bands(c, 0, 0, 192, 50, o.night ? ["#070a1c", "#0b1030", "#141a44", "#1d2450", "#2a2656"] : o.day ? ["#4fb0e8", "#6cc0ec", "#8ccff0", "#addcf2", "#d0ecf5"] : ["#3b2458", "#6a2d6a", "#a93f6d", "#e0655a", "#f59a57"]);
+  if (o.night) { const r = rng(4); for (let i = 0; i < 24; i++) R(c, r() * 192, r() * 20, 1, 1, "#dfe6ff"); }
   R(c, 132, 14, 12, 40, "#e8c9a0"); R(c, 134, 8, 8, 6, "#e8c9a0"); R(c, 137, 3, 2, 5, "#e8c9a0"); R(c, 136, 18, 4, 4, "#fff4d0"); R(c, 137, 19, 2, 2, "#7a5a3a");
   const fac = [["#f2c14e", 0, 26], ["#3fa7d6", 26, 32], ["#e86a92", 58, 28], ["#f29e4c", 86, 30], ["#9ad36a", 116, 16], ["#f2c14e", 148, 44]];
   fac.forEach(([col, x, w], i) => {
@@ -1302,6 +1726,7 @@ function drawOffice(c, t, st) {
   bands(c, 6, 6, 180, 60, day ? ["#6fb3e0", "#8cc4e6", "#a9d4ec", "#c6e2f0", "#e0eef4"] : ["#0b0f24", "#10163a", "#171d48", "#231f52", "#35285e"]);
   const r = rng(7);
   if (!day) for (let i = 0; i < 26; i++) { const x = 6 + Math.floor(r() * 180), y = 7 + Math.floor(r() * 22); if ((Math.floor(t / 600) + i) % 7) R(c, x, y, 1, 1, "#c9d3ff"); }
+  if (o.hills) { for (let x = 6; x < 186; x++) { const h = 30 + Math.round(8 * Math.sin(x / 19) + 4 * Math.sin(x / 7)); R(c, x, 64 - h, 1, h, "#4f7d4a"); if ((x * 13) % 7 === 0) R(c, x, 64 - h + 4 + (x % 9), 2, 1, "#c9704a"); } }
   const b = rng(hash(st.id || "x"));
   const skip = o.landmark ? [100, 162] : [999, 999];
   for (let x = 6; x < 186;) {
@@ -1325,6 +1750,25 @@ function drawOffice(c, t, st) {
     R(c, 132, 10, 2, 54, "#c9b8d8"); R(c, 128, 40, 2, 24, "#c9b8d8"); R(c, 136, 40, 2, 24, "#c9b8d8");
     [[133, 44, 6], [133, 24, 4], [133, 14, 2]].forEach(([cx, cy, rr]) => { for (let dy = -rr; dy <= rr; dy++) { const w = Math.floor(Math.sqrt(rr * rr - dy * dy)); R(c, cx - w, cy + dy, w * 2 + 1, 1, (Math.floor(t / 500) % 2) ? "#ff5fa2" : "#e0468a"); } });
     R(c, 110, 50, 18, 14, "#241a3a"); R(c, 146, 42, 12, 22, "#241a3a"); R(c, 150, 38, 4, 4, "#241a3a");
+  } else if (L === "angel") {
+    R(c, 128, 58, 11, 6, "#d9d0c0"); R(c, 131, 28, 5, 30, "#e9e2d6"); R(c, 130, 28, 7, 2, "#d9d0c0");
+    R(c, 132, 20, 3, 8, "#f5c542"); R(c, 128, 21, 4, 2, "#f5c542"); R(c, 135, 21, 4, 2, "#f5c542"); R(c, 133, 18, 1, 2, "#f5c542");
+  } else if (L === "vortex") {
+    for (let a = 0; a < 3.15; a += 0.02) R(c, 133 + Math.cos(a) * 32, 60 - Math.sin(a) * 48, 1, 1, "#9fb8c8");
+    for (let y = 16; y < 64; y++) { const w = y < 22 ? 12 - (y - 16) : 6; R(c, 133 - w / 2, y, w, 1, ((y + Math.floor(t / 60)) % 4) ? "#9fe1ff" : "#e8f8ff"); }
+    for (let k = 0; k < 5; k++) { R(c, 104 + k * 3, 44 + k * 4, 22 - k * 3, 3, "#3f7a4a"); R(c, 142 + k * 0, 44 + k * 4, 22 - k * 3, 3, "#3f7a4a"); }
+  } else if (L === "pingan") {
+    R(c, 126, 12, 14, 52, day ? "#8a9bb0" : "#1c2656"); R(c, 128, 6, 10, 6, day ? "#8a9bb0" : "#1c2656"); R(c, 132, 0, 2, 6, "#c9c9c9");
+    for (let yy = 14; yy < 62; yy += 3) R(c, 128, yy, 10, 1, day ? "#b8cadb" : "#ffd98a");
+  } else if (L === "t101") {
+    R(c, 124, 48, 18, 16, "#5f8a7a");
+    for (let k = 0; k < 8; k++) { const y = 44 - k * 4; R(c, 126, y, 14, 4, "#6f9a8a"); R(c, 125, y, 16, 1, "#8fbaa8"); }
+    R(c, 129, 8, 8, 4, "#6f9a8a"); R(c, 132, 0, 2, 8, "#c9c9c9");
+    for (let k = 0; k < 8; k++) if ((Math.floor(t / 400) + k) % 3) R(c, 132, 46 - k * 4, 2, 1, "#ffd98a");
+  } else if (L === "cctv") {
+    const col = day ? "#6b7a90" : "#2a3560";
+    R(c, 116, 30, 9, 34, col); R(c, 142, 26, 9, 38, col); R(c, 116, 20, 35, 8, col); R(c, 125, 28, 17, 2, day ? "#a9d4ec" : "#171d48");
+    for (let yy = 22; yy < 62; yy += 3) { R(c, 118, yy, 5, 1, day ? "#95a6bd" : "#ffd98a"); R(c, 144, yy, 5, 1, day ? "#95a6bd" : "#ffd98a"); }
   } else if (L === "lisboa") {
     for (let y = 16; y < 64; y++) { const k = (y - 16) / 48; const w = Math.round(y < 26 ? 10 - (y - 16) * 0.3 : 4 + Math.sin(k * Math.PI) * 10); R(c, 133 - w, y, w * 2, 1, y % 3 ? "#d9a53a" : "#f5d27a"); }
     for (let i = 0; i < 7; i++) R(c, 124 + i * 3, 12 - (i % 2) * 3, 2, 5, "#f5d27a");
@@ -1439,6 +1883,97 @@ function drawJet(c, t, st) {
   R(c, 94, 66, 4, 10, "#2c5a3a"); R(c, 95, 64, 2, 2, "#f5c542");
 }
 
+
+function terrace(c, t, st, col = "#8a5a33") {
+  R(c, 0, 80, 192, 28, col); for (let y = 84; y < 108; y += 5) R(c, 0, y, 192, 1, shade(col, 0.8));
+  R(c, 0, 76, 192, 2, shade(col, 1.25)); for (let x = 4; x < 192; x += 14) R(c, x, 70, 2, 10, shade(col, 1.25)); R(c, 0, 70, 192, 1, shade(col, 1.25));
+  people(c, t, st);
+  R(c, 72, 76, 48, 3, "#f2ede4"); R(c, 94, 79, 4, 12, "#c9c2b5");
+  R(c, 82, 72, 4, 4, "#f4f4f4"); R(c, 83, 73, 2, 2, "#5a3322"); R(c, 106, 72, 4, 4, "#f4f4f4"); R(c, 107, 73, 2, 2, "#5a3322");
+}
+function drawFarm(c, t, st) {
+  const o = st.opts || {};
+  if (o.golf) {
+    bands(c, 0, 0, 192, 48, ["#4fb0e8", "#6cc0ec", "#8ccff0", "#addcf2", "#d0ecf5"]);
+    bands(c, 0, 48, 192, 8, ["#3fd0cf", "#22b6c4"]);
+    for (let x = 0; x < 192; x += 9) R(c, x + ((Math.floor(t / 300)) % 3), 50, 3, 1, "#c8fbf4");
+    R(c, 0, 56, 192, 24, "#4f9a3f"); for (let x = 0; x < 192; x += 16) R(c, x, 56, 8, 24, "#5aa847");
+    R(c, 30, 64, 30, 6, "#e9d9a0"); R(c, 34, 63, 22, 1, "#e9d9a0");
+    R(c, 140, 60, 16, 6, "#6fc05a"); R(c, 148, 48, 1, 14, "#f4f4f4"); R(c, 149, 48 + (Math.floor(t / 300) % 2), 5, 3, "#e24b3b");
+    [[12, 30], [176, 26], [110, 34]].forEach(([x, y]) => { R(c, x, y, 2, 56 - y, "#7a5a3a"); for (let k = -6; k <= 6; k += 2) R(c, x + k, y - Math.abs(k) / 3, 3, 1, "#3f7a4a"); });
+    terrace(c, t, st, "#e8e2d6");
+    return;
+  }
+  bands(c, 0, 0, 192, 40, ["#9fc7e0", "#b4d4e6", "#c8e0ea", "#dcecef"]);
+  for (let x = 0; x < 192; x++) { R(c, x, 26 + Math.round(6 * Math.sin(x / 23)), 1, 40, "#6f9a6a"); }
+  for (let x = 0; x < 192; x++) { R(c, x, 36 + Math.round(5 * Math.sin(x / 15 + 2)), 1, 40, "#4f7d4a"); }
+  R(c, 0, 34 + ((Math.floor(t / 400)) % 3), 192, 2, "rgba(255,255,255,.45)");
+  for (let x = 0; x < 192; x++) { R(c, x, 48 + Math.round(4 * Math.sin(x / 11 + 1)), 1, 40, "#3a6040"); }
+  [[24, 10], [58, 16], [150, 8], [172, 14]].forEach(([x, y]) => { R(c, x, y, 1, 50 - y, "#e8e0d0"); for (let k = -3; k <= 3; k++) R(c, x + k, y - 1 + Math.abs(k) / 2, 1, 1, "#3f7a4a"); });
+  for (let y = 54; y < 70; y += 4) for (let x = (y % 8); x < 192; x += 8) { R(c, x, y, 5, 3, "#2f5a34"); if ((x + y) % 3 === 0) R(c, x + 2, y + 1, 1, 1, "#c0392b"); }
+  terrace(c, t, st);
+}
+function drawStadium(c, t, st) {
+  const o = st.opts || {};
+  bands(c, 0, 0, 192, 20, ["#070a1c", "#0b1030", "#141a44"]);
+  if (o.race) { const b = rng(21); for (let x = 0; x < 192;) { const w = 6 + Math.floor(b() * 8), h = 16 + Math.floor(b() * 20); R(c, x, 30 - h, w, h + 10, "#141b44"); for (let yy = 32 - h; yy < 38; yy += 3) for (let xx = x + 1; xx < x + w - 1; xx += 2) if (b() > 0.5) R(c, xx, yy, 1, 1, "#ffd98a"); x += w + 1; } }
+  [[6, 2], [180, 2]].forEach(([x, y]) => { R(c, x + 2, y + 4, 2, 30, "#3a3f4a"); R(c, x, y, 6, 4, "#fff8d0"); R(c, x - 2, y + 4, 10, 2, "rgba(255,248,208,.25)"); });
+  const b = rng(5);
+  for (let y = o.race ? 36 : 14; y < 46; y += 2) for (let x = 0; x < 192; x += 2) R(c, x, y, 1, 1, ((Math.floor(t / 300) + x * 3 + y) % 11) ? (o.race ? "#3a3f5c" : ["#f4f4f4", "#dfe6f0", "#c9d3ff", "#e8e8e8"][Math.floor(b() * 4)]) : "#f5c542");
+  if (o.race) {
+    R(c, 0, 46, 192, 26, "#5aa847"); R(c, 0, 50, 192, 10, "#a0764a"); R(c, 0, 50, 192, 1, "#f4f4f4"); R(c, 0, 60, 192, 1, "#f4f4f4");
+    for (let k = 0; k < 5; k++) { const x = ((t / 18 + k * 34) % 240) - 30, lg = Math.floor(t / 90 + k) % 2; R(c, x, 53, 7, 3, "#4a2e1a"); R(c, x + 6, 52, 2, 2, "#4a2e1a"); R(c, x + 1, 56, 1, 2 + lg, "#4a2e1a"); R(c, x + 5, 56, 1, 3 - lg, "#4a2e1a"); R(c, x + 3, 50, 2, 3, ["#e24b3b", "#f5c542", "#52c7b8", "#8fd3ff", "#ff6fae"][k]); }
+  } else {
+    R(c, 0, 46, 192, 26, "#3f8a3a"); for (let x = 0; x < 192; x += 24) R(c, x, 46, 12, 26, "#4a9a44");
+    R(c, 0, 47, 192, 1, "#f4f4f4"); R(c, 96, 47, 1, 25, "#f4f4f4"); for (let a = 0; a < 6.28; a += 0.3) R(c, 96 + Math.cos(a) * 8, 58 + Math.sin(a) * 5, 1, 1, "#f4f4f4");
+    const bx = 60 + ((t / 30) % 80); R(c, bx, 56 + Math.round(Math.sin(t / 150)), 2, 2, "#f4f4f4");
+  }
+  R(c, 0, 72, 192, 2, "#9fd0f2"); R(c, 0, 74, 192, 34, "#23283f"); for (let y = 78; y < 108; y += 6) R(c, 0, y, 192, 1, "#1e2236");
+  people(c, t, st, [62, 66, 120, 66]);
+  R(c, 40, 78, 112, 3, "#f4f4f4"); R(c, 40, 81, 112, 6, "#c9c9d6");
+  R(c, 80, 74, 2, 4, "#f5e7b0"); R(c, 110, 74, 2, 4, "#f5e7b0");
+}
+function drawTeahouse(c, t, st) {
+  const o = st.opts || {};
+  if (o.courtyard) {
+    bands(c, 0, 0, 192, 30, ["#8fb8de", "#a9c8e6", "#c6daee"]);
+    R(c, 0, 14, 192, 6, "#3a3f4a"); for (let x = 0; x < 192; x += 4) R(c, x, 18, 3, 3, "#2b2f38");
+    R(c, 0, 20, 192, 50, "#8a8f97"); for (let y = 22; y < 70; y += 4) for (let x = (y % 8); x < 192; x += 8) R(c, x, y, 7, 1, "#7a7f87");
+    R(c, 80, 28, 32, 42, "#b3261e"); R(c, 95, 28, 2, 42, "#7a1a12"); for (let y = 32; y < 66; y += 6) for (let x = 84; x < 110; x += 5) if (x !== 94) R(c, x, y, 1, 1, "#f5c542");
+    R(c, 76, 24, 40, 4, "#2b2f38");
+    [[40, 30], [150, 30]].forEach(([x, y]) => { R(c, x, y, 1, 4, "#3a2a2a"); R(c, x - 3, y + 4, 7, 7, (Math.floor(t / 500) % 2) ? "#ff5f5f" : "#e24b3b"); R(c, x - 2, y + 11, 5, 1, "#f5c542"); });
+    R(c, 170, 20, 2, 50, "#5a3a22"); for (let k = 0; k < 16; k++) { R(c, 160 + (k * 7) % 22, 18 + (k * 5) % 16, 3, 2, "#3f7a4a"); if (k % 3 === 0) R(c, 162 + (k * 7) % 20, 22 + (k * 5) % 14, 2, 2, "#f29e4c"); }
+    terrace(c, t, st, "#9a9aa0");
+    return;
+  }
+  R(c, 0, 0, 192, 108, "#5a3a22");
+  for (let x = 0; x < 192; x += 8) R(c, x, 0, 1, 72, "#4a2e1a"); for (let y = 0; y < 72; y += 8) R(c, 0, y, 192, 1, "#4a2e1a");
+  const cx = 96, cy = 36, rad = 30;
+  for (let y = cy - rad; y <= cy + rad; y++) for (let x = cx - rad; x <= cx + rad; x++) {
+    const d = (x - cx) ** 2 + (y - cy) ** 2; if (d > rad * rad) continue;
+    let col;
+    if (o.mountain) {
+      col = y < 40 ? (y < 18 ? "#7fb0dc" : "#a9cbe6") : "#4f7d4a";
+      const peak = 12 + Math.abs(x - 100) * 0.9 + (x % 5 === 0 ? 1 : 0); if (y > peak && y < 40) col = y < peak + 8 ? "#f4f4f4" : "#8a8f97";
+      if (y > 26 && y < 30 && ((x + Math.floor(t / 200)) % 23) < 12) col = "#f4f4f4";
+    } else {
+      col = y < 36 ? (y < 20 ? "#e9c9a0" : "#f2d8b0") : "#8fb0b8";
+      if (y > 36 && ((x + y * 3 + Math.floor(t / 250)) % 11 === 0)) col = "#c6dde2";
+      if (y > 26 && y <= 36 && x > 60 && x < 130 && y > 32 - Math.round(3 * Math.sin((x - 60) / 12))) col = "#6f8a7a";
+      if (x >= 108 && x <= 116 && y >= 16 && y <= 36) { const tier = Math.floor((y - 16) / 4); col = tier % 2 ? "#b86a3a" : "#3a2a2a"; if (Math.abs(x - 112) > 4 - tier * 0.3) col = null; }
+      if (col && x < 76 && y < 34 && (x * 7 + y) % 5 === 0 && y > 4 + (x - 66) * 0.5) col = "#6fa05a";
+    }
+    if (col) R(c, x, y, 1, 1, col);
+  }
+  for (let a = 0; a < 6.3; a += 0.05) R(c, cx + Math.cos(a) * (rad + 1), cy + Math.sin(a) * (rad + 1), 2, 2, "#3a2414");
+  R(c, 0, 72, 192, 36, "#6b4a2a"); for (let y = 76; y < 108; y += 5) R(c, 0, y, 192, 1, "#5a3a22");
+  people(c, t, st, [58, 62, 124, 62]);
+  R(c, 66, 74, 60, 4, "#3a2414"); R(c, 70, 78, 52, 10, "#2a1a0c");
+  R(c, 90, 69, 8, 5, "#6b4a2a"); R(c, 97, 70, 3, 1, "#6b4a2a"); R(c, 92, 68, 4, 1, "#6b4a2a");
+  R(c, 80, 72, 3, 2, "#f4f0e6"); R(c, 108, 72, 3, 2, "#f4f0e6");
+  for (let k = 0; k < 3; k++) R(c, 93 + k, 66 - ((t / 120 + k * 4) % 8), 1, 1, "rgba(255,255,255,.5)");
+}
+
 function drawGeneric(c, t, st) {
   const k = st.kind;
   if (k === "shack") drawShack(c, t, st);
@@ -1448,6 +1983,9 @@ function drawGeneric(c, t, st) {
   else if (k === "boat") drawDeck(c, t, { ...st, opts: { sky: ["sunset", "night", "day"][hash(st.id) % 3], shore: "generic", deck: "teak" } });
   else if (k === "villa") drawDeck(c, t, { ...st, opts: { ...(st.opts || {}), deck: "pool", shore: st.opts?.shore || "vedra" } });
   else if (k === "jet") drawJet(c, t, st);
+  else if (k === "farm") drawFarm(c, t, st);
+  else if (k === "stadium") drawStadium(c, t, st);
+  else if (k === "teahouse") drawTeahouse(c, t, st);
   else drawOffice(c, t, st);
 }
 function genNpcPal(seed) {
@@ -1619,10 +2157,9 @@ function renderCareer() {
   if (!c) return renderUnwritten();
   const t = tier(), i = tierIdx(), L = life();
   $("#career-title").textContent = c.title;
-  $("#career-sub").textContent = LANGS[G.lang].name + " passport";
   const hidden = t.secret && !secretUnlocked();
   $("#hud-career").textContent = hidden ? "██████ · ██:██" : t.place.toUpperCase() + " · " + t.clock;
-  $("#stakes-career").textContent = "STAKES " + money(STAKES[i]) + (fee(i) ? " · TRIP " + money(fee(i)) : "");
+  $("#stakes-career").textContent = "STAKES " + money(t.stakes) + (fee(i) ? " · TRIP " + money(fee(i)) : "");
   $("#brief-title").textContent = hidden ? "████████" : t.title;
   $("#brief-tag").textContent = hidden ? "Classified" : hasScript(t) ? "Scripted + live" : "Live only";
   $("#brief-who").textContent = hidden ? "██████████, ████ ██ ████" : t.who.name + ", " + t.who.role;
@@ -1632,13 +2169,22 @@ function renderCareer() {
   $("#brief-intel").innerHTML = intel.length ? intel.map((s) => '<span class="chip gold">' + esc(s.title) + (s.deal ? " +" + s.deal : "") + "</span>").join(" ") : '<span class="muted">No files on them yet.</span>';
   if ($("#goal").dataset.for !== t.id) { $("#goal").value = hidden ? "" : t.goal; $("#goal").dataset.for = t.id; }
   $("#level").value = G.level;
-  $("#ladder").innerHTML = c.tiers.map((tt, k) => {
+  const wins = c.tiers.filter((x) => won(x)).length;
+  $("#career-sub").textContent = wins + " / " + c.tiers.length + " won";
+  let html = "";
+  c.tiers.forEach((tt, k) => {
+    if (tt.pos === 0) {
+      const chWins = c.tiers.filter((x) => x.ch === tt.ch && won(x)).length, chCount = c.tiers.filter((x) => x.ch === tt.ch).length;
+      html += '<div class="chapter"><span class="label">Chapter ' + (tt.ch + 1) + " · " + esc(c.ranks[tt.ch]) + '</span><span class="label">' + chWins + "/" + chCount + "</span></div>";
+    }
     const lk = tierLock(k), hid = tt.secret && !secretUnlocked(), best = L.cleared[tt.id];
     const stars = best == null ? "" : best >= 9 ? "★★★" : best >= 7 ? "★★☆" : best >= 5 ? "★☆☆" : "☆☆☆";
-    return '<button class="rung' + (lk ? " locked" : "") + '" data-i="' + k + '" aria-pressed="' + (k === i) + '"><canvas width="192" height="108"></canvas><span><span class="tt">' + (hid ? "█████ ███" : esc(tt.title)) + '</span><span class="pl">' + (hid ? "Invitation only" : esc(tt.place)) + '</span></span><span class="rt"><span class="money">' + money(STAKES[k]) + "</span>" +
+    html += '<button class="rung' + (lk ? " locked" : "") + '" data-i="' + k + '" aria-pressed="' + (k === i) + '"><canvas width="192" height="108"></canvas><span><span class="tt">' + (hid ? "█████ ███" : esc(tt.title)) + '</span><span class="pl">' + (hid ? "Invitation only" : esc(tt.place)) + '</span></span><span class="rt"><span class="money">' + money(tt.stakes) + "</span>" +
       (lk ? '<span class="chip info">' + esc(lk) + "</span>" : stars ? '<span class="stars">' + stars + "</span>" : '<span class="chip good">Open</span>') + "</span></button>";
-  }).join("");
-  $("#ladder").querySelectorAll(".rung").forEach((b, k) => {
+  });
+  $("#ladder").innerHTML = html;
+  $("#ladder").querySelectorAll(".rung").forEach((b) => {
+    const k = +b.dataset.i;
     paintTier(b.querySelector("canvas").getContext("2d"), c.tiers[k], 1400, {}, !!tierLock(k));
     b.addEventListener("click", () => { G.tier[G.lang] = k; save(); resetMeeting(); renderCareer(); });
   });
@@ -1664,7 +2210,7 @@ function updateModes() {
   $("#mode-" + mode).checked = true;
   const L = life(), f = fee();
   const msgs = [];
-  if (lock) msgs.push(lock === "Invitation only" ? "As far as you know, this meeting doesn't exist. Own a superyacht or a jet, or get the location from someone in your circle." : lock + ". Earn XP in meetings, quizzes and drills.");
+  if (lock) msgs.push(lock === "Invitation only" ? "As far as you know, this meeting doesn't exist. Own a superyacht or a jet, or get the location from someone in your circle." : lock.startsWith("Win") ? lock + " to open this one." : lock + ". Earn XP with first wins, quizzes and drills.");
   else if (L.cash < f) msgs.push("The trip costs " + money(f) + " and you have " + money(L.cash) + ". Win smaller deals or clear drills first.");
   if (!script && !sample) msgs.push("This meeting runs live with Claude, which this view can't reach. Open the page on claude.ai.");
   else if (!script) msgs.push("Nobody wrote a script for this one. It's live with Claude.");
@@ -1702,21 +2248,22 @@ async function writeCareer() {
   try {
     const ids = SHOP_BASE.map((x) => x.id + " (" + x.cat + ", $" + x.price + ")").join(", ");
     const d = await sample.json(
-      "Design a six-rung business career for a " + L.name + " learner in a language-learning game. Rung 0 is a humble street-level deal worth about $600. Rung 5 is an invitation-only billionaire setting worth $200M. Stakes in between: $40K, $400K, $3M, $25M. Each rung in a different real place where " + L.name + " is spoken, each counterpart with culture, register and etiquette specific to that place and level. Make it glamorous, a bit decadent and secretive.\n" +
-      "Also: flavor names for shop items by id, humble to obscene, local to this language's world: " + ids + ". Five circle members (flirty, charismatic locals of mixed genders who unlock at rungs 1-4 and know gossip), one secret per rung (leverage on that rung's counterpart; the rung-5 secret is how to get invited), and five real marinas in this language's world.\n" +
+      "Design an 18-stop business career (six chapters of three stops) for a " + L.name + " learner in a language-learning game. Chapter 1 stops are humble street-level deals worth $600-$4K. Chapter 6 stops are invitation-only billionaire settings worth $90M-$400M. Chapters in between climb through $12K-$90K, $200K-$900K, $1.8M-$6M, $12M-$50M. Each stop in a different real place where " + L.name + " is spoken, each counterpart with culture, register and etiquette specific to that place and level. Make it glamorous, a bit decadent and secretive.\n" +
+      "Also: flavor names for shop items by id, humble to obscene, local to this language's world: " + ids + ". Five circle members (flirty, charismatic locals of mixed genders who unlock at rungs 1-4 and know gossip), six secrets, one for the first stop of each chapter (leverage on that counterpart; the last one is how to get invited to chapter 6), and five real marinas in this language's world.\n" +
       'Reply with only JSON: {"title":"career name in ' + L.name + '","ranks":["six rank titles from nobody to legend, in ' + L.name + ' with short English in parentheses"],"tiers":[{"title":"","place":"","clock":"HH:MM TZ","kind":"shack|street|rooftop|office|boat|villa|jet","who":{"name":"","role":"","persona":""},"deal":"","goal":""}],"shop":{"ride1":["name","one-line joke"]},"circle":[{"id":"short-id","name":"","g":"w|m","rank":1,"role":"","persona":""}],"secrets":[{"title":"","text":""}],"ports":["marina names"]}',
       { modelTier: "default" });
     if (!Array.isArray(d?.tiers) || d.tiers.length < 6) throw { code: "bad_shape" };
     const id = (k) => G.lang + k;
     const c = {
       title: String(d.title || L.name + " career"), ranks: (d.ranks || []).slice(0, 6).map(String),
-      tiers: d.tiers.slice(0, 6).map((t, k) => ({ id: id(k), title: String(t.title || "Rung " + (k + 1)), place: String(t.place || ""), clock: String(t.clock || ""), kind: ["shack", "street", "rooftop", "office", "boat", "villa", "jet"].includes(t.kind) ? t.kind : "office", who: { name: String(t.who?.name || "Your counterpart"), role: String(t.who?.role || ""), persona: String(t.who?.persona || "") }, deal: String(t.deal || ""), goal: String(t.goal || ""), secret: k === 5 })),
+      tiers: d.tiers.slice(0, 18).map((t, k, arr) => ({ id: id(k), title: String(t.title || "Rung " + (k + 1)), place: String(t.place || ""), clock: String(t.clock || ""), kind: ["shack", "street", "rooftop", "office", "boat", "villa", "jet"].includes(t.kind) ? t.kind : "office", who: { name: String(t.who?.name || "Your counterpart"), role: String(t.who?.role || ""), persona: String(t.who?.persona || "") }, deal: String(t.deal || ""), goal: String(t.goal || ""), ch: Math.min(5, Math.floor((k * 6) / arr.length)) })),
       shop: d.shop && typeof d.shop === "object" ? d.shop : {},
-      circle: (d.circle || []).slice(0, 5).map((p, k) => { const rk = clamp(parseInt(p.rank, 10) || k + 1, 1, 4); return { id: String(p.id || "p" + k).replace(/[^a-z0-9-]/gi, "").slice(0, 20) || "p" + k, name: String(p.name || "Someone"), g: p.g === "m" ? "m" : "w", rank: rk, role: String(p.role || ""), persona: String(p.persona || ""), pal: genNpcPal(hash(p.name || k)), secret: id(k === 4 ? 5 : rk) }; }),
-      secrets: (d.secrets || []).slice(0, 6).map((s, k) => ({ id: id(k), tier: id(k), title: String(s.title || "A file"), text: String(s.text || ""), deal: k < 5 ? (k >= 3 ? 2 : 1) : 0, unlock: k === 5 })),
+      circle: (d.circle || []).slice(0, 5).map((p, k) => { const rk = clamp(parseInt(p.rank, 10) || k + 1, 1, 4); return { id: String(p.id || "p" + k).replace(/[^a-z0-9-]/gi, "").slice(0, 20) || "p" + k, name: String(p.name || "Someone"), g: p.g === "m" ? "m" : "w", rank: rk, role: String(p.role || ""), persona: String(p.persona || ""), pal: genNpcPal(hash(p.name || k)), secret: "sec" + (k === 4 ? 5 : rk) }; }),
+      secrets: (d.secrets || []).slice(0, 6).map((s, k) => ({ id: "sec" + k, tier: id(Math.min(Math.max(0, Math.min(d.tiers.length, 18) - 1), Math.round((k * Math.min(d.tiers.length, 18)) / 6))), title: String(s.title || "A file"), text: String(s.text || ""), deal: k < 5 ? (k >= 3 ? 2 : 1) : 0, unlock: k === 5 })),
       ports: Array.isArray(d.ports) && d.ports.length ? d.ports.slice(0, 6).map(String) : PORTS_GENERIC,
     };
     while (c.ranks.length < 6) c.ranks.push("Rank " + (c.ranks.length + 1));
+    finalizeCareer(c);
     Object.keys(c.shop).forEach((k) => { const v = c.shop[k]; c.shop[k] = Array.isArray(v) ? [String(v[0] || ""), String(v[1] || "")] : [String(v), ""]; });
     G.careers[G.lang] = c; save(); renderHud(); renderCareer(); toast("Your " + L.name + " life begins with " + money(life().cash) + ".");
   } catch (e) { toast(errCopy(e)); btn.disabled = false; btn.textContent = "Write my " + L.name + " career"; }
@@ -1736,7 +2283,7 @@ function renderTrain() {
   const note = $("#train-note"), gen = $("#gen-pack");
   gen.hidden = !sample || !t || hidden;
   const keys = [];
-  if (t?.script && !hidden) t.script.forEach((n) => { const g = n.choices.find((c) => c.q === "good"); if (g?.en) keys.push({ t: g.t, r: g.r, en: g.en, tip: g.why }); });
+  if (scriptFor(t) && !hidden) scriptFor(t).forEach((n) => { const g = n.choices.find((c) => c.q === "good"); if (g?.en) keys.push({ t: g.t, r: g.r, en: g.en, tip: g.why }); });
   const fresh = tierPack();
   if (fresh) keys.push(...fresh.phrases);
   $("#key-lines-wrap").hidden = !keys.length;
@@ -1869,7 +2416,7 @@ function beginMeeting() {
   if (t.secret) award("invite");
   showTab("meeting");
   $("#hud-meet").textContent = t.place.toUpperCase() + " · " + t.clock;
-  $("#stakes-meet").textContent = "ON THE TABLE " + money(STAKES[i]) + (M.replay ? " · REPLAY 35%" : "");
+  $("#stakes-meet").textContent = "ON THE TABLE " + money(t.stakes) + (M.replay ? " · REPLAY 35%" : "");
   $("#toggle-en").textContent = G.showEn ? "Hide English" : "Show English";
   renderMeter();
   if (mode === "script") scriptNode(); else { $("#compose").hidden = false; liveTurn(null); }
@@ -1888,7 +2435,7 @@ $("#walk").addEventListener("click", () => {
   ctl?.abort(); award("walkout"); M.deal = Math.min(M.deal, 3); endMeeting("You walked out. The trip money is gone.");
 });
 function scriptNode() {
-  const node = M.tier.script[M.node];
+  const node = scriptFor(M.tier)[M.node];
   M.turns.push({ who: "npc", text: node.npc, rom: node.r, en: node.en });
   showNpc(node.npc, node.r, node.en); renderLog();
   const box = $("#answers"), strike = perks().hint ? node.choices.findIndex((c) => c.q === "major") : -1;
@@ -1906,7 +2453,7 @@ function scriptNode() {
     setTimeout(() => {
       if (M.done) return;
       M.node++;
-      if (M.node >= M.tier.script.length) endMeeting(M.deal >= 9 ? "Signed on the spot." : M.deal >= 7 ? "A yes, with conditions." : M.deal >= 5 ? "Interest, but they'll think about it." : "A polite no.");
+      if (M.node >= scriptFor(M.tier).length) endMeeting(M.deal >= 9 ? "Signed on the spot." : M.deal >= 7 ? "A yes, with conditions." : M.deal >= 5 ? "Interest, but they'll think about it." : "A polite no.");
       else scriptNode();
     }, reduceMotion ? 200 : 1400);
   }));
@@ -1940,37 +2487,44 @@ function endMeeting(outcome) {
 function settle() {
   if (M.settled) return M.result;
   M.settled = true;
-  const t = M.tier, i = career().tiers.indexOf(t), L = life(), pk = perks();
+  const t = M.tier, L = life(), pk = perks(), wasWon = won(t);
   const you = M.turns.filter((x) => x.who === "you" && x.fb);
   const c = { good: 0, minor: 0, major: 0 }; you.forEach((x) => c[x.fb.verdict]++);
   const flawless = you.length >= 4 && c.good === you.length;
-  const xp = c.good * 10 + c.minor * 3 + (flawless ? 25 : 0);
-  const payout = Math.round(STAKES[i] * clamp((M.deal - 4) / 6, 0, 1) * (1 + pk.pay) * streakMult() * (M.replay ? 0.35 : 1));
+  const firstWin = !wasWon && M.deal >= 5;
+  const xp = c.good * 10 + c.minor * 3 + (flawless ? 25 : 0) + (firstWin ? 30 + 10 * t.ch : 0);
+  const payout = Math.round(t.stakes * clamp((M.deal - 4) / 6, 0, 1) * (1 + pk.pay) * streakMult() * (M.replay ? 0.35 : 1));
   L.cleared[t.id] = Math.max(L.cleared[t.id] ?? -1, M.deal); L.meetings++;
   const slips = you.filter((x) => x.fb.verdict !== "good" && x.fb.better).map((x) => ({ said: x.text, better: x.fb.better, why: x.fb.why }));
   slips.forEach((s) => { if (!L.deck.some((d) => d.said === s.said)) L.deck.push(s); }); L.deck = L.deck.slice(-80);
   save();
   let bonus = "";
   const rv = rivalsFor(), near = rv.slice().sort((a, b) => Math.abs(a.ratio - 1) - Math.abs(b.ratio - 1))[0];
-  if (payout === 0) { L.rivalBonus[near.id] = (L.rivalBonus[near.id] || 0) + Math.round(STAKES[i] * 0.8); save(); setTimeout(() => toast(near.name + " swooped in and closed the deal you lost. +" + money(STAKES[i] * 0.8) + " to them."), 1600); }
-  else if (M.deal >= 9) { const r = rv[Math.floor(Math.random() * rv.length)]; L.rivalBonus[r.id] = Math.max(0, (L.rivalBonus[r.id] || 0) - Math.round(STAKES[i] * 0.3)); save(); bonus = "You beat " + r.name + " to it"; }
+  if (payout === 0) { L.rivalBonus[near.id] = (L.rivalBonus[near.id] || 0) + Math.round(t.stakes * 0.8); save(); setTimeout(() => toast(near.name + " swooped in and closed the deal you lost. +" + money(t.stakes * 0.8) + " to them."), 1600); }
+  else if (M.deal >= 9) { const r = rv[Math.floor(Math.random() * rv.length)]; L.rivalBonus[r.id] = Math.max(0, (L.rivalBonus[r.id] || 0) - Math.round(t.stakes * 0.3)); save(); bonus = "You beat " + r.name + " to it"; }
   if (flawless) { award("flawless"); const s = grantSecret(t.id); if (s) bonus = "Flawless. New file: " + s.title; }
   if (payout > 0) { award("first"); addCash(payout); queueModal(() => envelopeModal(payout)); }
   if (xp) addXp(xp);
+  if (firstWin) {
+    const next = career().tiers[career().tiers.indexOf(t) + 1];
+    const nl = next ? tierLock(career().tiers.indexOf(next)) : "";
+    bonus = [bonus, next ? (nl ? "Next: " + next.title + " (" + nl.toLowerCase() + ")" : "Unlocked: " + (next.secret && !secretUnlocked() ? "a classified meeting" : next.title)) : ""].filter(Boolean).join(" · ");
+  }
   M.result = { payout, xp, bonus: bonus || (slips.length ? slips.length + " slips added to drills" : "") };
   return M.result;
 }
 function grantSecret(prefer) {
   const c = career(), L = life();
-  const pool = c.secrets.filter((s) => !L.secrets[s.id]);
+  const pool = c.secrets.filter((s) => !L.secrets[s.id] && (!s.unlock || rank() >= 4));
   if (!pool.length) return null;
-  const s = pool.find((x) => x.tier === prefer) || pool[Math.floor(Math.random() * pool.length)];
+  if (prefer !== undefined) { const own = pool.find((x) => x.tier === prefer); if (!own) return null; L.secrets[own.id] = today(); save(); return own; }
+  const s = pool[Math.floor(Math.random() * pool.length)];
   L.secrets[s.id] = today(); save(); return s;
 }
 function liveContext(t) {
-  const L = LANGS[G.lang], i = career().tiers.indexOf(t), intel = intelFor(t);
+  const L = LANGS[G.lang], intel = intelFor(t);
   return "You run a business-meeting simulator for language learners. You play the counterpart AND grade the learner.\n" +
-    "Setting: " + t.place + " (" + t.title + "), local time " + t.clock + ". Stakes: " + money(STAKES[i]) + ".\n" +
+    "Setting: " + t.place + " (" + t.title + "), local time " + t.clock + ". Stakes: " + money(t.stakes) + ".\n" +
     "Counterpart: " + t.who.name + ", " + t.who.role + ". Personality: " + t.who.persona + "\n" +
     "Deal: " + t.deal + "\nLearner's goal: " + ($("#goal").value || t.goal) + "\nLearner arrives with: " + lifeLine() + "\n" +
     (intel.length ? "The learner secretly knows: " + intel.map((s) => s.text).join(" ") + " React well if they use it tactfully.\n" : "") +
@@ -2055,8 +2609,8 @@ function envelopeModal(payout) {
 }
 function promoModal(r) {
   sfx("level");
-  const c = career(), next = c.tiers[r];
-  $("#modal").innerHTML = '<div class="label">Promoted</div><div class="big">' + esc(c.ranks[r]) + '</div><canvas width="192" height="108" id="promo-cv" class="env" style="width:240px"></canvas><p>' + (next ? (next.secret ? "Something is opening up. Nobody will say what." : "Unlocked: " + esc(next.title) + ", " + esc(next.place) + ". Stakes " + money(STAKES[r]) + ".") : "") + ' New faces in your circle, too.</p><button class="btn primary" id="promo-close">Let\'s go</button>';
+  const c = career(), next = c.tiers.find((x) => x.ch === r);
+  $("#modal").innerHTML = '<div class="label">Promoted</div><div class="big">' + esc(c.ranks[r]) + '</div><canvas width="192" height="108" id="promo-cv" class="env" style="width:240px"></canvas><p>' + (next ? (next.secret ? "Something is opening up. Nobody will say what." : "Chapter " + (r + 1) + " opens: " + esc(next.title) + ", " + esc(next.place) + ". Stakes " + money(next.stakes) + ".") : "") + ' New faces in your circle, too.</p><button class="btn primary" id="promo-close">Let\'s go</button>';
   if (next) paintTier($("#promo-cv").getContext("2d"), next, 1000, {}, next.secret && !secretUnlocked());
   $("#promo-close").onclick = closeModal; $("#promo-close").focus();
   renderHud();
