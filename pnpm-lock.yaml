@@ -167,17 +167,17 @@ importers:
   .:
     dependencies:
       '@ai-sdk/alibaba':
-        specifier: ^2.0.51
-        version: 2.0.51(zod@4.6.5)
+        specifier: ^2.0.52
+        version: 2.0.52(zod@4.6.5)
       '@ai-sdk/amazon-bedrock':
-        specifier: ^5.0.88
-        version: 5.0.88(zod@4.6.5)
+        specifier: ^5.0.91
+        version: 5.0.91(zod@4.6.5)
       '@ai-sdk/anthropic':
-        specifier: ^4.0.58
-        version: 4.0.58(zod@4.6.5)
+        specifier: ^4.0.60
+        version: 4.0.60(zod@4.6.5)
       '@ai-sdk/azure':
-        specifier: ^4.0.75
-        version: 4.0.75(zod@4.6.5)
+        specifier: ^4.0.76
+        version: 4.0.76(zod@4.6.5)
       '@ai-sdk/cerebras':
         specifier: ^3.0.53
         version: 3.0.53(zod@4.6.5)
@@ -188,14 +188,14 @@ importers:
         specifier: ^3.0.53
         version: 3.0.53(zod@4.6.5)
       '@ai-sdk/deepseek':
-        specifier: ^3.0.49
-        version: 3.0.49(zod@4.6.5)
+        specifier: ^3.0.50
+        version: 3.0.50(zod@4.6.5)
       '@ai-sdk/fireworks':
         specifier: ^3.0.56
         version: 3.0.56(zod@4.6.5)
       '@ai-sdk/google':
-        specifier: ^4.0.76
-        version: 4.0.76(zod@4.6.5)
+        specifier: ^4.0.77
+        version: 4.0.77(zod@4.6.5)
       '@ai-sdk/groq':
         specifier: ^4.0.46
         version: 4.0.46(zod@4.6.5)
@@ -212,8 +212,8 @@ importers:
         specifier: ^2.0.49
         version: 2.0.49(zod@4.6.5)
       '@ai-sdk/openai':
-        specifier: ^4.0.71
-        version: 4.0.71(zod@4.6.5)
+        specifier: ^4.0.72
+        version: 4.0.72(zod@4.6.5)
       '@ai-sdk/openai-compatible':
         specifier: ^3.0.53
         version: 3.0.53(zod@4.6.5)
@@ -221,8 +221,8 @@ importers:
         specifier: ^4.0.48
         version: 4.0.48(zod@4.6.5)
       '@ai-sdk/react':
-        specifier: ^4.0.110
-        version: 4.0.110(react@19.3.0)(zod@4.6.5)
+        specifier: ^4.0.114
+        version: 4.0.114(react@19.3.0)(zod@4.6.5)
       '@ai-sdk/replicate':
         specifier: ^3.0.46
         version: 3.0.46(zod@4.6.5)
@@ -233,8 +233,8 @@ importers:
         specifier: ^3.0.30
         version: 3.0.30(zod@4.6.5)
       '@ai-sdk/xai':
-        specifier: ^5.0.4
-        version: 5.0.4(zod@4.6.5)
+        specifier: ^5.0.5
+        version: 5.0.5(zod@4.6.5)
       '@babel/runtime':
         specifier: ^8.0.5
         version: 8.0.5
@@ -341,11 +341,11 @@ importers:
         specifier: ^0.2.7
         version: 0.2.7(wxt@0.21.4(eslint@9.39.4(jiti@2.7.0)(supports-color@7.2.0))(rollup@4.53.2)(typescript@7.0.2)(vite@8.3.0(@types/node@26.1.1)(esbuild@0.27.7)(jiti@2.7.0)(yaml@2.9.0))(web-ext@10.6.0(express@5.2.1(supports-color@7.2.0))(jiti@2.7.0)(supports-color@7.2.0)))
       ai:
-        specifier: ^7.0.107
-        version: 7.0.107(zod@4.6.5)
+        specifier: ^7.0.111
+        version: 7.0.111(zod@4.6.5)
       ai-sdk-ollama:
         specifier: ^4.3.0
-        version: 4.3.0(ai@7.0.107(zod@4.6.5))(zod@4.6.5)
+        version: 4.3.0(ai@7.0.111(zod@4.6.5))(zod@4.6.5)
       better-auth:
         specifier: ^1.7.5
         version: 1.7.5(@opentelemetry/api@1.9.1)(mongodb@7.1.0(socks@2.8.9))(react-dom@19.3.0(react@19.3.0))(react@19.3.0)(solid-js@1.9.15)(vitest@4.1.11)
@@ -520,7 +520,7 @@ importers:
         version: 17.5.1
       node:
         specifier: runtime:^26.9.0
-        version: runtime:26.9.0
+        version: runtime:26.10.0
       nx:
         specifier: ^23.2.1
         version: 23.2.1
@@ -575,26 +575,26 @@ packages:
   '@adobe/css-tools@4.4.4':
     resolution: {integrity: sha512-Elp+iwUx5rN5+Y8xLt5/GRoG20WGoDCQ/1Fb+1LiGtvwbDavuSk0jhD/eZdckHAuzcDzccnkv+rEjyWfRx18gg==}
 
-  '@ai-sdk/alibaba@2.0.51':
-    resolution: {integrity: sha512-9GnbaBIj02mHrLowfdDQ2CYzJLoekJdIdLe74UzzcWhF5sBaN9QowRqt71BVwIyFVYycLD4etl8M/losox1yNg==}
+  '@ai-sdk/alibaba@2.0.52':
+    resolution: {integrity: sha512-46Y8ujElwPfPjTwiQNn+5Z3WYsAG6iUk09XFI2nS8gEfFShAulQOy/1z9xKDz0kNJu9ditz8zRuw4S4ycxPEtA==}
     engines: {node: '>=22'}
     peerDependencies:
       zod: ^3.25.76 || ^4.1.8
 
-  '@ai-sdk/amazon-bedrock@5.0.88':
-    resolution: {integrity: sha512-S6QKEKaSHGIIJFa+dNm0o9Dp5Od9iLji6GgRmMyc1nJBE+DbCsHe2S4HOgmdKIEFwQuPxawoAaIu6Q60DuIvYg==}
+  '@ai-sdk/amazon-bedrock@5.0.91':
+    resolution: {integrity: sha512-n3NJedgLDR5wZIQIJCw/eCpDysGVZ7naLSvgOfrcE6stXGsLwykqqf7VwNaS5q/w2proRcJQxdk03y7CZvHDgg==}
     engines: {node: '>=22'}
     peerDependencies:
       zod: ^3.25.76 || ^4.1.8
 
-  '@ai-sdk/anthropic@4.0.58':
-    resolution: {integrity: sha512-vhXKBz7jnIhBlOoj2d0joyHicWISuIxDNha65SLrAnagAkVgulLoZBRLZRazstxlO/BtXU+cDERe1opVKte2OQ==}
+  '@ai-sdk/anthropic@4.0.60':
+    resolution: {integrity: sha512-7Hb10pUnPRLYQxrWC5OtcYEmrOIGmAez6+meKBePxCO09Jjle5Ke+L2mTOonAVkY/7MEafpY7c55F7DJ9yGeNg==}
     engines: {node: '>=22'}
     peerDependencies:
       zod: ^3.25.76 || ^4.1.8
 
-  '@ai-sdk/azure@4.0.75':
-    resolution: {integrity: sha512-radEF1WwU598ah1UDO0X0op4P/KxSBH/mgyv22iXKy3mhNSPI5PE8f7nxV0GTpYZbt7YKuV5JcApySiC+vfmzA==}
+  '@ai-sdk/azure@4.0.76':
+    resolution: {integrity: sha512-tZ2PmC4mHA7ros6AxrdB9zOJhQF3XjoZiAHQSexrbmaE0Lm1iXVRKvNUWNpmzxjIhZdw0u1p6veAWkSWQvfCEw==}
     engines: {node: '>=22'}
     peerDependencies:
       zod: ^3.25.76 || ^4.1.8
@@ -617,8 +617,8 @@ packages:
     peerDependencies:
       zod: ^3.25.76 || ^4.1.8
 
-  '@ai-sdk/deepseek@3.0.49':
-    resolution: {integrity: sha512-fcZ6uFsGKCyMy8FucUGAkI/Wi4vX4QQNfF7+hCzmDxQ9fcvsqTruncPqJ/PKlw7iCj4z4m2mD4cGzTjptYTG6g==}
+  '@ai-sdk/deepseek@3.0.50':
+    resolution: {integrity: sha512-xqQwo+nlsr/LQDU1TTk14LpW6a8BlepkCMadjj8Myoq9eOMZ7zv7Y/YC62OMTQYjC1dds7oYtZWMN6nTpMeKzg==}
     engines: {node: '>=22'}
     peerDependencies:
       zod: ^3.25.76 || ^4.1.8
@@ -629,14 +629,14 @@ packages:
     peerDependencies:
       zod: ^3.25.76 || ^4.1.8
 
-  '@ai-sdk/gateway@4.0.87':
-    resolution: {integrity: sha512-6wJmX/D5OO7tvDJbtFdXdBuRt8AkCnW+FLK+W35UHe/tHgolAa4hclXtJcMSYnlTDy/t5DNRgdesVaoMXtwzow==}
+  '@ai-sdk/gateway@4.0.89':
+    resolution: {integrity: sha512-n0Q88UUASYQBGK3Ogs9pCe8h3ZXeTHFSuGOLBJAyH73MVGNKUv9w8EJX2f340WUF3eDWWOV305gO7YBpSCPblA==}
     engines: {node: '>=22'}
     peerDependencies:
       zod: ^3.25.76 || ^4.1.8
 
-  '@ai-sdk/google@4.0.76':
-    resolution: {integrity: sha512-RHYTfsrlzM2D7VS4dxq2TWFj0tzE+ALesbTIkrFgyqBbBER8TLw/r93h9IVhR27cLcl4II1tLyiuzZq44IyoCQ==}
+  '@ai-sdk/google@4.0.77':
+    resolution: {integrity: sha512-7s1Gy6PL/KRk12s31g+LMMY5v1D80AQT6Lm+HUGXvCXw5T5WCxzbUuxOrBegXhhLPfIXTRunkYgSIjcRys37Zw==}
     engines: {node: '>=22'}
     peerDependencies:
       zod: ^3.25.76 || ^4.1.8
@@ -653,8 +653,8 @@ packages:
     peerDependencies:
       zod: ^3.25.76 || ^4
 
-  '@ai-sdk/mcp@2.0.54':
-    resolution: {integrity: sha512-Q9o7KCyPNRrC7VhBtbnZh2OiApNbFhsNupjDQLW6P/y3xV6l9HES2KWeu0905T9IH6HurN6ckJwRXE0PnLL7Mg==}
+  '@ai-sdk/mcp@2.0.55':
+    resolution: {integrity: sha512-f0IWtAJzCRrnz/YJB14yz5yKso5yGODJfGSciQZKVKm+5wv8Ye9Dmcqxi6QZ80Q2FBJIdqrBdpDccl60BZN/DQ==}
     engines: {node: '>=22'}
     peerDependencies:
       zod: ^3.25.76 || ^4.1.8
@@ -689,8 +689,8 @@ packages:
     peerDependencies:
       zod: ^3.25.76 || ^4.1.8
 
-  '@ai-sdk/openai@4.0.71':
-    resolution: {integrity: sha512-w8FuHr1bD/bP/8SIgcaJKUyePE4ke9s7+Ew2ed/9i5mDoFXEfyVUyFX8R0wQ3YfcdMKmTs8ct/f6XJsXsnPVsQ==}
+  '@ai-sdk/openai@4.0.72':
+    resolution: {integrity: sha512-X5dowqxAXPhu72FpspKX7P5nDycvl/Nt0Qi9A5VjdotV1SrJdhH4vOeWVdBootwEC6uY2hYN0SHAuL1fd4cV8Q==}
     engines: {node: '>=22'}
     peerDependencies:
       zod: ^3.25.76 || ^4.1.8
@@ -721,8 +721,8 @@ packages:
     resolution: {integrity: sha512-6or44XprPzKbr8zkmzosowSE0pxkvJcoojBL+mCZvPUt3kvXp3XSNqeVun9golb1acEfSo6yaEBRT18h2VU+1Q==}
     engines: {node: '>=22'}
 
-  '@ai-sdk/react@4.0.110':
-    resolution: {integrity: sha512-5WSYzAwdnECdDekICJjj2e83793YYNAcTk8yAEvt/sxme1NXTE3OWr3QLSJPjkyOaa6XAmJ6iE/R9l+2YvcI3Q==}
+  '@ai-sdk/react@4.0.114':
+    resolution: {integrity: sha512-BdCr6tnr/iExtRqkKJOhQk6Fi5NG5z9VvHgrnrlQLRuC+bee8MjTIWoZMDo1VwqkwNCA4uQiRfDzDY3hnOqXoQ==}
     engines: {node: '>=22'}
     peerDependencies:
       react: ^18 || ~19.0.1 || ~19.1.2 || ^19.2.1
@@ -746,8 +746,8 @@ packages:
     peerDependencies:
       zod: ^3.25.76 || ^4.1.8
 
-  '@ai-sdk/xai@5.0.4':
-    resolution: {integrity: sha512-Cg3xUB0H6OA4fvcX+uamkZXuzxdjhi7HH15glxpE8boZUijFmfz3YPM3Y/HvQkuCb6D/ixCe7lpcwVjidLhw9w==}
+  '@ai-sdk/xai@5.0.5':
+    resolution: {integrity: sha512-Y4gH49EObyBjohcVpqXEL2LJyMXIPx6mPBS8AID4LNEMOkEzIuj5NA1ny6Bv5aW1aDJOMcx2q1vXVHlTG2sPeA==}
     engines: {node: '>=22'}
     peerDependencies:
       zod: ^3.25.76 || ^4.1.8
@@ -3405,8 +3405,8 @@ packages:
     peerDependencies:
       ai: ^7.0.95
 
-  ai@7.0.107:
-    resolution: {integrity: sha512-PVYQ3W9kR8oYiGQxbg4aFIlhQzKskZm8UV+4E0zB2uKOzFr8ju3bXQncOOZtLsOgJY8vdpgyu3cXtomsfcdQYg==}
+  ai@7.0.111:
+    resolution: {integrity: sha512-jd35WisL5FT7lFB6wIsZ38G0EaL4p1o+bUuRfkZGTXqO21U3SWyEZ+muV7N191QQfNeExgoyaeFoa8Jx6Uo+0A==}
     engines: {node: '>=22'}
     peerDependencies:
       zod: ^3.25.76 || ^4.1.8
@@ -5628,7 +5628,7 @@ packages:
     resolution: {integrity: sha512-YHs7BmmcsdAI5Ozuf8JZo6PT0mv2GIWC9vMfvUC3dp65M8hn7Ux8CPL+2oBI7juNuj9d0ndhTcznq2ODBps9cQ==}
     engines: {node: '>=18'}
 
-  node@runtime:26.9.0:
+  node@runtime:26.10.0:
     resolution:
       type: variations
       variants:
@@ -5636,9 +5636,9 @@ packages:
             archive: tarball
             bin:
               node: bin/node
-            integrity: sha256-CfBOC34bExUGVxGJbiFLQ1jcn0xCUEtiKwWeJgjU1z0=
+            integrity: sha256-9ak/5zz1WDQU1Ni+WYxOx+cr4ygbWCDUlcKhXOaqE8g=
             type: binary
-            url: https://nodejs.org/download/release/v26.9.0/node-v26.9.0-aix-ppc64.tar.gz
+            url: https://nodejs.org/download/release/v26.10.0/node-v26.10.0-aix-ppc64.tar.gz
           targets:
             - cpu: ppc64
               os: aix
@@ -5646,9 +5646,9 @@ packages:
             archive: tarball
             bin:
               node: bin/node
-            integrity: sha256-bz3n7YU+4oO0vyS25CZhjx01dAHOWBXbGGbrhetLBdk=
+            integrity: sha256-dR/fdDnxFdh+4qjz8YwGW2FRhSBo4+ZmrGCsKZb3Wsk=
             type: binary
-            url: https://nodejs.org/download/release/v26.9.0/node-v26.9.0-darwin-arm64.tar.gz
+            url: https://nodejs.org/download/release/v26.10.0/node-v26.10.0-darwin-arm64.tar.gz
           targets:
             - cpu: arm64
               os: darwin
@@ -5656,9 +5656,9 @@ packages:
             archive: tarball
             bin:
               node: bin/node
-            integrity: sha256-BrLnQu2QJdyErcgwJDs/cxlW6snDIbzNDt44QgmvAqg=
+            integrity: sha256-676aubWK1rtUOQ1uLIYsGvp9RHX7foroFGrN4hG/cN8=
             type: binary
-            url: https://nodejs.org/download/release/v26.9.0/node-v26.9.0-darwin-x64.tar.gz
+            url: https://nodejs.org/download/release/v26.10.0/node-v26.10.0-darwin-x64.tar.gz
           targets:
             - cpu: x64
               os: darwin
@@ -5666,9 +5666,9 @@ packages:
             archive: tarball
             bin:
               node: bin/node
-            integrity: sha256-1Qd1kao4tI2Qv5s6wQ2o0vQNziibIClJE8WMGfFT6xI=
+            integrity: sha256-QjpBv/jiovoV5wL+/ikZ75WCOyN4dE2sy4Q5MCU0tE8=
             type: binary
-            url: https://nodejs.org/download/release/v26.9.0/node-v26.9.0-linux-arm64.tar.gz
+            url: https://nodejs.org/download/release/v26.10.0/node-v26.10.0-linux-arm64.tar.gz
           targets:
             - cpu: arm64
               os: linux
@@ -5676,9 +5676,9 @@ packages:
             archive: tarball
             bin:
               node: bin/node
-            integrity: sha256-ORTOE6zySIDM6zSmlnIG3i+Mqg/vk/FCoN2xTDYyjzU=
+            integrity: sha256-DMa5qZBiFvjefXAUYDj+a6tffo86itKdjb6r3xOBtS0=
             type: binary
-            url: https://nodejs.org/download/release/v26.9.0/node-v26.9.0-linux-ppc64le.tar.gz
+            url: https://nodejs.org/download/release/v26.10.0/node-v26.10.0-linux-ppc64le.tar.gz
           targets:
             - cpu: ppc64le
               os: linux
@@ -5686,9 +5686,9 @@ packages:
             archive: tarball
             bin:
               node: bin/node
-            integrity: sha256-xThv+JaOrfZt15IJNVs4wB7nEsbP0yuSu8ycxNxN4P0=
+            integrity: sha256-eHQCtH8Pj9RioZpEw9cHBSyryV7LlG/oBBobXIEOPWM=
             type: binary
-            url: https://nodejs.org/download/release/v26.9.0/node-v26.9.0-linux-s390x.tar.gz
+            url: https://nodejs.org/download/release/v26.10.0/node-v26.10.0-linux-s390x.tar.gz
           targets:
             - cpu: s390x
               os: linux
@@ -5696,9 +5696,9 @@ packages:
             archive: tarball
             bin:
               node: bin/node
-            integrity: sha256-FTGQoRcLObEVfjKp/fcL1HIRY9LjYBEdEnr0tzZWoyM=
+            integrity: sha256-G99gyBQeUVJgS6+LOPMeGRs3lPYPzitxNR54xAIfAWY=
             type: binary
-            url: https://nodejs.org/download/release/v26.9.0/node-v26.9.0-linux-x64-musl.tar.gz
+            url: https://nodejs.org/download/release/v26.10.0/node-v26.10.0-linux-x64-musl.tar.gz
           targets:
             - cpu: x64
               os: linux
@@ -5707,9 +5707,9 @@ packages:
             archive: tarball
             bin:
               node: bin/node
-            integrity: sha256-A9kQT8TxllLnRID+0RwCPXWYFGS3KS8hpgHD+Vzn2Q0=
+            integrity: sha256-y1yc6cgNe4gh46JYVDxxuTkTjPF8dNXMRLvoXW28Wtg=
             type: binary
-            url: https://nodejs.org/download/release/v26.9.0/node-v26.9.0-linux-x64.tar.gz
+            url: https://nodejs.org/download/release/v26.10.0/node-v26.10.0-linux-x64.tar.gz
           targets:
             - cpu: x64
               os: linux
@@ -5717,10 +5717,10 @@ packages:
             archive: zip
             bin:
               node: node.exe
-            integrity: sha256-tw5FV9Gzgp5FwK/Bmsk3bMvUqGYSNTd//OkLOfxyJ7o=
-            prefix: node-v26.9.0-win-arm64
+            integrity: sha256-t3hkDXJxVmvKqWeZEs3waEwT6CTBFOQai2lvsUr3p6o=
+            prefix: node-v26.10.0-win-arm64
             type: binary
-            url: https://nodejs.org/download/release/v26.9.0/node-v26.9.0-win-arm64.zip
+            url: https://nodejs.org/download/release/v26.10.0/node-v26.10.0-win-arm64.zip
           targets:
             - cpu: arm64
               os: win32
@@ -5728,10 +5728,10 @@ packages:
             archive: zip
             bin:
               node: node.exe
-            integrity: sha256-yK+HC1s+l4mmy9swJw58IS4S12p6+n/H8htrIcwipxs=
-            prefix: node-v26.9.0-win-x64
+            integrity: sha256-n+9+ymdDprkQmJzY54cSN2s5T8ubbh6cRKB5mih/kMU=
+            prefix: node-v26.10.0-win-x64
             type: binary
-            url: https://nodejs.org/download/release/v26.9.0/node-v26.9.0-win-x64.zip
+            url: https://nodejs.org/download/release/v26.10.0/node-v26.10.0-win-x64.zip
           targets:
             - cpu: x64
               os: win32
@@ -5739,9 +5739,9 @@ packages:
             archive: tarball
             bin:
               node: bin/node
-            integrity: sha256-tSt0fobvbRgGjwL0P1CKYINYyXTcXajvJwvII7pHEMo=
+            integrity: sha256-0mAnv/MZcFDSorC/oVGxjoN47YGv+iv1CTgE2xWJebY=
             type: binary
-            url: https://unofficial-builds.nodejs.org/download/release/v26.9.0/node-v26.9.0-linux-arm64-musl.tar.gz
+            url: https://unofficial-builds.nodejs.org/download/release/v26.10.0/node-v26.10.0-linux-arm64-musl.tar.gz
           targets:
             - cpu: arm64
               os: linux
@@ -5750,14 +5750,14 @@ packages:
             archive: tarball
             bin:
               node: bin/node
-            integrity: sha256-Zp3WfsN09zFdusnhGWQdDk83FRngDEtpLx+B56BLdHw=
+            integrity: sha256-5C2pSCG5Qi63a/Wq9N4Jd+BLoyC4r/YUjYlalLCO4iM=
             type: binary
-            url: https://unofficial-builds.nodejs.org/download/release/v26.9.0/node-v26.9.0-linux-x64-musl.tar.gz
+            url: https://unofficial-builds.nodejs.org/download/release/v26.10.0/node-v26.10.0-linux-x64-musl.tar.gz
           targets:
             - cpu: x64
               os: linux
               libc: musl
-    version: 26.9.0
+    version: 26.10.0
     hasBin: true
 
   npm-run-path@4.0.1:
@@ -7219,16 +7219,16 @@ snapshots:
 
   '@adobe/css-tools@4.4.4': {}
 
-  '@ai-sdk/alibaba@2.0.51(zod@4.6.5)':
+  '@ai-sdk/alibaba@2.0.52(zod@4.6.5)':
     dependencies:
       '@ai-sdk/provider': 4.0.17
       '@ai-sdk/provider-utils': 5.0.45(zod@4.6.5)
       zod: 4.6.5
 
-  '@ai-sdk/amazon-bedrock@5.0.88(zod@4.6.5)':
+  '@ai-sdk/amazon-bedrock@5.0.91(zod@4.6.5)':
     dependencies:
-      '@ai-sdk/anthropic': 4.0.58(zod@4.6.5)
-      '@ai-sdk/openai': 4.0.71(zod@4.6.5)
+      '@ai-sdk/anthropic': 4.0.60(zod@4.6.5)
+      '@ai-sdk/openai': 4.0.72(zod@4.6.5)
       '@ai-sdk/provider': 4.0.17
       '@ai-sdk/provider-utils': 5.0.45(zod@4.6.5)
       '@smithy/eventstream-codec': 4.5.2
@@ -7236,16 +7236,16 @@ snapshots:
       aws4fetch: 1.0.20
       zod: 4.6.5
 
-  '@ai-sdk/anthropic@4.0.58(zod@4.6.5)':
+  '@ai-sdk/anthropic@4.0.60(zod@4.6.5)':
     dependencies:
       '@ai-sdk/provider': 4.0.17
       '@ai-sdk/provider-utils': 5.0.45(zod@4.6.5)
       zod: 4.6.5
 
-  '@ai-sdk/azure@4.0.75(zod@4.6.5)':
+  '@ai-sdk/azure@4.0.76(zod@4.6.5)':
     dependencies:
-      '@ai-sdk/deepseek': 3.0.49(zod@4.6.5)
-      '@ai-sdk/openai': 4.0.71(zod@4.6.5)
+      '@ai-sdk/deepseek': 3.0.50(zod@4.6.5)
+      '@ai-sdk/openai': 4.0.72(zod@4.6.5)
       '@ai-sdk/provider': 4.0.17
       '@ai-sdk/provider-utils': 5.0.45(zod@4.6.5)
       zod: 4.6.5
@@ -7270,7 +7270,7 @@ snapshots:
       '@ai-sdk/provider-utils': 5.0.45(zod@4.6.5)
       zod: 4.6.5
 
-  '@ai-sdk/deepseek@3.0.49(zod@4.6.5)':
+  '@ai-sdk/deepseek@3.0.50(zod@4.6.5)':
     dependencies:
       '@ai-sdk/provider': 4.0.17
       '@ai-sdk/provider-utils': 5.0.45(zod@4.6.5)
@@ -7283,14 +7283,14 @@ snapshots:
       '@ai-sdk/provider-utils': 5.0.45(zod@4.6.5)
       zod: 4.6.5
 
-  '@ai-sdk/gateway@4.0.87(zod@4.6.5)':
+  '@ai-sdk/gateway@4.0.89(zod@4.6.5)':
     dependencies:
       '@ai-sdk/provider': 4.0.17
       '@ai-sdk/provider-utils': 5.0.45(zod@4.6.5)
       '@vercel/oidc': 3.2.0
       zod: 4.6.5
 
-  '@ai-sdk/google@4.0.76(zod@4.6.5)':
+  '@ai-sdk/google@4.0.77(zod@4.6.5)':
     dependencies:
       '@ai-sdk/provider': 4.0.17
       '@ai-sdk/provider-utils': 5.0.45(zod@4.6.5)
@@ -7309,7 +7309,7 @@ snapshots:
       '@ai-sdk/provider-utils': 5.0.45(zod@4.6.5)
       zod: 4.6.5
 
-  '@ai-sdk/mcp@2.0.54(zod@4.6.5)':
+  '@ai-sdk/mcp@2.0.55(zod@4.6.5)':
     dependencies:
       '@ai-sdk/provider': 4.0.17
       '@ai-sdk/provider-utils': 5.0.45(zod@4.6.5)
@@ -7347,7 +7347,7 @@ snapshots:
       '@ai-sdk/provider-utils': 5.0.45(zod@4.6.5)
       zod: 4.6.5
 
-  '@ai-sdk/openai@4.0.71(zod@4.6.5)':
+  '@ai-sdk/openai@4.0.72(zod@4.6.5)':
     dependencies:
       '@ai-sdk/provider': 4.0.17
       '@ai-sdk/provider-utils': 5.0.45(zod@4.6.5)
@@ -7385,12 +7385,12 @@ snapshots:
     dependencies:
       json-schema: 0.4.0
 
-  '@ai-sdk/react@4.0.110(react@19.3.0)(zod@4.6.5)':
+  '@ai-sdk/react@4.0.114(react@19.3.0)(zod@4.6.5)':
     dependencies:
-      '@ai-sdk/mcp': 2.0.54(zod@4.6.5)
+      '@ai-sdk/mcp': 2.0.55(zod@4.6.5)
       '@ai-sdk/provider': 4.0.17
       '@ai-sdk/provider-utils': 5.0.45(zod@4.6.5)
-      ai: 7.0.107(zod@4.6.5)
+      ai: 7.0.111(zod@4.6.5)
       react: 19.3.0
       swr: 2.5.1(react@19.3.0)
       throttleit: 2.1.0
@@ -7417,7 +7417,7 @@ snapshots:
       '@ai-sdk/provider-utils': 5.0.27(zod@4.6.5)
       zod: 4.6.5
 
-  '@ai-sdk/xai@5.0.4(zod@4.6.5)':
+  '@ai-sdk/xai@5.0.5(zod@4.6.5)':
     dependencies:
       '@ai-sdk/provider': 4.0.17
       '@ai-sdk/provider-utils': 5.0.45(zod@4.6.5)
@@ -9870,19 +9870,19 @@ snapshots:
 
   agent-base@7.1.4: {}
 
-  ai-sdk-ollama@4.3.0(ai@7.0.107(zod@4.6.5))(zod@4.6.5):
+  ai-sdk-ollama@4.3.0(ai@7.0.111(zod@4.6.5))(zod@4.6.5):
     dependencies:
       '@ai-sdk/provider': 4.0.17
       '@ai-sdk/provider-utils': 5.0.45(zod@4.6.5)
-      ai: 7.0.107(zod@4.6.5)
+      ai: 7.0.111(zod@4.6.5)
       jsonrepair: 3.15.0
       ollama: 0.6.3
     transitivePeerDependencies:
       - zod
 
-  ai@7.0.107(zod@4.6.5):
+  ai@7.0.111(zod@4.6.5):
     dependencies:
-      '@ai-sdk/gateway': 4.0.87(zod@4.6.5)
+      '@ai-sdk/gateway': 4.0.89(zod@4.6.5)
       '@ai-sdk/provider': 4.0.17
       '@ai-sdk/provider-utils': 5.0.45(zod@4.6.5)
       zod: 4.6.5
@@ -12042,7 +12042,7 @@ snapshots:
 
   node-releases@2.0.54: {}
 
-  node@runtime:26.9.0: {}
+  node@runtime:26.10.0: {}
 
   npm-run-path@4.0.1:
     dependencies:
