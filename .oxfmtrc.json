@@ -15,6 +15,7 @@
     ".turbo/**",
     "repos/**",
     "llplayer/**",
+    "meeting-sim/**",
     "scripts/output/**",
     ".agents/**",
     ".claude/**",

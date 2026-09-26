@@ -1,0 +1,1067 @@
+<title>Deal Abroad</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Silkscreen:wght@400;700&family=Atkinson+Hyperlegible:ital,wght@0,400;0,700;1,400&display=swap">
+<style>
+  /* Single deliberate look: a dusk-lit pixel game. Colors are set explicitly so it reads the same on any host theme. */
+  :root {
+    color-scheme: dark;
+    --ink: #151a2b;
+    --panel: #1f2540;
+    --panel-2: #29304f;
+    --line: #3d4570;
+    --shadow: #0b0e1a;
+    --text: #f1e9d6;
+    --muted: #a9adc6;
+    --accent: #ff9a5c;
+    --accent-ink: #2a1408;
+    --good: #52c7b8;
+    --minor: #f2c94c;
+    --major: #ff6f6f;
+    --pixel: "Silkscreen", "Courier New", monospace;
+    --body: "Atkinson Hyperlegible", system-ui, -apple-system, "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
+  }
+  * { box-sizing: border-box; }
+  [hidden] { display: none !important; }
+  html, body { background: var(--ink); color: var(--text); }
+  body { font: 16px/1.5 var(--body); padding-inline: 16px; padding-block: 0 48px; }
+  .wrap { max-width: 1180px; margin: 0 auto; }
+  button, input, select, textarea { font: inherit; color: inherit; }
+  :focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
+
+  /* header */
+  .top { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px 24px; padding-block: 18px 14px; }
+  .brand { display: flex; align-items: baseline; gap: 12px; flex-wrap: wrap; }
+  .brand h1 { font: 700 26px/1 var(--pixel); margin: 0; letter-spacing: .02em; color: var(--accent); text-shadow: 3px 3px 0 var(--shadow); }
+  .brand span { color: var(--muted); font-size: 14px; }
+  nav.tabs { display: flex; flex-wrap: wrap; gap: 6px; }
+  nav.tabs button { font: 400 13px/1 var(--pixel); background: var(--panel); border: 2px solid var(--line); padding: 9px 12px; cursor: pointer; box-shadow: 3px 3px 0 var(--shadow); }
+  nav.tabs button[aria-selected="true"] { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); }
+  nav.tabs button .n { opacity: .6; margin-right: 6px; }
+
+  /* shared pieces */
+  .box { background: var(--panel); border: 2px solid var(--line); box-shadow: 4px 4px 0 var(--shadow); padding: 16px; }
+  .label { font: 400 12px/1.2 var(--pixel); letter-spacing: .06em; text-transform: uppercase; color: var(--muted); }
+  h2 { font: 700 18px/1.2 var(--pixel); margin: 0; text-wrap: balance; }
+  h3 { font: 700 15px/1.25 var(--pixel); margin: 0; text-wrap: balance; }
+  p { margin: 0; }
+  .muted { color: var(--muted); }
+  .btn { font: 700 13px/1 var(--pixel); background: var(--panel-2); border: 2px solid var(--line); padding: 11px 14px; cursor: pointer; box-shadow: 3px 3px 0 var(--shadow); text-transform: uppercase; letter-spacing: .03em; }
+  .btn:hover:not(:disabled) { border-color: var(--accent); }
+  .btn:active:not(:disabled) { transform: translate(2px, 2px); box-shadow: 1px 1px 0 var(--shadow); }
+  .btn.primary { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); }
+  .btn.small { font-size: 11px; padding: 7px 9px; box-shadow: 2px 2px 0 var(--shadow); }
+  .btn:disabled { opacity: .45; cursor: not-allowed; }
+  .row { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; }
+  .stack { display: grid; gap: 14px; align-content: start; }
+  .chip { display: inline-block; font: 400 11px/1 var(--pixel); padding: 5px 7px; border: 2px solid currentColor; text-transform: uppercase; letter-spacing: .04em; white-space: nowrap; }
+  .chip.good { color: var(--good); } .chip.minor { color: var(--minor); } .chip.major { color: var(--major); } .chip.info { color: var(--muted); }
+  .field { display: grid; gap: 6px; }
+  select, input[type="text"], textarea { background: var(--ink); border: 2px solid var(--line); padding: 9px 10px; width: 100%; }
+  textarea { resize: vertical; min-height: 70px; }
+  .note { font-size: 14px; color: var(--muted); border-left: 4px solid var(--line); padding-left: 10px; }
+  .note.warn { border-color: var(--minor); color: var(--text); }
+  .t { font-size: 18px; font-weight: 700; }
+  .rom { color: var(--muted); font-style: italic; font-size: 14px; }
+  mark { background: none; color: inherit; border-bottom: 3px solid; padding: 0 1px; }
+  mark.minor { border-color: var(--minor); background: rgba(242, 201, 76, .13); }
+  mark.major { border-color: var(--major); background: rgba(255, 111, 111, .15); }
+
+  /* stage */
+  .stage { position: relative; background: #000; border: 2px solid var(--line); box-shadow: 4px 4px 0 var(--shadow); max-width: 100%; }
+  .stage canvas { display: block; width: 100%; aspect-ratio: 16 / 9; image-rendering: pixelated; image-rendering: crisp-edges; max-width: 100%; }
+  .hud { position: absolute; inset: 8px 10px auto 10px; display: flex; justify-content: space-between; align-items: flex-start; gap: 10px; pointer-events: none; }
+  .hud .place { font: 400 12px/1.3 var(--pixel); background: rgba(11, 14, 26, .72); padding: 5px 7px; color: var(--text); }
+  .meter { display: flex; gap: 2px; background: rgba(11, 14, 26, .72); padding: 5px 6px; align-items: center; }
+  .meter b { font: 400 11px/1 var(--pixel); margin-right: 5px; }
+  .meter i { width: 9px; height: 12px; background: #3a3f5c; display: block; }
+  .meter i.on { background: var(--accent); }
+
+  section[hidden] { display: none !important; }
+  .grid-2 { display: grid; grid-template-columns: minmax(0, 1.35fr) minmax(0, 1fr); gap: 20px; align-items: start; }
+  @media (max-width: 860px) { .grid-2 { grid-template-columns: minmax(0, 1fr); } }
+
+  /* setup */
+  .scenes { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+  .scene-card { text-align: left; background: var(--ink); border: 2px solid var(--line); padding: 8px; cursor: pointer; display: grid; gap: 8px; }
+  .scene-card canvas { width: 100%; aspect-ratio: 16 / 9; image-rendering: pixelated; display: block; max-width: 100%; }
+  .scene-card[aria-pressed="true"] { border-color: var(--accent); box-shadow: 0 0 0 2px var(--accent); }
+  .scene-card strong { font: 700 13px/1.2 var(--pixel); display: block; }
+  .scene-card span { font-size: 13px; color: var(--muted); }
+  .form2 { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+  @media (max-width: 480px) { .form2, .scenes { grid-template-columns: minmax(0, 1fr); } }
+  .radio { display: grid; gap: 8px; }
+  .radio label { display: flex; gap: 10px; align-items: flex-start; background: var(--ink); border: 2px solid var(--line); padding: 10px; cursor: pointer; }
+  .radio label:has(input:checked) { border-color: var(--accent); }
+  .radio input { margin-top: 4px; accent-color: var(--accent); }
+  .radio small { display: block; color: var(--muted); font-size: 13px; }
+  .brief dl { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 6px 14px; margin: 0; }
+  .brief dt { font: 400 11px/1.6 var(--pixel); color: var(--muted); text-transform: uppercase; }
+  .brief dd { margin: 0; }
+
+  /* train */
+  .cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(230px, 1fr)); gap: 12px; }
+  .card { background: var(--ink); border: 2px solid var(--line); padding: 12px; display: grid; gap: 8px; align-content: start; }
+  .card .en { font-size: 15px; }
+  .card .back { display: grid; gap: 4px; }
+  .card .tip { font-size: 13px; color: var(--muted); }
+  .card .said { text-decoration: line-through; text-decoration-color: var(--major); color: var(--muted); }
+  .quiz .choice { display: block; width: 100%; text-align: left; background: var(--ink); border: 2px solid var(--line); padding: 10px 12px; cursor: pointer; margin-top: 8px; }
+  .quiz .choice.right { border-color: var(--good); }
+  .quiz .choice.wrong { border-color: var(--major); }
+
+  /* meeting */
+  .dialog { background: #0f1322; border: 3px solid var(--text); box-shadow: 4px 4px 0 var(--shadow); padding: 16px 16px 14px; position: relative; margin-top: 18px; display: grid; gap: 6px; }
+  .dialog .who { position: absolute; top: -14px; left: 12px; background: var(--accent); color: var(--accent-ink); font: 700 12px/1 var(--pixel); padding: 6px 8px; }
+  .dialog .line { font-size: 20px; font-weight: 700; min-height: 1.5em; }
+  .dialog .en { color: var(--muted); font-size: 15px; }
+  .answers { display: grid; gap: 8px; margin-top: 12px; }
+  .answer { text-align: left; background: var(--panel); border: 2px solid var(--line); padding: 10px 12px; cursor: pointer; box-shadow: 3px 3px 0 var(--shadow); }
+  .answer:hover:not(:disabled) { border-color: var(--accent); }
+  .answer .rom { display: block; }
+  .compose { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 8px; margin-top: 12px; }
+  .fb { border-left: 5px solid var(--line); padding: 10px 12px; background: var(--panel); display: grid; gap: 6px; }
+  .fb.good { border-color: var(--good); } .fb.minor { border-color: var(--minor); } .fb.major { border-color: var(--major); }
+  .log { display: grid; gap: 10px; max-height: 620px; overflow-y: auto; padding-right: 4px; }
+  .turn { display: grid; gap: 4px; padding: 8px 10px; background: var(--ink); border: 2px solid var(--line); }
+  .turn.you { border-color: #4a5488; }
+  .turn .speaker { font: 400 11px/1.2 var(--pixel); color: var(--muted); display: flex; justify-content: space-between; gap: 8px; }
+  .turn .fix { font-size: 14px; }
+  .fix b { color: var(--good); }
+  .thinking::after { content: "..."; animation: dots 1.2s steps(4) infinite; display: inline-block; overflow: hidden; vertical-align: bottom; width: 0; }
+  @keyframes dots { to { width: 1.2em; } }
+  .end { border: 2px solid var(--accent); }
+
+  /* review + transcript */
+  .stats { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 10px; }
+  @media (max-width: 560px) { .stats { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+  .stat { background: var(--ink); border: 2px solid var(--line); padding: 10px; }
+  .stat .v { font: 700 24px/1.1 var(--pixel); font-variant-numeric: tabular-nums; }
+  .tr-lines { display: grid; gap: 6px; }
+  .tr-line { display: grid; grid-template-columns: 2.2em minmax(0, 1fr); gap: 8px; padding: 6px 8px; border: 2px solid transparent; }
+  .tr-line.me { background: var(--ink); border-color: var(--line); }
+  .tr-line .num { font: 400 11px/1.9 var(--pixel); color: var(--muted); font-variant-numeric: tabular-nums; text-align: right; }
+  .tr-line .spk { font: 400 11px/1.2 var(--pixel); color: var(--muted); display: block; }
+  .tr-line .fix { margin-top: 6px; font-size: 14px; display: grid; gap: 2px; }
+  .tr-line .fix + .fix { border-top: 1px dashed var(--line); padding-top: 6px; }
+  .toast { position: fixed; left: 50%; bottom: calc(18px + env(safe-area-inset-bottom, 0px)); transform: translateX(-50%); background: var(--text); color: var(--ink); font: 700 12px/1 var(--pixel); padding: 10px 14px; box-shadow: 3px 3px 0 var(--shadow); max-width: calc(100% - 32px); }
+  @media (prefers-reduced-motion: reduce) { .thinking::after { animation: none; width: 1.2em; } }
+</style>
+
+<div class="wrap">
+  <header class="top">
+    <div class="brand">
+      <h1>DEAL ABROAD</h1>
+      <span>Rehearse business meetings in another language.</span>
+    </div>
+    <nav class="tabs" role="tablist" aria-label="Sections">
+      <button role="tab" data-tab="setup" aria-selected="true"><span class="n">1</span>Brief</button>
+      <button role="tab" data-tab="train" aria-selected="false"><span class="n">2</span>Train</button>
+      <button role="tab" data-tab="meeting" aria-selected="false"><span class="n">3</span>Meeting</button>
+      <button role="tab" data-tab="review" aria-selected="false"><span class="n">4</span>Debrief</button>
+      <button role="tab" data-tab="transcript" aria-selected="false">Real transcript</button>
+    </nav>
+  </header>
+
+  <!-- 1. BRIEF -->
+  <section id="tab-setup">
+    <div class="grid-2">
+      <div class="stack">
+        <div class="stage">
+          <canvas id="stage-setup" width="192" height="108" data-live="1"></canvas>
+          <div class="hud"><div class="place" id="hud-setup"></div></div>
+        </div>
+        <div class="box brief stack">
+          <div class="row" style="justify-content:space-between"><h2 id="brief-title"></h2><span class="chip info" id="brief-lang"></span></div>
+          <dl>
+            <dt>Meeting</dt><dd id="brief-who"></dd>
+            <dt>On the table</dt><dd id="brief-deal"></dd>
+            <dt>Read on them</dt><dd id="brief-persona"></dd>
+          </dl>
+        </div>
+      </div>
+      <div class="box stack">
+        <div class="label">Where are you meeting?</div>
+        <div class="scenes" id="scene-cards"></div>
+        <div class="form2">
+          <div class="field"><label class="label" for="lang">Language</label><select id="lang"></select></div>
+          <div class="field"><label class="label" for="level">Your level</label>
+            <select id="level"><option value="beginner">Beginner</option><option value="intermediate" selected>Intermediate</option><option value="advanced">Advanced</option></select></div>
+        </div>
+        <div class="field"><label class="label" for="goal">Your goal for the meeting</label><textarea id="goal" rows="2"></textarea></div>
+        <div class="field">
+          <div class="label">How do you want to play?</div>
+          <div class="radio">
+            <label><input type="radio" name="mode" id="mode-script" value="script" checked><span>Scripted<small>Pick from answers. One is right, some carry classic mistakes. Works with no connection to Claude.</small></span></label>
+            <label><input type="radio" name="mode" id="mode-live" value="live"><span>Live with Claude<small>Type anything. The counterpart answers in character and every line you write gets graded.</small></span></label>
+          </div>
+        </div>
+        <p class="note" id="mode-note" hidden></p>
+        <div class="row">
+          <button class="btn primary" id="go-train">Train first</button>
+          <button class="btn" id="go-meet">Go to the meeting</button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 2. TRAIN -->
+  <section id="tab-train" hidden>
+    <div class="stack">
+      <div class="row" style="justify-content:space-between">
+        <div class="stack" style="gap:4px"><h2 id="train-title">Phrasebook</h2><p class="muted" id="train-sub"></p></div>
+        <div class="row"><button class="btn small" id="reveal-all">Reveal all</button><button class="btn small" id="gen-pack" hidden>Build a briefing with Claude</button></div>
+      </div>
+      <p class="note warn" id="train-note" hidden></p>
+      <div class="cards" id="phrase-cards"></div>
+      <div class="grid-2">
+        <div class="box quiz stack" id="quiz"></div>
+        <div class="box stack">
+          <div class="row" style="justify-content:space-between"><h3>Your slips</h3><span class="chip info" id="deck-count">0</span></div>
+          <p class="muted" style="font-size:14px">Mistakes from your meetings and real transcripts land here. Say the fixed version out loud until it sticks.</p>
+          <div class="stack" id="deck"></div>
+        </div>
+      </div>
+      <div class="row"><button class="btn primary" id="train-go-meet">I'm ready. Start the meeting</button></div>
+    </div>
+  </section>
+
+  <!-- 3. MEETING -->
+  <section id="tab-meeting" hidden>
+    <div class="grid-2">
+      <div>
+        <div class="stage">
+          <canvas id="stage-meet" width="192" height="108" data-live="1"></canvas>
+          <div class="hud"><div class="place" id="hud-meet"></div><div class="meter" id="meter" aria-label="Deal meter"></div></div>
+        </div>
+        <div class="dialog" aria-live="polite">
+          <div class="who" id="npc-name"></div>
+          <div class="line" id="npc-line"></div>
+          <div class="rom" id="npc-rom"></div>
+          <div class="en" id="npc-en" hidden></div>
+          <div class="row" style="margin-top:4px">
+            <button class="btn small" id="hear">Hear it</button>
+            <button class="btn small" id="toggle-en">Show English</button>
+            <button class="btn small" id="restart">Restart</button>
+          </div>
+        </div>
+        <div class="answers" id="answers"></div>
+        <form class="compose" id="compose" hidden>
+          <input type="text" id="say" autocomplete="off" placeholder="Type your reply">
+          <button class="btn primary" id="send">Say it</button>
+        </form>
+      </div>
+      <div class="stack">
+        <div id="feedback"></div>
+        <div class="box stack">
+          <div class="row" style="justify-content:space-between"><h3>Live transcript</h3><span class="label" id="slip-count"></span></div>
+          <div class="log" id="log"></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 4. DEBRIEF -->
+  <section id="tab-review" hidden>
+    <div class="stack" id="review"></div>
+  </section>
+
+  <!-- TRANSCRIPT -->
+  <section id="tab-transcript" hidden>
+    <div class="grid-2">
+      <div class="box stack" id="tr-result"></div>
+      <div class="box stack">
+        <h3>Check a real meeting</h3>
+        <p class="muted" style="font-size:14px">Paste a transcript or load a .txt, .vtt or .srt export from Zoom, Teams or Meet. Lines like <code>Name: text</code> work best.</p>
+        <div class="field"><label class="label" for="tr-file">Transcript file</label><input type="file" id="tr-file" accept=".txt,.vtt,.srt,text/plain"></div>
+        <div class="field"><label class="label" for="tr-text">Transcript</label><textarea id="tr-text" rows="12"></textarea></div>
+        <div class="form2">
+          <div class="field"><label class="label" for="tr-speaker">You are</label><select id="tr-speaker"></select></div>
+          <div class="field"><label class="label" for="tr-lang">Language</label><select id="tr-lang"></select></div>
+        </div>
+        <p class="note" id="tr-note" hidden></p>
+        <div class="row"><button class="btn primary" id="tr-go">Find my mistakes</button></div>
+      </div>
+    </div>
+  </section>
+</div>
+<div class="toast" id="toast" hidden></div>
+
+<script>
+(() => {
+"use strict";
+
+/* ---------------- data ---------------- */
+const LANGS = {
+  es: { name: "Spanish", tts: "es-419" },
+  zh: { name: "Mandarin Chinese", tts: "zh-CN", rom: "pinyin" },
+  fr: { name: "French", tts: "fr-FR" },
+  de: { name: "German", tts: "de-DE" },
+  pt: { name: "Portuguese (Brazil)", tts: "pt-BR" },
+  it: { name: "Italian", tts: "it-IT" },
+  nl: { name: "Dutch", tts: "nl-NL" },
+  ja: { name: "Japanese", tts: "ja-JP", rom: "romaji" },
+  ko: { name: "Korean", tts: "ko-KR", rom: "romanization" },
+  ar: { name: "Arabic", tts: "ar-SA", rom: "transliteration" },
+  hi: { name: "Hindi", tts: "hi-IN", rom: "transliteration" },
+};
+
+const SCENES = {
+  aruba: {
+    title: "The yacht", place: "Off Oranjestad, Aruba", clock: "17:40 AST", lang: "es",
+    who: { name: "Valentina Croes", role: "owner of Croes Marina & Resorts",
+      persona: "Warm and relationship-first. Expects small talk before business and usted until she offers tú. Sharp on money." },
+    deal: "Put your booking platform into her marina and two beach hotels.",
+    goal: "Get her to agree to a 3-month pilot with a follow-up date.",
+    you: { hair: "#3b2a20", skin: "#e0ac80", jacket: "#2b3a67", shirt: "#f2f2f2" },
+    npc: { hair: "#2a1a14", skin: "#b97c52", jacket: "#f4efe6", shirt: "#2f8f9d", long: true },
+    draw: drawAruba,
+  },
+  singapore: {
+    title: "The 42nd floor", place: "Marina Bay, Singapore", clock: "21:15 SGT", lang: "zh",
+    who: { name: "Lim Wei Jie 林伟杰", role: "Regional Director, Straits Logistics",
+      persona: "Formal and indirect. Rarely says no outright. Values titles, face and hard numbers." },
+    deal: "License your warehouse software across his six Southeast Asia sites.",
+    goal: "Win a pilot at one site and a date for the decision.",
+    you: { hair: "#3b2a20", skin: "#e0ac80", jacket: "#2b3a67", shirt: "#f2f2f2" },
+    npc: { hair: "#15151c", skin: "#e2b48c", jacket: "#262a33", shirt: "#dfe6f0" },
+    draw: drawSingapore,
+  },
+};
+
+const PACKS = {
+  aruba_es: {
+    phrases: [
+      { t: "Mucho gusto, señora Croes.", en: "Pleased to meet you, Mrs. Croes.", tip: "Surname plus señora until she tells you otherwise." },
+      { t: "Es un placer estar aquí con usted.", en: "It's a pleasure to be here with you.", tip: "Con usted, not contigo, with a new partner." },
+      { t: "Le agradezco la invitación.", en: "Thank you for the invitation.", tip: "More formal than a plain gracias." },
+      { t: "¿Qué le parece?", en: "What do you think?", tip: "Le = usted form. Use it after every proposal." },
+      { t: "Podríamos empezar con un piloto.", en: "We could start with a pilot.", tip: "Conditional podríamos softens the ask." },
+      { t: "sin costo de instalación", en: "with no setup cost", tip: "Costo in Latin America, coste in Spain." },
+      { t: "Estoy muy entusiasmado con el proyecto.", en: "I'm very excited about the project.", tip: "Never excitado. It means aroused." },
+      { t: "Si los resultados no son buenos, pueden cancelar.", en: "If the results aren't good, you can cancel.", tip: "Present tense after si, never future." },
+      { t: "Le envío la propuesta por correo esta tarde.", en: "I'll email you the proposal this afternoon.", tip: "Present tense for a near promise sounds confident." },
+      { t: "Quedamos en contacto.", en: "Let's stay in touch.", tip: "A clean way to close." },
+    ],
+    pitfalls: [
+      { q: "You want to say \"Actually, I have a question.\" Which is right?", choices: ["Actualmente, tengo una pregunta.", "En realidad, tengo una pregunta.", "Realmente tengo pregunta."], a: 1, why: "Actualmente means currently. Use en realidad or de hecho." },
+      { q: "You notice a mistake in the numbers. \"I realized that...\"", choices: ["Realicé que...", "Me di cuenta de que...", "Me realicé que..."], a: 1, why: "Realizar means to carry out. Noticing is darse cuenta de." },
+      { q: "She says \"Puedes tutearme\" halfway through. What changed?", choices: ["She wants you to speak slower", "She's inviting you to use tú", "She's ending the meeting"], a: 1, why: "Tutear means to address someone as tú. Accept and switch." },
+      { q: "You made a small error and feel embarrassed.", choices: ["Estoy embarazado.", "Qué pena, disculpe.", "Estoy excitado."], a: 1, why: "Embarazado means pregnant. Qué pena or me da vergüenza works." },
+    ],
+  },
+  singapore_zh: {
+    phrases: [
+      { t: "很高兴认识您。", r: "Hěn gāoxìng rènshi nín.", en: "Very pleased to meet you.", tip: "您 is the polite you. Use it all meeting." },
+      { t: "林总", r: "Lín zǒng", en: "Director Lim", tip: "Surname + 总 for senior managers. Never his given name." },
+      { t: "请多指教。", r: "Qǐng duō zhǐjiào.", en: "I look forward to your guidance.", tip: "Say it when you exchange cards." },
+      { t: "贵公司", r: "guì gōngsī", en: "your (esteemed) company", tip: "Polite form of 你们公司." },
+      { t: "您看怎么样？", r: "Nín kàn zěnmeyàng?", en: "How does that look to you?", tip: "Soft way to invite a response." },
+      { t: "三个月的试点", r: "sān ge yuè de shìdiǎn", en: "a three-month pilot", tip: "三个月 is three months. 三月 is March." },
+      { t: "百分之二十", r: "bǎi fēn zhī èrshí", en: "twenty percent", tip: "Hundred-parts-of twenty. The order trips people." },
+      { t: "没有任何费用", r: "méiyǒu rènhé fèiyòng", en: "no cost at all", tip: "有 takes 没, never 不." },
+      { t: "我今天把资料发到您的邮箱。", r: "Wǒ jīntiān bǎ zīliào fā dào nín de yóuxiāng.", en: "I'll send the materials to your inbox today.", tip: "把 moves the object before the verb." },
+      { t: "合作愉快！", r: "Hézuò yúkuài!", en: "To a good partnership!", tip: "Closing line or toast." },
+    ],
+    pitfalls: [
+      { q: "He says 我们再考虑一下 about your price. What does it usually signal?", choices: ["A firm yes", "A polite not yet, or no", "He wants you to lower the price now"], a: 1, why: "Indirect refusals save face. Offer a lower-risk option instead of pushing." },
+      { q: "He hands you his business card. What do you do?", choices: ["Take it with one hand and pocket it", "Take it with both hands, read it, set it on the table", "Wave it off and give him yours"], a: 1, why: "The card stands for the person. Treat it that way." },
+      { q: "\"The pilot lasts three months.\"", choices: ["试点三月。", "试点三个月。", "试点三月份。"], a: 1, why: "Durations need 个: 三个月. 三月 is the month of March." },
+      { q: "Singapore offices often mix languages. If he switches to English, you should...", choices: ["Insist on Mandarin to practise", "Follow his lead, then return to Mandarin when natural", "Switch to Singlish"], a: 1, why: "Follow the host. Forcing a language costs rapport." },
+    ],
+  },
+};
+
+const SCRIPTS = {
+  aruba: [
+    { npc: "¡Bienvenido a bordo! ¿Qué tal el vuelo?", en: "Welcome aboard! How was the flight?", choices: [
+      { t: "Muy bien, gracias. Es un placer estar aquí con usted.", q: "good", why: "Warm, formal usted, and you answered her question." },
+      { t: "Bien, gracias. Es un placer estar aquí contigo.", q: "minor", cat: "register", better: "Es un placer estar aquí con usted.", why: "Contigo is the tú form. Stay with usted until she switches." },
+      { t: "Bien. Empecemos con los números.", q: "major", cat: "culture", better: "Muy bien, gracias. ¡Qué vista tan increíble!", why: "Skipping small talk reads as cold in a Caribbean or Latin American meeting." } ] },
+    { npc: "¿Quiere tomar algo? Tenemos café y jugo de parchita.", en: "Would you like something to drink? We have coffee and passion fruit juice.", choices: [
+      { t: "Un café, por favor. ¡Qué vista tan increíble!", q: "good", why: "Polite and you complimented her boat. Rapport up." },
+      { t: "Quiero un café.", q: "minor", cat: "register", better: "Me gustaría un café, por favor.", why: "Grammatical, but bare quiero sounds like an order." },
+      { t: "Soy un café, por favor.", q: "major", cat: "grammar", better: "Un café, por favor.", why: "Soy means I am. You just said you are a coffee." } ] },
+    { npc: "Bueno, cuénteme. ¿Qué nos propone su empresa?", en: "Well, tell me. What is your company proposing?", choices: [
+      { t: "Proponemos integrar nuestra plataforma de reservas con su marina y sus hoteles.", q: "good", why: "Clear and concrete, with the formal su." },
+      { t: "Nosotros queremos a integrar nuestra plataforma con su marina.", q: "minor", cat: "grammar", better: "Queremos integrar nuestra plataforma con su marina.", why: "Querer takes the infinitive directly, with no a." },
+      { t: "Estoy muy excitado por esta propuesta.", q: "major", cat: "vocabulary", better: "Estoy muy entusiasmado con esta propuesta.", why: "False friend. Excitado means sexually aroused." } ] },
+    { npc: "Interesante. Pero ¿cuánto nos costaría? Este año el presupuesto está bastante ajustado.", en: "Interesting. But how much would it cost us? Our budget is tight this year.", choices: [
+      { t: "Entiendo. Podríamos empezar con un piloto de tres meses sin costo de instalación.", q: "good", why: "You acknowledged her concern and lowered her risk." },
+      { t: "Entiendo. Podemos empezar con una piloto de tres meses.", q: "minor", cat: "grammar", better: "Podemos empezar con un piloto de tres meses.", why: "Piloto is masculine here: un piloto." },
+      { t: "El precio es el precio. No podemos negociar.", q: "major", cat: "culture", better: "Entiendo. ¿Qué le parece si empezamos con un piloto?", why: "Closing the door this early kills the relationship. Offer an option." } ] },
+    { npc: "Me gusta la idea del piloto. ¿Y si los resultados no son buenos?", en: "I like the pilot idea. And if the results aren't good?", choices: [
+      { t: "En ese caso, ustedes pueden cancelar sin penalización.", q: "good", why: "A concrete safeguard answers a risk question." },
+      { t: "Si los resultados no serán buenos, pueden cancelar.", q: "minor", cat: "grammar", better: "Si los resultados no son buenos, pueden cancelar.", why: "After si in a real condition, use the present, not the future." },
+      { t: "Eso no va a pasar, confíe en mí.", q: "major", cat: "clarity", better: "En ese caso, pueden cancelar sin penalización.", why: "Overpromising sounds like a sales pitch. She asked about risk." } ] },
+    { npc: "Muy bien. Lo hablo con mi socio la próxima semana y lo cerramos.", en: "Very well. I'll talk to my partner next week and we'll close it.", choices: [
+      { t: "Perfecto. Le envío la propuesta por correo esta tarde. Muchas gracias por recibirme.", q: "good", why: "You locked the next step and thanked your host." },
+      { t: "Perfecto. Le mando la propuesta mañana. Gracias por invitarme en su yate.", q: "minor", cat: "grammar", better: "Gracias por invitarme a su yate.", why: "You are invited to a place: a, not en." },
+      { t: "Vale, chao.", q: "major", cat: "register", better: "Perfecto. Le envío la propuesta esta tarde. Muchas gracias.", why: "Far too casual to close a deal, and vale sounds Spanish from Spain." } ] },
+  ],
+  singapore: [
+    { npc: "欢迎欢迎！请坐。今天很热吧？", r: "Huānyíng huānyíng! Qǐng zuò. Jīntiān hěn rè ba?", en: "Welcome! Please sit. Hot today, isn't it?", choices: [
+      { t: "是啊，不过新加坡很漂亮。很高兴认识您，林总。", r: "Shì a, búguò Xīnjiāpō hěn piàoliang. Hěn gāoxìng rènshi nín, Lín zǒng.", q: "good", why: "Small talk, polite 您, and his title." },
+      { t: "是啊。很高兴认识你，伟杰。", r: "Shì a. Hěn gāoxìng rènshi nǐ, Wěijié.", q: "minor", cat: "register", better: "很高兴认识您，林总。", why: "His given name and 你 are too familiar for a first meeting." },
+      { t: "对。我们开始吧。", r: "Duì. Wǒmen kāishǐ ba.", q: "major", cat: "culture", better: "是啊，不过新加坡很漂亮。", why: "Jumping to business feels rushed and a little rude." } ] },
+    { npc: "这是我的名片。", r: "Zhè shì wǒ de míngpiàn.", en: "This is my business card.", choices: [
+      { t: "（双手接过）谢谢。这是我的名片，请多指教。", r: "(both hands) Xièxie. Zhè shì wǒ de míngpiàn, qǐng duō zhǐjiào.", q: "good", why: "Both hands, your card in return, and the standard courtesy." },
+      { t: "（双手接过）谢谢。我的名片在这里。", r: "(both hands) Xièxie. Wǒ de míngpiàn zài zhèlǐ.", q: "minor", cat: "culture", better: "这是我的名片，请多指教。", why: "Fine, but 请多指教 is the expected phrase here." },
+      { t: "好的。（放进裤子口袋）", r: "Hǎo de. (puts it in back pocket)", q: "major", cat: "culture", better: "（双手接过，看一下，放在桌上）谢谢。", why: "Pocketing his card without reading it is disrespectful." } ] },
+    { npc: "请介绍一下贵公司的方案。", r: "Qǐng jièshào yíxià guì gōngsī de fāng'àn.", en: "Please introduce your company's proposal.", choices: [
+      { t: "我们的软件可以帮贵公司把仓库效率提高百分之二十。", r: "Wǒmen de ruǎnjiàn kěyǐ bāng guì gōngsī bǎ cāngkù xiàolǜ tígāo bǎi fēn zhī èrshí.", q: "good", why: "Concrete number, polite 贵公司, correct percent." },
+      { t: "我们的软件可以帮你们公司提高仓库效率二十百分。", r: "Wǒmen de ruǎnjiàn kěyǐ bāng nǐmen gōngsī tígāo cāngkù xiàolǜ èrshí bǎi fēn.", q: "minor", cat: "grammar", better: "…把仓库效率提高百分之二十。", why: "Percent is 百分之二十. Also 贵公司 is the polite form." },
+      { t: "我们的软件是最好的，比别人都好。", r: "Wǒmen de ruǎnjiàn shì zuì hǎo de, bǐ biérén dōu hǎo.", q: "major", cat: "clarity", better: "我们的软件可以把效率提高百分之二十。", why: "Claims with no numbers sound empty to a numbers person." } ] },
+    { npc: "价格方面，我们需要再考虑一下。", r: "Jiàgé fāngmiàn, wǒmen xūyào zài kǎolǜ yíxià.", en: "On price, we need to think about it some more.", choices: [
+      { t: "明白。我们可以先做一个三个月的试点，您看怎么样？", r: "Míngbai. Wǒmen kěyǐ xiān zuò yí ge sān ge yuè de shìdiǎn, nín kàn zěnmeyàng?", q: "good", why: "You read the soft no and offered a low-risk path." },
+      { t: "明白。我们可以先做三月的试点。", r: "Míngbai. Wǒmen kěyǐ xiān zuò sānyuè de shìdiǎn.", q: "minor", cat: "grammar", better: "我们可以先做三个月的试点。", why: "三月 means March. Three months is 三个月." },
+      { t: "为什么？我们的价格很便宜啊。", r: "Wèishénme? Wǒmen de jiàgé hěn piányi a.", q: "major", cat: "culture", better: "明白。我们可以先做一个试点，您看怎么样？", why: "Challenging him directly costs him face." } ] },
+    { npc: "如果试点效果不好呢？", r: "Rúguǒ shìdiǎn xiàoguǒ bù hǎo ne?", en: "And if the pilot doesn't go well?", choices: [
+      { t: "那您可以随时取消，不收任何费用。", r: "Nà nín kěyǐ suíshí qǔxiāo, bù shōu rènhé fèiyòng.", q: "good", why: "A clear safeguard, stated politely." },
+      { t: "那您可以随时取消，不有任何费用。", r: "Nà nín kěyǐ suíshí qǔxiāo, bù yǒu rènhé fèiyòng.", q: "minor", cat: "grammar", better: "没有任何费用。", why: "有 is always negated with 没: 没有." },
+      { t: "不会的，我保证。", r: "Bú huì de, wǒ bǎozhèng.", q: "major", cat: "clarity", better: "那您可以随时取消，不收任何费用。", why: "A bare guarantee sounds like sales talk." } ] },
+    { npc: "好，我跟老板商量一下，下周给你答复。", r: "Hǎo, wǒ gēn lǎobǎn shāngliang yíxià, xià zhōu gěi nǐ dáfù.", en: "OK, I'll discuss with my boss and give you an answer next week.", choices: [
+      { t: "太好了，谢谢林总。我今天把资料发到您的邮箱。", r: "Tài hǎo le, xièxie Lín zǒng. Wǒ jīntiān bǎ zīliào fā dào nín de yóuxiāng.", q: "good", why: "Thanks with title, and you own the next step." },
+      { t: "太好了。我明天给您发了邮件。", r: "Tài hǎo le. Wǒ míngtiān gěi nín fā le yóujiàn.", q: "minor", cat: "grammar", better: "我明天给您发邮件。", why: "了 marks completion. It clashes with 明天 (tomorrow)." },
+      { t: "下周？太慢了，能不能明天？", r: "Xià zhōu? Tài màn le, néng bu néng míngtiān?", q: "major", cat: "culture", better: "好的，谢谢林总。我等您的消息。", why: "Pushing his timeline after he committed costs goodwill." } ] },
+  ],
+};
+
+const SAMPLE_TRANSCRIPT = `Marta Ruiz: Buenos días, Alex. Gracias por conectarte tan temprano.
+Alex: Buenos días, Marta. No hay problema, estoy muy excitado por esta reunión.
+Marta Ruiz: Genial. ¿Pudiste revisar el contrato que te mandamos?
+Alex: Sí, lo revisé ayer. Actualmente, tengo algunas preguntas sobre la cláusula de pago.
+Marta Ruiz: Claro, dime.
+Alex: El pago a 90 días es mucho para nosotros. ¿Es posible de reducirlo a 30 días?
+Marta Ruiz: Podemos hablarlo. ¿Qué ofrecen ustedes a cambio?
+Alex: Si firmamos hoy, podemos comprometer un volumen más grande en el segundo trimestre.
+Marta Ruiz: Eso me interesa. Lo consulto con finanzas.
+Alex: Perfecto. Espero que tú tienes una respuesta esta semana.
+Marta Ruiz: Te escribo el jueves.
+Alex: Gracias, Marta. Hasta luego.`;
+
+const SAMPLE_ANALYSIS = {
+  summary: "Alex negotiated well: a clear ask on payment terms and a trade (more volume) in return. Four language slips, one of them embarrassing, took some polish off an otherwise confident call.",
+  strengths: ["Matched Marta's tú register straight away.", "Offered something in exchange instead of just asking.", "Closed with a thank-you and let her own the next step."],
+  issues: [
+    { line: 2, quote: "estoy muy excitado", better: "estoy muy entusiasmado", why: "Excitado means sexually aroused in most of the Spanish-speaking world.", category: "vocabulary", severity: "major" },
+    { line: 4, quote: "Actualmente", better: "En realidad", why: "Actualmente means currently, not actually.", category: "vocabulary", severity: "minor" },
+    { line: 6, quote: "¿Es posible de reducirlo", better: "¿Es posible reducirlo", why: "Es posible takes the infinitive directly, with no de.", category: "grammar", severity: "minor" },
+    { line: 10, quote: "Espero que tú tienes", better: "Espero que tengas", why: "Esperar que triggers the subjunctive.", category: "grammar", severity: "minor" },
+  ],
+};
+
+/* ---------------- state ---------------- */
+const store = {
+  get(k, d) { try { const v = localStorage.getItem("dealabroad." + k); return v == null ? d : JSON.parse(v); } catch { return d; } },
+  set(k, v) { try { localStorage.setItem("dealabroad." + k, JSON.stringify(v)); } catch {} },
+};
+const S = {
+  scene: store.get("scene", "aruba"), lang: null, level: "intermediate", mode: "script", goal: "",
+  showEn: store.get("showEn", false),
+  turns: [], deal: 5, node: 0, done: false, busy: false, outcome: "",
+  speaking: null, speakUntil: 0, thinking: false,
+};
+S.lang = store.get("lang", SCENES[S.scene].lang);
+let deck = store.get("deck", []);
+const genPacks = store.get("packs", {});
+let sample = null;
+let ctl = null;
+
+const $ = (s) => document.querySelector(s);
+const esc = (s) => String(s ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+const canSpeak = "speechSynthesis" in window;
+function speak(text, lang) {
+  if (!canSpeak || !text) return;
+  try { const u = new SpeechSynthesisUtterance(text.replace(/[（(][^）)]*[）)]/g, "")); u.lang = LANGS[lang]?.tts || lang; u.rate = 0.9; speechSynthesis.cancel(); speechSynthesis.speak(u); } catch {}
+}
+function toast(msg) { const t = $("#toast"); t.textContent = msg; t.hidden = false; clearTimeout(toast.h); toast.h = setTimeout(() => (t.hidden = true), 2600); }
+function shuffle(a) { a = a.slice(); for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; }
+const scene = () => SCENES[S.scene];
+const hasScript = () => SCRIPTS[S.scene] && scene().lang === S.lang;
+const packKey = () => S.scene + "_" + S.lang;
+const pack = () => PACKS[packKey()] || genPacks[packKey()] || null;
+const errCopy = (e) => ({
+  not_granted: "Claude access was declined, so live features are off until you reload the page.",
+  rate_limited: "Too many requests right now. Wait a minute, then try again.",
+  cancelled: "Stopped.",
+}[e?.code] || "Claude couldn't answer" + (e?.code ? " (" + e.code + ")" : "") + ". Try again.");
+
+/* ---------------- pixel art ---------------- */
+function R(c, x, y, w, h, col) { c.fillStyle = col; c.fillRect(Math.round(x), Math.round(y), w, h); }
+function rng(seed) { return () => { seed |= 0; seed = (seed + 0x6d2b79f5) | 0; let t = Math.imul(seed ^ (seed >>> 15), 1 | seed); t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t; return ((t ^ (t >>> 14)) >>> 0) / 4294967296; }; }
+
+const SPRITE = [
+  "..hhhhhh..",
+  ".hhhhhhhh.",
+  ".hssssssh.",
+  ".sesssses.",
+  ".ssssssss.",
+  "..ssmmss..",
+  "...ssss...",
+  "..JJSSJJ..",
+  ".JJJSSJJJ.",
+  "JJJJSSJJJJ",
+  "JJJJSSJJJJ",
+  "sJJJSSJJJs",
+  ".JJJJJJJJ.",
+  ".JJJJJJJJ.",
+];
+function drawPerson(c, x, y, pal, t, talking, seed) {
+  const blink = ((t + seed * 997) % 3400) < 140;
+  const mouthOpen = talking && Math.floor(t / 130) % 2 === 0;
+  for (let r = 0; r < SPRITE.length; r++) {
+    for (let k = 0; k < 10; k++) {
+      let ch = SPRITE[r][k];
+      if (pal.long && (k === 0 || k === 9) && r >= 2 && r <= 7) ch = "h";
+      if (ch === ".") continue;
+      let col = { h: pal.hair, s: pal.skin, e: "#1b1b22", S: pal.shirt, J: pal.jacket }[ch];
+      if (ch === "e" && blink) col = pal.skin;
+      if (ch === "m") col = mouthOpen ? "#5a1f24" : shade(pal.skin);
+      R(c, x + k, y + r, 1, 1, col);
+    }
+  }
+}
+function shade(hex) { const n = parseInt(hex.slice(1), 16); const f = (v) => Math.max(0, Math.round(v * 0.72)); return "rgb(" + f(n >> 16) + "," + f((n >> 8) & 255) + "," + f(n & 255) + ")"; }
+function bubble(c, x, y, t) {
+  R(c, x, y, 13, 7, "#f1e9d6"); R(c, x + 1, y - 1, 11, 1, "#f1e9d6"); R(c, x + 1, y + 7, 11, 1, "#f1e9d6"); R(c, x + 3, y + 8, 2, 2, "#f1e9d6");
+  const n = Math.floor(t / 300) % 4;
+  for (let i = 0; i < 3; i++) R(c, x + 3 + i * 3, y + 3, 1, 1, i < n ? "#151a2b" : "#b9b3a2");
+}
+
+function drawAruba(c, t, st) {
+  const bob = Math.round(Math.sin(t / 800) * 1.2);
+  const hy = 58 + bob;
+  const sky = ["#2d1f4f", "#4a2764", "#7a3070", "#b54a6c", "#e56f5c", "#f99a5a", "#ffc070"];
+  const bh = hy / sky.length;
+  sky.forEach((col, i) => R(c, 0, Math.floor(i * bh), 192, Math.ceil(bh) + 1, col));
+  // sun with retro stripes
+  const cx = 138, cy = hy - 6, rad = 11;
+  for (let dy = -rad; dy <= rad; dy++) {
+    const yy = cy + dy; if (yy >= hy) continue;
+    if (dy > 0 && dy % 3 === 1) continue;
+    const w = Math.floor(Math.sqrt(rad * rad - dy * dy));
+    R(c, cx - w, yy, w * 2 + 1, 1, dy < -4 ? "#ffe08a" : "#ffc663");
+  }
+  // clouds
+  const cxo = (t / 180) % 260;
+  [[20, 14, 34], [120, 24, 26], [70, 34, 20]].forEach(([x0, y0, w], i) => {
+    const x = ((x0 + cxo * (0.6 + i * 0.2)) % 260) - 40;
+    R(c, x, y0, w, 2, "#f5a283"); R(c, x + 5, y0 - 1, w - 12, 1, "#f5a283"); R(c, x + 2, y0 + 2, w - 4, 1, "#c96a78");
+  });
+  // gull
+  const gx = 210 - ((t / 45) % 280), gy = 20 + Math.round(Math.sin(t / 400) * 2), flap = Math.floor(t / 250) % 2;
+  R(c, gx, gy + flap, 1, 1, "#2a1a3a"); R(c, gx + 1, gy + 1 - flap, 1, 1, "#2a1a3a"); R(c, gx + 2, gy + 2, 1, 1, "#2a1a3a"); R(c, gx + 3, gy + 1 - flap, 1, 1, "#2a1a3a"); R(c, gx + 4, gy + flap, 1, 1, "#2a1a3a");
+  // island with a divi-divi tree, bent southwest by the trade winds
+  for (let x = 4; x < 70; x++) { const h = Math.round(5 * Math.sin(((x - 4) / 66) * Math.PI)); R(c, x, hy - h, 1, h, "#3a3b4f"); }
+  for (let i = 0; i < 7; i++) R(c, 40 - i, hy - 4 - i, 1, 1, "#2a2230");
+  [[26, hy - 13, 14], [24, hy - 12, 12], [28, hy - 14, 8], [23, hy - 11, 8]].forEach(([x, y, w]) => R(c, x, y, w, 1, "#35513f"));
+  // sea
+  const sea = ["#2b6e86", "#23627a", "#1d5670", "#174a62", "#133f55"];
+  const sh = (108 - hy) / sea.length;
+  sea.forEach((col, i) => R(c, 0, hy + Math.floor(i * sh), 192, Math.ceil(sh) + 1, col));
+  for (let y = hy + 2; y < 76; y += 3) {
+    const off = Math.floor(t / 140 + y * 5) % 14;
+    for (let x = -14 + off; x < 192; x += 14) R(c, x, y, 3 + (y % 2), 1, "#5fb0c0");
+  }
+  for (let y = hy + 1; y < hy + 14; y += 2) { const w = 3 + ((Math.floor(t / 120) + y) % 5); R(c, cx - w, y, w * 2, 1, "#ffc98a"); }
+  // yacht: rail + teak deck
+  R(c, 0, 66, 192, 2, "#eef2f5"); R(c, 0, 68, 192, 1, "#b9c3cc");
+  for (let x = 4; x < 192; x += 16) R(c, x, 68, 2, 12, "#dfe6ec");
+  R(c, 0, 80, 192, 28, "#a4693f");
+  for (let y = 80; y < 108; y += 4) R(c, 0, y, 192, 1, "#7d4c2b");
+  for (let y = 82, i = 0; y < 108; y += 4, i++) for (let x = (i % 2) * 20; x < 192; x += 40) R(c, x, y - 2, 1, 3, "#7d4c2b");
+  // people + table
+  drawPerson(c, 58, 64, st.sc.you, t, st.speaking === "you", 1);
+  drawPerson(c, 124, 64, st.sc.npc, t, st.speaking === "npc", 2);
+  R(c, 72, 76, 48, 3, "#f2ede4"); R(c, 72, 79, 48, 1, "#c9c2b5"); R(c, 94, 80, 4, 12, "#c9c2b5");
+  R(c, 80, 72, 3, 4, "#ffcf7a"); R(c, 80, 71, 3, 1, "#fff4d8"); R(c, 83, 70, 1, 3, "#3fa66b");
+  R(c, 108, 73, 4, 3, "#5a3322"); R(c, 108, 72, 4, 1, "#e9e2d6"); R(c, 112, 74, 1, 1, "#e9e2d6");
+  if (st.thinking) bubble(c, 132, 50, t);
+}
+
+function drawSingapore(c, t, st) {
+  R(c, 0, 0, 192, 108, "#171b2e");
+  const sky = ["#0b0f24", "#10163a", "#171d48", "#231f52", "#35285e"];
+  sky.forEach((col, i) => R(c, 6, 6 + i * 12, 180, 12, col));
+  const r = rng(7);
+  for (let i = 0; i < 26; i++) { const x = 6 + Math.floor(r() * 180), y = 7 + Math.floor(r() * 22); if ((Math.floor(t / 600) + i) % 7) R(c, x, y, 1, 1, "#c9d3ff"); }
+  // skyline
+  const b = rng(42);
+  for (let x = 6; x < 186;) {
+    const w = 6 + Math.floor(b() * 10), h = 10 + Math.floor(b() * 30);
+    const col = b() > 0.5 ? "#10163a" : "#141b44";
+    if (x > 108 && x < 158) { x += w; continue; }
+    R(c, x, 64 - h, w, h, col);
+    for (let yy = 66 - h; yy < 62; yy += 3) for (let xx = x + 1; xx < x + w - 1; xx += 2) {
+      const s = b(); if (s > 0.55) { const on = ((Math.floor(t / 1500) * 13 + xx * 7 + yy * 3) % 23) !== 0; if (on) R(c, xx, yy, 1, 1, s > 0.85 ? "#8fd3ff" : "#ffd98a"); }
+    }
+    x += w + 1;
+  }
+  // Marina Bay Sands: three towers carrying the long sky park
+  [118, 129, 140].forEach((x) => {
+    R(c, x, 34, 7, 30, "#1c2656"); R(c, x + 6, 34, 1, 30, "#2d3a78");
+    for (let yy = 36; yy < 62; yy += 2) for (let xx = x + 1; xx < x + 6; xx += 2) if ((xx * 5 + yy * 3) % 4) R(c, xx, yy, 1, 1, "#f3d08a");
+  });
+  R(c, 112, 31, 42, 3, "#2f3d82"); R(c, 112, 30, 40, 1, "#56689f"); R(c, 152, 32, 5, 1, "#2f3d82");
+  const beam = Math.floor(t / 90) % 60;
+  R(c, 136, 30 - Math.min(beam, 24), 1, Math.min(beam, 24), "rgba(160,200,255,.35)");
+  // bay
+  R(c, 6, 64, 180, 8, "#0a1531");
+  for (let y = 65; y < 72; y += 2) for (let x = 8 + ((Math.floor(t / 200) + y) % 6); x < 184; x += 9) R(c, x, y, 2, 1, x > 110 && x < 155 ? "#b99c5c" : "#2a4c7a");
+  // rain on the glass
+  const rr = rng(3);
+  for (let i = 0; i < 34; i++) { const x = 6 + Math.floor(rr() * 180), sp = 0.5 + rr(); const y = 6 + ((rr() * 66 + t / (40 / sp)) % 66); R(c, x, y, 1, 2, "rgba(150,170,230,.45)"); }
+  // mullions
+  [6, 50, 96, 142, 184].forEach((x) => R(c, x, 6, 2, 66, "#2c3350"));
+  R(c, 6, 4, 180, 2, "#2c3350"); R(c, 6, 72, 180, 2, "#2c3350");
+  // floor
+  R(c, 0, 74, 192, 34, "#23283f");
+  for (let y = 78; y < 108; y += 6) R(c, 0, y, 192, 1, "#1e2236");
+  // orchid (Vanda Miss Joaquim)
+  R(c, 168, 88, 10, 8, "#e8e2d6"); R(c, 172, 76, 1, 12, "#3f7a4a"); R(c, 173, 79, 3, 1, "#3f7a4a");
+  [[169, 75], [174, 77], [171, 80], [176, 74]].forEach(([x, y]) => { R(c, x, y, 3, 2, "#b565c9"); R(c, x + 1, y, 1, 1, "#e7a5ef"); });
+  // people + table
+  drawPerson(c, 62, 66, st.sc.you, t, st.speaking === "you", 1);
+  drawPerson(c, 120, 66, st.sc.npc, t, st.speaking === "npc", 2);
+  R(c, 40, 78, 112, 3, "#6b4430"); R(c, 40, 81, 112, 6, "#4e3122"); R(c, 40, 81, 112, 1, "#3a2418");
+  R(c, 76, 73, 9, 5, "#9aa3b5"); R(c, 77, 74, 7, 3, "#9fe1ff"); R(c, 74, 77, 13, 1, "#c8cfdc");
+  R(c, 106, 74, 2, 4, "#bfe4f2"); R(c, 112, 76, 6, 2, "#f4f4f4");
+  if (st.thinking) bubble(c, 128, 52, t);
+}
+
+const reduceMotion = window.matchMedia?.("(prefers-reduced-motion: reduce)").matches;
+let lastFrame = 0;
+function frame(now) {
+  requestAnimationFrame(frame);
+  if (now - lastFrame < 80) return;
+  lastFrame = now;
+  const t = reduceMotion ? 0 : now;
+  if (S.speaking && now > S.speakUntil) S.speaking = null;
+  document.querySelectorAll("canvas[data-live]").forEach((cv) => {
+    if (!cv.offsetParent) return;
+    const c = cv.getContext("2d");
+    scene().draw(c, t, { sc: scene(), speaking: S.speaking, thinking: S.thinking });
+  });
+}
+function talk(who, text) { S.speaking = who; S.speakUntil = performance.now() + Math.min(4200, 400 + (text || "").length * 55); }
+
+/* ---------------- tabs ---------------- */
+function showTab(name) {
+  document.querySelectorAll("nav.tabs button").forEach((b) => b.setAttribute("aria-selected", String(b.dataset.tab === name)));
+  document.querySelectorAll("main section, .wrap > section").forEach((s) => (s.hidden = s.id !== "tab-" + name));
+  if (name === "train") renderTrain();
+  if (name === "review") renderReview();
+  if (name === "meeting" && !S.turns.length && !S.busy) startMeeting();
+  window.scrollTo({ top: 0, behavior: "instant" in window ? "instant" : "auto" });
+}
+document.querySelectorAll("nav.tabs button").forEach((b) => b.addEventListener("click", () => showTab(b.dataset.tab)));
+
+/* ---------------- setup ---------------- */
+function renderSetup() {
+  const sc = scene();
+  $("#hud-setup").textContent = sc.place.toUpperCase() + " · " + sc.clock;
+  $("#hud-meet").textContent = sc.place.toUpperCase() + " · " + sc.clock;
+  $("#brief-title").textContent = sc.title;
+  $("#brief-lang").textContent = LANGS[S.lang].name;
+  $("#brief-who").textContent = sc.who.name + ", " + sc.who.role;
+  $("#brief-deal").textContent = sc.deal;
+  $("#brief-persona").textContent = sc.who.persona;
+  document.querySelectorAll(".scene-card").forEach((b) => b.setAttribute("aria-pressed", String(b.dataset.scene === S.scene)));
+  $("#lang").value = S.lang;
+  if (!$("#goal").value || Object.values(SCENES).some((s) => s.goal === $("#goal").value)) $("#goal").value = sc.goal;
+  updateModes();
+}
+function updateModes() {
+  const script = hasScript();
+  $("#mode-script").disabled = !script;
+  $("#mode-live").disabled = !sample;
+  if (!script && S.mode === "script") S.mode = "live";
+  if (!sample && S.mode === "live" && script) S.mode = "script";
+  $("#mode-" + S.mode).checked = true;
+  const note = $("#mode-note");
+  const msgs = [];
+  if (!script) msgs.push("Scripted meetings are written for Spanish on the yacht and Mandarin in Singapore. " + LANGS[S.lang].name + " here runs live with Claude.");
+  if (!sample) msgs.push("Live mode needs Claude, which this view can't reach. Open the page on claude.ai to use it.");
+  note.textContent = msgs.join(" ");
+  note.hidden = !msgs.length;
+  note.classList.toggle("warn", !script && !sample);
+  $("#go-meet").disabled = !script && !sample;
+}
+function buildSetup() {
+  const wrap = $("#scene-cards");
+  Object.entries(SCENES).forEach(([id, sc]) => {
+    const b = document.createElement("button");
+    b.className = "scene-card"; b.dataset.scene = id; b.type = "button";
+    b.innerHTML = '<canvas width="192" height="108"></canvas><div><strong>' + esc(sc.title) + "</strong><span>" + esc(sc.place) + " · " + esc(LANGS[sc.lang].name) + "</span></div>";
+    const c = b.querySelector("canvas").getContext("2d");
+    sc.draw(c, 1200, { sc, speaking: null, thinking: false });
+    b.addEventListener("click", () => { S.scene = id; S.lang = sc.lang; store.set("scene", id); store.set("lang", S.lang); resetMeeting(); renderSetup(); });
+    wrap.appendChild(b);
+  });
+  const opts = Object.entries(LANGS).map(([k, v]) => '<option value="' + k + '">' + esc(v.name) + "</option>").join("");
+  $("#lang").innerHTML = opts; $("#tr-lang").innerHTML = opts;
+  $("#tr-lang").value = "es";
+  $("#lang").addEventListener("change", (e) => { S.lang = e.target.value; store.set("lang", S.lang); resetMeeting(); renderSetup(); });
+  $("#level").addEventListener("change", (e) => (S.level = e.target.value));
+  document.querySelectorAll('input[name="mode"]').forEach((r) => r.addEventListener("change", (e) => { S.mode = e.target.value; resetMeeting(); }));
+  $("#go-train").addEventListener("click", () => showTab("train"));
+  $("#go-meet").addEventListener("click", () => { resetMeeting(); showTab("meeting"); });
+  $("#train-go-meet").addEventListener("click", () => { resetMeeting(); showTab("meeting"); });
+}
+
+/* ---------------- train ---------------- */
+let quizState = { i: 0, score: 0, answered: false, items: [] };
+function renderTrain() {
+  const sc = scene(), p = pack(), L = LANGS[S.lang];
+  $("#train-title").textContent = "Phrasebook · " + sc.title;
+  $("#train-sub").textContent = "Ten lines you'll need with " + sc.who.name.split(" ")[0] + ", in " + L.name + ". Say each one out loud before you reveal it.";
+  const note = $("#train-note"), gen = $("#gen-pack");
+  gen.hidden = !sample || !!PACKS[packKey()];
+  gen.textContent = genPacks[packKey()] ? "Rebuild with Claude" : "Build a briefing with Claude";
+  if (!p) {
+    note.hidden = false;
+    note.textContent = sample ? "There's no ready-made briefing for " + L.name + " on " + sc.title.toLowerCase() + " yet. Build one with Claude." : "Ready-made briefings cover Spanish on the yacht and Mandarin in Singapore. Other languages need Claude, which this view can't reach.";
+    $("#phrase-cards").innerHTML = "";
+    $("#quiz").innerHTML = '<h3>Pitfall quiz</h3><p class="muted">Appears once there is a briefing.</p>';
+  } else {
+    note.hidden = true;
+    $("#phrase-cards").innerHTML = p.phrases.map((ph, i) =>
+      '<div class="card"><div class="en">' + esc(ph.en) + '</div><div class="back" hidden id="back-' + i + '"><div class="t">' + esc(ph.t) + "</div>" + (ph.r ? '<div class="rom">' + esc(ph.r) + "</div>" : "") + '<div class="tip">' + esc(ph.tip || "") + '</div></div><div class="row"><button class="btn small" data-reveal="' + i + '">Reveal</button>' + (canSpeak ? '<button class="btn small" data-hear="' + i + '">Hear it</button>' : "") + "</div></div>").join("");
+    $("#phrase-cards").querySelectorAll("[data-reveal]").forEach((b) => b.addEventListener("click", () => { const el = $("#back-" + b.dataset.reveal); el.hidden = !el.hidden; b.textContent = el.hidden ? "Reveal" : "Hide"; }));
+    $("#phrase-cards").querySelectorAll("[data-hear]").forEach((b) => b.addEventListener("click", () => speak(p.phrases[b.dataset.hear].t, S.lang)));
+    quizState = { i: 0, score: 0, answered: false, items: p.pitfalls || [] };
+    renderQuiz();
+  }
+  renderDeck();
+}
+$("#reveal-all").addEventListener("click", () => document.querySelectorAll("#phrase-cards .back").forEach((el) => (el.hidden = false)));
+function renderQuiz() {
+  const q = quizState, box = $("#quiz");
+  if (!q.items.length) { box.innerHTML = "<h3>Pitfall quiz</h3><p class='muted'>No questions in this briefing.</p>"; return; }
+  if (q.i >= q.items.length) {
+    box.innerHTML = '<h3>Pitfall quiz</h3><p class="t">' + q.score + " of " + q.items.length + '</p><p class="muted">' + (q.score === q.items.length ? "Clean sweep. You're ready for the room." : "Go over the ones you missed, then take the meeting.") + '</p><div class="row"><button class="btn small" id="quiz-again">Again</button></div>';
+    $("#quiz-again").onclick = () => { quizState.i = 0; quizState.score = 0; renderQuiz(); };
+    return;
+  }
+  const it = q.items[q.i];
+  box.innerHTML = '<div class="row" style="justify-content:space-between"><h3>Pitfall quiz</h3><span class="label">' + (q.i + 1) + " / " + q.items.length + "</span></div><p>" + esc(it.q) + "</p><div>" +
+    it.choices.map((c, i) => '<button class="choice" data-i="' + i + '">' + esc(c) + "</button>").join("") + '</div><p class="muted" id="quiz-why" hidden></p><div class="row"><button class="btn small" id="quiz-next" hidden>Next</button></div>';
+  q.answered = false;
+  box.querySelectorAll(".choice").forEach((b) => b.addEventListener("click", () => {
+    if (q.answered) return; q.answered = true;
+    const i = +b.dataset.i;
+    if (i === it.a) q.score++;
+    box.querySelectorAll(".choice").forEach((x) => { if (+x.dataset.i === it.a) x.classList.add("right"); else if (x === b) x.classList.add("wrong"); });
+    const why = $("#quiz-why"); why.hidden = false; why.textContent = (i === it.a ? "Right. " : "Not quite. ") + it.why;
+    const nx = $("#quiz-next"); nx.hidden = false; nx.onclick = () => { q.i++; renderQuiz(); };
+  }));
+}
+function renderDeck() {
+  $("#deck-count").textContent = deck.length;
+  const el = $("#deck");
+  if (!deck.length) { el.innerHTML = '<p class="muted" style="font-size:14px">Nothing yet. Finish a meeting or check a transcript.</p>'; return; }
+  el.innerHTML = deck.slice().reverse().map((d, ri) => {
+    const i = deck.length - 1 - ri;
+    return '<div class="card"><div class="said">' + esc(d.said) + '</div><div class="back" hidden id="deck-' + i + '"><div class="t">' + esc(d.better) + '</div><div class="tip">' + esc(d.why) + '</div></div><div class="row"><button class="btn small" data-dreveal="' + i + '">Show fix</button>' + (canSpeak ? '<button class="btn small" data-dhear="' + i + '">Hear it</button>' : "") + '<button class="btn small" data-drop="' + i + '">Got it</button></div></div>';
+  }).join("");
+  el.querySelectorAll("[data-dreveal]").forEach((b) => b.addEventListener("click", () => { const x = $("#deck-" + b.dataset.dreveal); x.hidden = !x.hidden; }));
+  el.querySelectorAll("[data-dhear]").forEach((b) => b.addEventListener("click", () => { const d = deck[b.dataset.dhear]; speak(d.better, d.lang); }));
+  el.querySelectorAll("[data-drop]").forEach((b) => b.addEventListener("click", () => { deck.splice(+b.dataset.drop, 1); store.set("deck", deck); renderDeck(); }));
+}
+function addToDeck(items) {
+  let n = 0;
+  items.forEach((it) => { if (!it.better || deck.some((d) => d.said === it.said && d.better === it.better)) return; deck.push(it); n++; });
+  deck = deck.slice(-60); store.set("deck", deck);
+  toast(n ? "Added " + n + " to your drills" : "Already in your drills");
+}
+$("#gen-pack").addEventListener("click", async () => {
+  const sc = scene(), L = LANGS[S.lang], btn = $("#gen-pack");
+  btn.disabled = true; btn.innerHTML = '<span class="thinking">Building</span>';
+  try {
+    const data = await sample.json(
+      "Build a pre-meeting language briefing for an English speaker.\n" +
+      "Setting: " + sc.place + ". Counterpart: " + sc.who.name + ", " + sc.who.role + ". Personality: " + sc.who.persona + "\n" +
+      "Deal: " + sc.deal + " Learner's goal: " + ($("#goal").value || sc.goal) + "\n" +
+      "Target language: " + L.name + ". Learner level: " + S.level + ".\n" +
+      "Give 10 phrases covering greeting and titles, small talk, proposing, handling price, handling risk, and agreeing next steps, plus 4 multiple-choice pitfalls about common learner mistakes (false friends, register, grammar traps, business etiquette for this place).\n" +
+      'Reply with only JSON: {"phrases":[{"t":"phrase in ' + L.name + '","r":"' + (L.rom ? L.rom : "empty string") + '","en":"English meaning","tip":"one short usage tip"}],"pitfalls":[{"q":"question in English","choices":["a","b","c"],"a":0,"why":"one sentence"}]}',
+      { modelTier: "default" });
+    if (!Array.isArray(data?.phrases) || !data.phrases.length) throw { code: "bad_shape" };
+    genPacks[packKey()] = { phrases: data.phrases.slice(0, 12), pitfalls: (data.pitfalls || []).filter((p) => Array.isArray(p.choices)) };
+    store.set("packs", genPacks);
+    renderTrain();
+  } catch (e) { toast(errCopy(e)); }
+  finally { btn.disabled = false; btn.textContent = genPacks[packKey()] ? "Rebuild with Claude" : "Build a briefing with Claude"; }
+});
+
+/* ---------------- meeting ---------------- */
+const VERDICT = { good: "Nailed it", minor: "Minor slip", major: "Major slip" };
+function resetMeeting() {
+  ctl?.abort();
+  Object.assign(S, { turns: [], deal: 5, node: 0, done: false, busy: false, outcome: "", thinking: false });
+  $("#feedback").innerHTML = ""; $("#answers").innerHTML = ""; $("#npc-line").textContent = ""; $("#npc-rom").textContent = ""; $("#npc-en").textContent = "";
+  renderLog(); renderMeter();
+  if (!$("#tab-meeting").hidden) startMeeting();
+}
+function renderMeter() {
+  $("#meter").innerHTML = "<b>DEAL</b>" + Array.from({ length: 10 }, (_, i) => '<i class="' + (i < S.deal ? "on" : "") + '"></i>').join("");
+}
+let typing = null;
+function showNpc(text, rom, en) {
+  const sc = scene();
+  $("#npc-name").textContent = sc.who.name.toUpperCase();
+  const el = $("#npc-line");
+  clearInterval(typing);
+  talk("npc", text);
+  if (reduceMotion) el.textContent = text;
+  else { let i = 0; el.textContent = ""; typing = setInterval(() => { i += 1; el.textContent = text.slice(0, i); if (i >= text.length) clearInterval(typing); }, 28); }
+  $("#npc-rom").textContent = rom || "";
+  $("#npc-en").textContent = en || "";
+  $("#npc-en").hidden = !S.showEn || !en;
+  $("#hear").hidden = !canSpeak;
+}
+$("#toggle-en").addEventListener("click", () => { S.showEn = !S.showEn; store.set("showEn", S.showEn); $("#toggle-en").textContent = S.showEn ? "Hide English" : "Show English"; $("#npc-en").hidden = !S.showEn || !$("#npc-en").textContent; });
+$("#hear").addEventListener("click", () => speak(lastNpc()?.text, S.lang));
+$("#restart").addEventListener("click", () => resetMeeting());
+const lastNpc = () => [...S.turns].reverse().find((t) => t.who === "npc");
+
+function startMeeting() {
+  $("#toggle-en").textContent = S.showEn ? "Hide English" : "Show English";
+  renderMeter();
+  if (S.mode === "script" && hasScript()) { $("#compose").hidden = true; scriptNode(); }
+  else if (sample) { $("#answers").innerHTML = ""; $("#compose").hidden = false; liveTurn(null); }
+  else { $("#npc-name").textContent = "NO MEETING"; $("#npc-line").textContent = "Pick Spanish on the yacht or Mandarin in Singapore to play offline."; }
+}
+function scriptNode() {
+  const node = SCRIPTS[S.scene][S.node];
+  S.turns.push({ who: "npc", text: node.npc, rom: node.r, en: node.en });
+  showNpc(node.npc, node.r, node.en);
+  renderLog();
+  const box = $("#answers");
+  box.innerHTML = shuffle(node.choices.map((ch, k) => [ch, k])).map(([ch, k]) =>
+    '<button class="answer" data-k="' + k + '"><span class="t" style="font-size:16px">' + esc(ch.t) + "</span>" + (ch.r ? '<span class="rom">' + esc(ch.r) + "</span>" : "") + "</button>").join("");
+  box.querySelectorAll(".answer").forEach((b) => b.addEventListener("click", () => {
+    const ch = node.choices[+b.dataset.k];
+    box.querySelectorAll("button").forEach((x) => (x.disabled = true));
+    const fb = { verdict: ch.q, category: ch.cat || "", better: ch.better || "", why: ch.why };
+    S.turns.push({ who: "you", text: ch.t, rom: ch.r, fb });
+    talk("you", ch.t);
+    S.deal = Math.max(0, Math.min(10, S.deal + (ch.q === "good" ? 1 : ch.q === "minor" ? 0 : -1)));
+    renderMeter(); showFeedback(fb, ch.t); renderLog();
+    setTimeout(() => {
+      S.node++;
+      if (S.node >= SCRIPTS[S.scene].length) {
+        S.outcome = S.deal >= 9 ? "signed" : S.deal >= 6 ? "follow" : "no";
+        endMeeting({ signed: "She's in. Pilot agreed and the follow-up is in the calendar.", follow: "Interest, but not a yes. You'll get a follow-up call.", no: "A polite no. The relationship needs repair before the numbers matter." }[S.outcome]);
+      } else scriptNode();
+    }, reduceMotion ? 200 : 1400);
+  }));
+}
+function showFeedback(fb, said) {
+  const el = $("#feedback");
+  if (!fb) { el.innerHTML = ""; return; }
+  el.innerHTML = '<div class="fb ' + esc(fb.verdict) + '"><div class="row" style="justify-content:space-between"><span class="chip ' + esc(fb.verdict) + '">' + (VERDICT[fb.verdict] || fb.verdict) + "</span>" + (fb.category ? '<span class="label">' + esc(fb.category) + "</span>" : "") + "</div>" +
+    (fb.issue ? "<p><strong>" + esc(fb.issue) + "</strong></p>" : "") + "<p>" + esc(fb.why) + "</p>" +
+    (fb.better && fb.verdict !== "good" ? '<p class="fix">Say: <b>' + esc(fb.better) + "</b></p>" : "") + "</div>";
+}
+function renderLog() {
+  const log = $("#log"), sc = scene();
+  const slips = S.turns.filter((t) => t.fb && t.fb.verdict !== "good").length;
+  $("#slip-count").textContent = S.turns.some((t) => t.who === "you") ? slips + (slips === 1 ? " slip" : " slips") : "";
+  if (!S.turns.length) { log.innerHTML = '<p class="muted" style="font-size:14px">Your lines appear here, marked where they went wrong.</p>'; return; }
+  log.innerHTML = S.turns.map((t) => {
+    if (t.who === "npc") return '<div class="turn"><div class="speaker"><span>' + esc(sc.who.name) + "</span></div><div>" + esc(t.text) + "</div>" + (t.en ? '<div class="rom">' + esc(t.en) + "</div>" : "") + "</div>";
+    const v = t.fb?.verdict;
+    return '<div class="turn you"><div class="speaker"><span>You</span>' + (v ? '<span class="chip ' + esc(v) + '">' + VERDICT[v] + "</span>" : '<span class="label thinking">Grading</span>') + "</div><div>" + (v && v !== "good" ? '<mark class="' + esc(v) + '">' + esc(t.text) + "</mark>" : esc(t.text)) + "</div>" +
+      (v && v !== "good" && t.fb.better ? '<div class="fix">Better: <b>' + esc(t.fb.better) + "</b></div>" : "") + "</div>";
+  }).join("");
+  log.scrollTop = log.scrollHeight;
+}
+function endMeeting(outcome) {
+  S.done = true;
+  $("#answers").innerHTML = '<div class="box end stack"><h3>Meeting over</h3><p>' + esc(outcome) + '</p><div class="row"><button class="btn primary" id="to-debrief">See the debrief</button><button class="btn" id="again">Run it again</button></div></div>';
+  $("#compose").hidden = true;
+  $("#to-debrief").onclick = () => showTab("review");
+  $("#again").onclick = () => resetMeeting();
+  S.outcomeText = outcome;
+}
+
+function liveContext() {
+  const sc = scene(), L = LANGS[S.lang];
+  return "You run a business-meeting simulator for language learners. You play the counterpart AND grade the learner.\n" +
+    "Setting: " + sc.place + ", " + sc.title.toLowerCase() + ", local time " + sc.clock + ".\n" +
+    "Counterpart: " + sc.who.name + ", " + sc.who.role + ". Personality: " + sc.who.persona + "\n" +
+    "Deal on the table: " + sc.deal + "\nLearner's goal: " + ($("#goal").value || sc.goal) + "\n" +
+    "Target language: " + L.name + ". Learner is an English speaker at " + S.level + " level.\n" +
+    "Counterpart rules: speak only " + L.name + ", 1-3 short natural sentences pitched to the level. React realistically to register, directness, small talk and cultural fit for this place. Move through greeting and small talk, proposal, price and risk objections, next steps. Finish (done=true) after about 8 learner turns or when there's a clear outcome.\n";
+}
+async function liveTurn(userText) {
+  if (S.busy) return;
+  S.busy = true; S.thinking = true;
+  $("#say").disabled = true; $("#send").disabled = true;
+  const L = LANGS[S.lang];
+  const history = S.turns.map((t) => (t.who === "npc" ? "Counterpart: " : "Learner: ") + t.text).join("\n");
+  const romField = L.rom ? '"' + L.rom + ' of reply"' : '""';
+  const prompt = liveContext() + (userText == null
+    ? "Open the meeting now with the counterpart's first line (a greeting fitting the setting).\nReply with only JSON: {\"reply\":\"...\",\"romanization\":" + romField + ",\"english\":\"translation\"}"
+    : "Transcript so far:\n" + history + "\n\nGrade ONLY the learner's latest line for grammar, vocabulary, register/politeness, cultural fit and clarity. If they used English, show how to say it in " + L.name + ". Then write the counterpart's next line.\n" +
+      "Reply with only JSON: {\"feedback\":{\"verdict\":\"good|minor|major\",\"category\":\"grammar|vocabulary|register|culture|clarity|none\",\"issue\":\"short English label, empty if good\",\"better\":\"a more natural version in " + L.name + "\",\"why\":\"1-2 English sentences\"},\"reply\":\"...\",\"romanization\":" + romField + ",\"english\":\"translation of reply\",\"deal\":0,\"done\":false,\"outcome\":\"one English sentence if done, else empty\"}\n\"deal\" is an integer from -2 to 2 for how this line moved the deal.");
+  ctl = new AbortController();
+  try {
+    const d = await sample.json(prompt, { modelTier: "quick", cache: false, signal: ctl.signal });
+    const you = [...S.turns].reverse().find((t) => t.who === "you" && !t.fb);
+    if (you && d.feedback) {
+      const v = ["good", "minor", "major"].includes(d.feedback.verdict) ? d.feedback.verdict : "minor";
+      you.fb = { ...d.feedback, verdict: v };
+      showFeedback(you.fb, you.text);
+      S.deal = Math.max(0, Math.min(10, S.deal + Math.max(-2, Math.min(2, parseInt(d.deal, 10) || 0))));
+      renderMeter();
+    }
+    S.turns.push({ who: "npc", text: d.reply || "…", rom: d.romanization, en: d.english });
+    showNpc(d.reply || "…", d.romanization, d.english);
+    renderLog();
+    if (d.done) endMeeting(d.outcome || "The meeting wraps up.");
+  } catch (e) {
+    if (e?.code !== "cancelled") {
+      toast(errCopy(e));
+      const you = S.turns[S.turns.length - 1];
+      if (you?.who === "you" && !you.fb) { S.turns.pop(); $("#say").value = you.text; renderLog(); }
+      if (e?.code === "not_granted") { sample = null; updateModes(); }
+    }
+  } finally {
+    S.busy = false; S.thinking = false;
+    $("#say").disabled = S.done; $("#send").disabled = S.done;
+    if (!S.done) $("#say").focus({ preventScroll: true });
+  }
+}
+$("#compose").addEventListener("submit", (e) => {
+  e.preventDefault();
+  const text = $("#say").value.trim();
+  if (!text || S.busy || S.done) return;
+  $("#say").value = "";
+  S.turns.push({ who: "you", text });
+  talk("you", text);
+  renderLog();
+  liveTurn(text);
+});
+
+/* ---------------- debrief ---------------- */
+function renderReview() {
+  const el = $("#review"), you = S.turns.filter((t) => t.who === "you" && t.fb);
+  if (!you.length) {
+    el.innerHTML = '<div class="box stack"><h2>No meeting yet</h2><p class="muted">Take a meeting and your debrief shows up here: every line you said, what went wrong, and the version to use next time.</p><div class="row"><button class="btn primary" id="rv-go">Go to the meeting</button></div></div>';
+    $("#rv-go").onclick = () => showTab("meeting"); return;
+  }
+  const c = { good: 0, minor: 0, major: 0 }; you.forEach((t) => c[t.fb.verdict]++);
+  const slips = you.filter((t) => t.fb.verdict !== "good");
+  el.innerHTML = '<div class="box stack"><div class="row" style="justify-content:space-between"><h2>Debrief · ' + esc(scene().title) + '</h2><span class="chip info">' + esc(LANGS[S.lang].name) + "</span></div>" +
+    (S.done ? "<p>" + esc(S.outcomeText || "") + "</p>" : '<p class="muted">Meeting still in progress.</p>') +
+    '<div class="stats"><div class="stat"><div class="label">Deal meter</div><div class="v">' + S.deal + '/10</div></div><div class="stat"><div class="label">Clean lines</div><div class="v" style="color:var(--good)">' + c.good + '</div></div><div class="stat"><div class="label">Minor slips</div><div class="v" style="color:var(--minor)">' + c.minor + '</div></div><div class="stat"><div class="label">Major slips</div><div class="v" style="color:var(--major)">' + c.major + "</div></div></div>" +
+    '<div class="row"><button class="btn primary" id="rv-deck"' + (slips.length ? "" : " disabled") + '>Add slips to drills</button><button class="btn" id="rv-again">Run it again</button></div></div>' +
+    '<div class="box stack"><h3>Line by line</h3>' + you.map((t) =>
+      '<div class="fb ' + t.fb.verdict + '"><div class="row" style="justify-content:space-between"><span class="chip ' + t.fb.verdict + '">' + VERDICT[t.fb.verdict] + "</span>" + (t.fb.category && t.fb.category !== "none" ? '<span class="label">' + esc(t.fb.category) + "</span>" : "") + "</div><p>" + (t.fb.verdict === "good" ? esc(t.text) : '<mark class="' + t.fb.verdict + '">' + esc(t.text) + "</mark>") + "</p>" +
+      (t.fb.verdict !== "good" && t.fb.better ? '<p class="fix">Say: <b>' + esc(t.fb.better) + "</b></p>" : "") + '<p class="muted" style="font-size:14px">' + esc(t.fb.why) + "</p></div>").join("") + "</div>";
+  $("#rv-deck").onclick = () => { addToDeck(slips.map((t) => ({ said: t.text, better: t.fb.better, why: t.fb.why, lang: S.lang }))); };
+  $("#rv-again").onclick = () => { resetMeeting(); showTab("meeting"); };
+}
+
+/* ---------------- transcript ---------------- */
+function parseTranscript(raw) {
+  const out = [];
+  for (let line of raw.split(/\r?\n/)) {
+    line = line.trim();
+    if (!line || /^WEBVTT/.test(line) || /-->/.test(line) || /^\d+$/.test(line) || /^NOTE\b/.test(line)) continue;
+    let m = line.match(/^<v\s+([^>]+)>(.*?)(?:<\/v>)?$/);
+    if (m) { out.push({ speaker: m[1].trim(), text: m[2].replace(/<[^>]+>/g, "").trim() }); continue; }
+    line = line.replace(/<[^>]+>/g, "").replace(/^\[?(?:\d{1,2}:)?\d{1,2}:\d{2}(?:[.,]\d+)?\]?\s*/, "");
+    m = line.match(/^([^:]{1,40}):\s+(.+)$/);
+    if (m && !/^https?$/i.test(m[1])) { out.push({ speaker: m[1].trim(), text: m[2].trim() }); continue; }
+    if (out.length) out[out.length - 1].text += " " + line; else out.push({ speaker: "", text: line });
+  }
+  return out;
+}
+function refreshSpeakers() {
+  const lines = parseTranscript($("#tr-text").value);
+  const names = [...new Set(lines.map((l) => l.speaker).filter(Boolean))];
+  const sel = $("#tr-speaker"), prev = sel.value;
+  sel.innerHTML = names.length ? names.map((n) => '<option value="' + esc(n) + '">' + esc(n) + "</option>").join("") : '<option value="">No speakers found</option>';
+  if (names.includes(prev)) sel.value = prev;
+  const note = $("#tr-note");
+  if ($("#tr-text").value.trim() && !names.length) { note.hidden = false; note.textContent = "No speaker names found. Put each line as \"Name: text\" so the check knows which lines are yours."; }
+  else note.hidden = true;
+}
+function highlight(text, issues) {
+  let html = esc(text);
+  issues.forEach((is) => {
+    const q = esc(is.quote || ""); if (!q) return;
+    let i = html.indexOf(q); if (i < 0) i = html.toLowerCase().indexOf(q.toLowerCase());
+    if (i >= 0) html = html.slice(0, i) + '<mark class="' + (is.severity === "major" ? "major" : "minor") + '">' + html.slice(i, i + q.length) + "</mark>" + html.slice(i + q.length);
+  });
+  return html;
+}
+let lastAnalysis = null;
+function renderAnalysis(lines, me, a, lang, example) {
+  lastAnalysis = { a, lines, me, lang };
+  const issues = Array.isArray(a.issues) ? a.issues : [];
+  const byLine = {}; issues.forEach((is) => (byLine[is.line] ||= []).push(is));
+  const mine = lines.filter((l) => l.speaker === me).length;
+  const major = issues.filter((i) => i.severity === "major").length;
+  $("#tr-result").innerHTML =
+    '<div class="row" style="justify-content:space-between"><h2>' + esc(me) + "'s mistakes</h2>" + (example ? '<span class="chip info">Example</span>' : '<span class="chip info">' + esc(LANGS[lang]?.name || lang) + "</span>") + "</div>" +
+    (example ? '<p class="note">A sample Spanish call so you can see how it works. Paste your own transcript in the form to check it.</p>' : "") +
+    "<p>" + esc(a.summary || "") + "</p>" +
+    '<div class="stats"><div class="stat"><div class="label">Your lines</div><div class="v">' + mine + '</div></div><div class="stat"><div class="label">Slips</div><div class="v">' + issues.length + '</div></div><div class="stat"><div class="label">Major</div><div class="v" style="color:var(--major)">' + major + '</div></div><div class="stat"><div class="label">Minor</div><div class="v" style="color:var(--minor)">' + (issues.length - major) + "</div></div></div>" +
+    (a.strengths?.length ? '<div class="stack" style="gap:6px"><div class="label">What worked</div>' + a.strengths.map((s) => '<p class="fix">· ' + esc(s) + "</p>").join("") + "</div>" : "") +
+    '<div class="row"><button class="btn primary small" id="tr-deck"' + (issues.length ? "" : " disabled") + ">Add all to drills</button></div>" +
+    '<div class="tr-lines">' + lines.map((l, i) => {
+      const n = i + 1, is = byLine[n] || [], isMe = l.speaker === me;
+      return '<div class="tr-line' + (isMe ? " me" : "") + '"><div class="num">' + n + '</div><div><span class="spk">' + esc(l.speaker || "Unknown") + "</span>" + (isMe ? highlight(l.text, is) : esc(l.text)) +
+        is.map((x) => '<div class="fix"><div class="row" style="gap:6px"><span class="chip ' + (x.severity === "major" ? "major" : "minor") + '">' + esc(x.category || x.severity) + '</span><span>Say: <b>' + esc(x.better) + '</b></span></div><span class="muted">' + esc(x.why) + "</span></div>").join("") + "</div></div>";
+    }).join("") + "</div>";
+  $("#tr-deck").onclick = () => addToDeck(issues.map((x) => ({ said: x.quote, better: x.better, why: x.why, lang })));
+}
+$("#tr-text").addEventListener("input", refreshSpeakers);
+$("#tr-file").addEventListener("change", async (e) => {
+  const f = e.target.files?.[0]; if (!f) return;
+  try { $("#tr-text").value = await f.text(); refreshSpeakers(); toast("Loaded " + f.name); } catch { toast("Couldn't read that file. Try a plain .txt export."); }
+});
+$("#tr-go").addEventListener("click", async () => {
+  const lines = parseTranscript($("#tr-text").value), me = $("#tr-speaker").value, lang = $("#tr-lang").value, L = LANGS[lang];
+  const note = $("#tr-note");
+  if (!lines.length || !me) { note.hidden = false; note.textContent = "Paste a transcript with \"Name: text\" lines and pick which speaker is you."; return; }
+  if (!sample) { note.hidden = false; note.classList.add("warn"); note.textContent = "Checking a transcript needs Claude, which this view can't reach. Open the page on claude.ai."; return; }
+  let numbered = lines.map((l, i) => i + 1 + ". " + (l.speaker || "Unknown") + ": " + l.text).join("\n");
+  let cut = false;
+  if (numbered.length > 48000) { numbered = numbered.slice(0, 48000); cut = true; }
+  const btn = $("#tr-go"); btn.disabled = true; btn.innerHTML = '<span class="thinking">Reading</span>';
+  note.hidden = !cut; note.textContent = cut ? "That transcript is long, so only the first part is being checked." : "";
+  try {
+    const a = await sample.json(
+      "You are a business " + L.name + " coach. Review this meeting transcript. The learner is the speaker \"" + me + "\". Find only the learner's mistakes: grammar, vocabulary and false friends, register and politeness, cultural missteps, unclear phrasing. Ignore other speakers, filler words and obvious transcription glitches. Lines are numbered.\n" +
+      'Reply with only JSON: {"summary":"2-3 English sentences on how the learner came across","strengths":["up to 3 short points"],"issues":[{"line":N,"quote":"exact substring of that line","better":"corrected phrasing in ' + L.name + '","why":"one English sentence","category":"grammar|vocabulary|register|culture|clarity","severity":"minor|major"}]}\n\nTranscript:\n' + numbered,
+      { modelTier: "default" });
+    renderAnalysis(lines, me, a || {}, lang, false);
+    $("#tr-result").scrollIntoView({ behavior: reduceMotion ? "auto" : "smooth", block: "start" });
+  } catch (e) { note.hidden = false; note.textContent = errCopy(e); if (e?.code === "not_granted") { sample = null; updateModes(); } }
+  finally { btn.disabled = false; btn.textContent = "Find my mistakes"; }
+});
+
+/* ---------------- boot ---------------- */
+buildSetup();
+renderSetup();
+renderMeter();
+renderLog();
+$("#tr-text").value = SAMPLE_TRANSCRIPT;
+refreshSpeakers();
+$("#tr-speaker").value = "Alex";
+renderAnalysis(parseTranscript(SAMPLE_TRANSCRIPT), "Alex", SAMPLE_ANALYSIS, "es", true);
+requestAnimationFrame(frame);
+
+(async () => {
+  try { if (window.claude?.use) sample = await window.claude.use("sample"); } catch { sample = null; }
+  updateModes();
+  if (!$("#tab-train").hidden) renderTrain();
+})();
+})();
+</script>
