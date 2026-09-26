@@ -11,6 +11,12 @@ superyachts and private jets. It is a single self-contained page:
   stakes and local etiquette. Winning a stop opens the next; a new chapter also needs the next rank. Spanish runs from a beach bar in Aruba to an
   invitation-only island; Mandarin from a hawker stall in Singapore to a
   private jet. Other languages get a career written by Claude.
+- **Explore**: a pixel world map per language. Fly to any place in your
+  current chapter or earlier, then walk around (arrow keys, A/D, tap or the
+  on-screen buttons). Order from vendors in the language (coffee sharpens you
+  for the next meeting), make small talk with locals for XP and referrals,
+  buy your circle a drink, trade barbs with rivals, or walk up to the
+  counterpart and start the meeting on the spot.
 - **Meetings**: scripted (offline) or live with Claude. Every line is graded
   and a deal meter decides the payout. Rank (XP) and cash gate the next rung.
 - **Train**: meeting lines, a pitfall quiz and drills built from your own
