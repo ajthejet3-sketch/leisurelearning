@@ -1,0 +1,53 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFrameworks>net10.0-windows10.0.18362.0</TargetFrameworks>
+    <UseWindowsForms>true</UseWindowsForms>
+    <UseWPF>true</UseWPF>
+    <RepositoryUrl></RepositoryUrl>
+    <Description>Media Player .NET Library for WinUI 3/WPF/WinForms (based on FFmpeg/DirectX)</Description>
+    <Version>3.10.4</Version>
+    <Authors>SuRGeoNix</Authors>
+    <Copyright>SuRGeoNix © 2026</Copyright>
+    <PackageLicenseExpression>GPL-3.0-or-later</PackageLicenseExpression>
+    <PackageProjectUrl>https://github.com/SuRGeoNix/Flyleaf</PackageProjectUrl>
+    <PackageTags>flyleaf flyleaflib video audio media player engine framework download extract ffmpeg vortice directx</PackageTags>
+    <IncludeSymbols>true</IncludeSymbols>
+    <SymbolPackageFormat>snupkg</SymbolPackageFormat>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Debug|net10.0-windows10.0.18362.0|AnyCPU'">
+    <WarningLevel>6</WarningLevel>
+    <NoWarn>1701;1702;WFO1000</NoWarn>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Release|net10.0-windows10.0.18362.0|AnyCPU'">
+    <WarningLevel>6</WarningLevel>
+    <NoWarn>1701;1702;WFO1000</NoWarn>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="CliWrap" Version="3.10.1" />
+    <PackageReference Include="DeepL.net" Version="1.21.0" />
+    <PackageReference Include="Flyleaf.FFmpeg.Bindings" Version="7.1.1" />
+    <PackageReference Include="SearchPioneer.Lingua" Version="1.0.5" />
+    <PackageReference Include="TesseractOCR" Version="5.5.2" />
+    <PackageReference Include="UTF.Unknown" Version="2.6.0" />
+    <PackageReference Include="Vortice.D3DCompiler" Version="3.7.6-beta" />
+    <PackageReference Include="Vortice.Direct3D11" Version="3.7.6-beta" />
+    <PackageReference Include="Vortice.DirectComposition" Version="3.7.6-beta" />
+    <PackageReference Include="Vortice.Mathematics" Version="1.9.3" />
+    <PackageReference Include="Vortice.MediaFoundation" Version="3.7.6-beta" />
+    <PackageReference Include="Vortice.XAudio2" Version="3.7.6-beta" />
+    <PackageReference Include="Whisper.net" Version="1.9.0" />
+  </ItemGroup>
+
+</Project>

@@ -1,0 +1,31 @@
+name: Build & Test
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+
+jobs:
+  build:
+    runs-on: windows-latest
+
+    steps:
+    - uses: actions/checkout@v5
+
+    - name: Setup .NET
+      uses: actions/setup-dotnet@v5
+      with:
+        dotnet-version: 10.0.x
+
+    - name: Restore dependencies
+      run: dotnet restore
+
+    - name: Build App
+      run: dotnet build --no-restore -warnaserror .\LLPlayer
+
+    - name: Build Plugin (YoutubeDL)
+      run: dotnet build --no-restore -warnaserror .\Plugins\YoutubeDL
+
+    - name: Test
+      run: dotnet test --no-restore .\FlyleafLibTests
