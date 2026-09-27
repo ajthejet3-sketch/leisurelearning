@@ -2,7 +2,7 @@
 
 A pixel-art grand strategy game set in Europe, the Mediterranean and the Near East, starting in spring 200 BC.
 
-Open `index.html` in a browser to play. It has no dependencies or build step. The only network request is for Google Fonts.
+Open `index.html` in a browser to play. It has no dependencies or build step. The only network request is for Google Fonts. Music starts when you begin a game; turn it off with the Music button.
 
 ## What's in it
 
@@ -14,6 +14,7 @@ Open `index.html` in a browser to play. It has no dependencies or build step. Th
 - **16 building types**, named by culture (Forum, Agora, Nemeton, Cothon harbour, Murus gallicus and so on). You watch each one go up in the city scene: scaffolding, a treadwheel crane and workers carrying stone. Construction slows when a city lacks timber. Buildings also show on the map: fields, vineyards, groves and mines ring each town, and walls, temples and aqueducts grow with their level. Harbours go from a wooden jetty (I) to an enclosed harbour with a lighthouse (IV).
 - **Colonies**: send settlers from a harbour city to unclaimed coastline. A colony founded near a known ancient site takes its name (Narbo, Aquileia, Mogador, Londinium and others).
 - **Diplomacy and war**: trade rights, gifts, alliances, war and peace. Armies attack, raid or garrison cities.
+- **Music composed live in the ancient modes** with the Web Audio API and no audio files. Greeks and Romans get Dorian lyre and aulos in dactylic rhythm, Carthage and the Levant Phrygian harp, aulos and frame drum. The Nile gets Lydian harp and sistrum, the north and west pentatonic pipes and carnyx, and the steppe a fiddle and galloping drum. The style follows the people of the town you open, slows in winter and gains drums in wartime.
 - **Ambitions** for each faction, such as Macedon holding the Fetters of Greece or Carthage refilling its treasury.
 
 ## Layout
@@ -23,6 +24,7 @@ src/data.js     scenario data: goods, buildings, cultures, factions, cities, coa
 src/peoples.js  peoples, their homelands and population mixing
 src/engine.js   map generation, economy, trade, war, colonies, AI
 src/render.js   map renderer and city construction scene
+src/music.js    generative music and sound effects
 src/ui.js       panels, input, save/load
 src/shell.html  markup and styles
 build.mjs       concatenates src/ into index.html (standalone) and oikoumene.html (body fragment)

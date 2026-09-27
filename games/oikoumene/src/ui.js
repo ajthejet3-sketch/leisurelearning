@@ -32,7 +32,7 @@ function renderChron() {
 }
 
 // ---- panel ---------------------------------------------------------------------
-function select(sel) { UI.sel = sel; if (sel && sel.type === 'city' && C(sel.id).owner !== G.player && UI.tab === 'build') UI.tab = 'econ'; renderPanel(); }
+function select(sel) { UI.sel = sel; if (Music.on) Music.refresh(); renderMusic(); if (sel && sel.type === 'city' && C(sel.id).owner !== G.player && UI.tab === 'build') UI.tab = 'econ'; renderPanel(); }
 function renderPanel() {
   const el = $('#panel'); if (!G || !UI.sel) { el.hidden = true; return; } el.hidden = false; const s = UI.sel; let h = '';
   if (s.type === 'city') h = cityPanel(C(s.id));
@@ -174,6 +174,7 @@ function realmPanel() {
   const ar = G.armies.filter((a) => a.f === p);
   h += '<h3>Armies</h3><ul class="routes">' + (ar.length ? ar.map((a) => '<li data-a="selarmy" data-v="' + a.id + '"><div><b>' + esc(a.name) + '</b> <span class="muted small">' + (a.mv ? 'marching on ' + esc(C(a.mv.to).name) : 'at ' + esc(C(a.at).name)) + '</span></div><div class="val">' + fmt(a.str) + '</div></li>').join('') : '<li class="muted">None</li>') + '</ul>';
   if (G.fleets.some((f) => f.f === p)) h += '<h3>Colonists under way</h3><ul class="plain">' + G.fleets.filter((f) => f.f === p).map((f) => '<li>' + esc(f.name) + ' · arrives in ' + (f.turns - f.done) + ' season(s)</li>').join('') + '</ul>';
+  h += '<h3>Music</h3><p class="small">' + (Music.on ? 'Now playing: ' + esc(Music.label()) + '. The music follows the people of the town you open, slows in winter and gathers drums in wartime.' : 'Music is off. Turn it on from the top bar.') + '</p>';
   h += '<div class="row gap"><button data-a="save">Save game</button><button data-a="help">How to play</button><button class="danger" data-a="restart">New game</button></div>';
   return h;
 }
@@ -251,6 +252,7 @@ function helpPanel() {
 <p><b>Colonies</b>: from a harbour city, choose <i>Army &amp; colonies → Choose a colony site</i>, or simply click unclaimed land. Green squares show where your ships can reach.</p>
 <p><b>War</b>: raise armies, then attack or raid enemy cities. Walls and garrisons defend. Declare war and make peace in Diplomacy.</p>
 <p><b>Map modes</b>: Political, Trade (every route in the world), Goods (each city's main products), Terrain.</p>
+<p><b>Music</b> is composed live in the ancient modes: Dorian lyre and aulos for Greeks and Romans, Phrygian harp and frame drum for the Levant and Carthage, Lydian harp and sistrum on the Nile, pentatonic pipes and carnyx in the north and west, and fiddle and horse drum on the steppe. It follows the people of the town you open.</p>
 <p><b>Controls</b>: drag to pan, wheel or pinch to zoom, <kbd>Esc</kbd> to cancel.</p></div>`;
 }
 
@@ -258,7 +260,7 @@ function helpPanel() {
 const ACT = {
   close: () => { UI.sel = null; renderPanel(); },
   tab: (v) => { UI.tab = v; renderPanel(); },
-  build: (v) => { const c = C(UI.sel.id), e = queueBuild(c, v); if (e) toast(e, 'bad'); else toast(bname(v, c.culture) + ' ordered in ' + c.name, 'good'); renderAll(); },
+  build: (v) => { const c = C(UI.sel.id), e = queueBuild(c, v); if (e) toast(e, 'bad'); else { toast(bname(v, c.culture) + ' ordered in ' + c.name, 'good'); Music.sfx('build'); } renderAll(); },
   cancelq: (v) => { const c = C(UI.sel.id), it = c.q[+v]; if (!it) return; c.q.splice(+v, 1); G.fac[c.owner].gold += Math.round(it.cost * 0.75); toast('Cancelled; 75% refunded'); renderAll(); },
   selroute: (v) => select({ type: 'route', id: +v }),
   selcity: (v) => { select({ type: 'city', id: +v }); lookAtCity(C(+v)); },
@@ -270,13 +272,13 @@ const ACT = {
   closeroute: () => { const r = G.routes.find((x) => x.id === UI.sel.id); G.routes = G.routes.filter((x) => x !== r); G.black[dk(r.a, r.b)] = G.turn + 8; toast('Route closed. Merchants will stay away for two years.'); UI.sel = { type: 'city', id: r.a }; renderAll(); },
   raise: () => { const c = C(UI.sel.id), e = raiseArmy(c); if (e) toast(e, 'bad'); else toast('Troops levied in ' + c.name, 'good'); renderAll(); },
   colonymode: () => { const c = C(UI.sel.id); buildColonyOverlay(c); UI.mode = { type: 'colony', origin: c.id, msg: 'Click a green site to plant a colony from ' + c.name }; renderMode(); },
-  found: (v) => { const s = UI.sel, name = ($('#colname') || {}).value; const e = launchColony(C(+v), s.x, s.y, (name || '').trim() || null); if (e) toast(e, 'bad'); else { toast('Colonists set out for ' + (name || 'the new site'), 'good'); UI.mode = null; renderMode(); UI.sel = { type: 'realm' }; } UI.colName = null; renderAll(); },
+  found: (v) => { const s = UI.sel, name = ($('#colname') || {}).value; const e = launchColony(C(+v), s.x, s.y, (name || '').trim() || null); if (e) toast(e, 'bad'); else { toast('Colonists set out for ' + (name || 'the new site'), 'good'); Music.sfx('fanfare'); UI.mode = null; renderMode(); UI.sel = { type: 'realm' }; } UI.colName = null; renderAll(); },
   march: (v) => { const a = G.armies.find((x) => x.id === UI.sel.id), from = C(a.at); const targets = G.cities.filter((t) => t.owner && reach(from, t) && (v === 'move' ? t.owner === a.f || allied(a.f, t.owner) : atWar(a.f, t.owner))).map((t) => t.id); if (!targets.length) { toast(v === 'move' ? 'No friendly city within reach' : 'No enemy city within reach. Declare war first?', 'bad'); return; } UI.mode = { type: 'march', army: a.id, order: v, targets, msg: (v === 'attack' ? 'Choose a city to assault' : v === 'raid' ? 'Choose a city to raid' : 'Choose where to move') + ' (ringed cities are in reach)' }; renderMode(); },
   disband: () => { G.armies = G.armies.filter((x) => x.id !== UI.sel.id); UI.sel = null; renderAll(); },
   dipsel: (v) => { UI.dipSel = UI.dipSel === v ? null : v; UI.confirmWar = null; renderPanel(); },
   dipwith: (v) => { UI.dipSel = v; select({ type: 'dip' }); },
   confirmwar: (v) => { UI.confirmWar = v; renderPanel(); },
-  dip: (v, el) => { const [k, m] = playerDip(v, el.dataset.f); toast(m, k); UI.confirmWar = null; renderAll(); },
+  dip: (v, el) => { const [k, m] = playerDip(v, el.dataset.f); toast(m, k); if (v === 'war') Music.sfx('war'); else if (k === 'good') Music.sfx('coin'); UI.confirmWar = null; renderAll(); },
   lookat: (v) => { const cs = citiesOf(v); if (cs.length) lookAtCity(cs.find((c) => c.capital) || cs[0]); },
   save: () => { const ok = saveGame(); toast(ok ? 'Game saved in this browser' : 'Saving is blocked in this browser', ok ? 'good' : 'bad'); },
   help: () => select({ type: 'help' }),
@@ -338,6 +340,7 @@ function setupInput() {
   document.addEventListener('change', (e) => { const a = e.target.dataset && e.target.dataset.a; if (a === 'tax' || a === 'tariff') renderPanel(); });
   document.addEventListener('keydown', (e) => { if (e.target.tagName === 'INPUT') return; if (e.key === 'Escape') { if (UI.mode) { UI.mode = null; renderMode(); } else { UI.sel = null; renderPanel(); } } if (e.key === 'Enter' && G && $('#start').hidden) doEndTurn(); if (e.key === '+' || e.key === '=') zoomAt(1, VW / 2, VH / 2); if (e.key === '-') zoomAt(-1, VW / 2, VH / 2); });
   $('#endturn').addEventListener('click', doEndTurn);
+  $('#musicbtn').addEventListener('click', () => { Music.toggle(); if (Music.on) Music.refresh(); renderMusic(); });
   $('#modecancel').addEventListener('click', () => { UI.mode = null; renderMode(); });
   document.querySelectorAll('[data-mapmode]').forEach((b) => b.addEventListener('click', () => { UI.mapMode = b.dataset.mapmode; renderTop(); }));
   document.querySelectorAll('[data-open]').forEach((b) => b.addEventListener('click', () => { const t = b.dataset.open; select(UI.sel && UI.sel.type === t ? null : { type: t }); }));
@@ -352,7 +355,7 @@ let busy = false;
 function doEndTurn() {
   if (!G || busy || !G.fac[G.player].alive) return; busy = true; $('#endturn').disabled = true; $('#endturn').textContent = 'The season turns…';
   setTimeout(() => {
-    const before = G.fac[G.player].gold; endTurn(); saveGame(); busy = false; $('#endturn').disabled = false; $('#endturn').textContent = 'End season';
+    const before = G.fac[G.player].gold, warsBefore = FIDS.filter((f) => atWar(G.player, f)).length; endTurn(); Music.sfx(FIDS.filter((f) => atWar(G.player, f)).length > warsBefore ? 'war' : 'turn'); Music.refresh(); saveGame(); busy = false; $('#endturn').disabled = false; $('#endturn').textContent = 'End season';
     if (UI.mode && UI.mode.type === 'colony') buildColonyOverlay(C(UI.mode.origin));
     renderAll(); const d = G.fac[G.player].gold - before; toast(dateStr() + ' · treasury ' + (d >= 0 ? '+' : '') + fmt(d), d >= 0 ? 'good' : 'bad');
   }, 30);
@@ -374,8 +377,8 @@ function showStart() {
   h += '<div class="row gap"><button class="primary" id="begin">Begin as ' + esc(FAC[f].short) + '</button>' + (hasSave ? '<button id="cont">Continue saved game</button>' : '') + '</div></aside></div></div>';
   el.innerHTML = h;
   el.querySelectorAll('[data-pick]').forEach((b) => b.addEventListener('click', () => { UI.startPick = b.dataset.pick; showStart(); }));
-  $('#begin').addEventListener('click', () => { el.innerHTML = '<div class="loading">Surveying the coasts and charting the sea lanes…</div>'; setTimeout(() => { PATHS.clear(); newGame(UI.startPick); flagPirates(); afterLoad(); el.hidden = true; }, 30); });
-  const cb = $('#cont'); if (cb) cb.addEventListener('click', () => { if (loadGame()) el.hidden = true; else toast('Could not read the saved game', 'bad'); });
+  $('#begin').addEventListener('click', () => { if (Music.loadPref() !== 'off') Music.start(); renderMusic(); el.innerHTML = '<div class="loading">Surveying the coasts and charting the sea lanes…</div>'; setTimeout(() => { PATHS.clear(); newGame(UI.startPick); flagPirates(); afterLoad(); el.hidden = true; }, 30); });
+  const cb = $('#cont'); if (cb) cb.addEventListener('click', () => { if (Music.loadPref() !== 'off') Music.start(); renderMusic(); if (loadGame()) el.hidden = true; else toast('Could not read the saved game', 'bad'); });
 }
 function saveGame() { try { const s = JSON.stringify(G, (k, v) => (k === '_disp' || k === 'flash' || k === 'cand' || k === 'seaN' || k === 'landN' ? undefined : v)); localStorage.setItem(SAVE_KEY, s); return true; } catch (e) { return false; } }
 function loadGame() {
@@ -390,7 +393,8 @@ function afterLoad() {
   renderAll();
 }
 function onDefeat() { toast('Your state has fallen. Start a new game from the Realm panel.', 'bad'); }
-function onColony(c) { toast('The colony of ' + c.name + ' is founded!', 'good'); }
+function onColony(c) { toast('The colony of ' + c.name + ' is founded!', 'good'); Music.sfx('fanfare'); }
+function renderMusic() { const b = $('#musicbtn'); if (!b) return; b.textContent = Music.on ? 'Music: on' : 'Music: off'; b.setAttribute('aria-pressed', Music.on ? 'true' : 'false'); b.title = Music.on ? 'Now playing: ' + Music.label() + '. Click to mute.' : 'Play music in the ancient modes'; }
 
 // ---- boot --------------------------------------------------------------------
 function resize() { const tb = $('#top'); if (tb) document.documentElement.style.setProperty('--toph', tb.offsetHeight + 18 + 'px'); const cv = $('#map'); DPR = Math.min(2, window.devicePixelRatio || 1); VW = cv.clientWidth; VH = cv.clientHeight; cv.width = Math.round(VW * DPR); cv.height = Math.round(VH * DPR); clampCam(); }
