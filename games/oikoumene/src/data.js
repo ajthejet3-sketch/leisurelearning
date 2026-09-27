@@ -37,7 +37,7 @@ const BLD = {
   olive: { n: 'Olive groves', cost: 80, t: 3, max: 3, e: 'Olive oil (Mediterranean climate only)' },
   lumber: { n: 'Timber camp', cost: 50, t: 2, max: 3, e: 'Timber, plus furs or amber where found' },
   mine: { n: 'Mines', cost: 150, t: 4, max: 3, e: 'Ore from the local seams; silver and gold are partly minted' },
-  harbor: { n: 'Harbour', cost: 120, t: 3, max: 3, e: 'Fish and salt, +1 route slot, larger cargoes, launches colonies' },
+  harbor: { n: 'Harbour', cost: 120, t: 3, max: 4, e: 'Fish and salt, +1 route slot, larger cargoes, launches colonies. Level III adds a lighthouse, level IV a great enclosed harbour' },
   workshop: { n: 'Workshops', cost: 120, t: 3, max: 3, e: 'Pottery; weaves wool into textiles; purple, glass, papyrus where found' },
   forge: { n: 'Forges', cost: 140, t: 3, max: 3, e: 'Iron into arms, copper and tin into bronze' },
   market: { n: 'Market', cost: 100, t: 3, max: 3, e: '+1 route slot, +10% merchant income, draws eastern luxuries' },
@@ -161,7 +161,7 @@ const CITY_DATA = [
   ['Apollonia', 19.47, 40.72, 'rome', 3], ['Epidamnos', 19.45, 41.32, 'rome', 4], ['Ancona', 13.5, 43.62, 'rome', 3], ['Kroton', 17.12, 39.08, 'rome', 3],
   ['Carthago', 10.32, 36.85, 'carthage', 32, 1], ['Hadrumetum', 10.64, 35.83, 'carthage', 5], ['Hippo Regius', 7.77, 36.9, 'carthage', 4], ['Leptis Magna', 14.29, 32.63, 'carthage', 4],
   ['Oea', 13.18, 32.9, 'carthage', 3], ['Ebusus', 1.43, 38.91, 'carthage', 3],
-  ['Cirta', 6.61, 36.36, 'numidia', 8, 1], ['Siga', -1.46, 35.26, 'numidia', 4], ['Iol', 2.19, 36.6, 'numidia', 3], ['Thugga', 9.22, 36.42, 'numidia', 3], ['Theveste', 8.12, 35.4, 'numidia', 2],
+  ['Cirta', 6.61, 36.36, 'numidia', 8, 1], ['Siga', -1.46, 35.26, 'numidia', 4], ['Iol', 2.19, 36.6, 'numidia', 3], ['Thugga', 9.22, 36.42, 'carthage', 3], ['Theveste', 8.12, 35.4, 'numidia', 2],
   ['Volubilis', -5.55, 34.07, 'mauretania', 3, 1], ['Tingis', -5.8, 35.77, 'mauretania', 4], ['Lixus', -6.13, 35.2, 'mauretania', 3],
   ['Pella', 22.52, 40.76, 'macedon', 12, 1], ['Thessalonike', 22.94, 40.64, 'macedon', 9], ['Amphipolis', 23.85, 40.82, 'macedon', 6], ['Demetrias', 22.94, 39.34, 'macedon', 6],
   ['Larisa', 22.42, 39.64, 'macedon', 5], ['Chalkis', 23.6, 38.46, 'macedon', 4], ['Korinthos', 22.93, 37.9, 'macedon', 8], ['Herakleia Lynkestis', 21.33, 41.01, 'macedon', 3],
@@ -470,6 +470,8 @@ FDEF.push(
   ['garamantes', 'Garamantes', 'Garamantes', '#b07a4a', 'numidian', 'shekels', [0.5, 0.4, 0.1], 'Chariot lords of the Fezzan oases, masters of underground canals.'],
 );
 CITY_DATA.push(
+  ['Hippo Diarrhytus', 9.87, 37.27, 'carthage', 4], ['Kerkouane', 11.1, 36.95, 'carthage', 2], ['Thapsus', 11.05, 35.62, 'carthage', 3], ['Tacape', 10.1, 33.88, 'carthage', 2],
+  ['Sabratha', 12.48, 32.8, 'carthage', 2], ['Thaenae', 10.7, 34.67, 'carthage', 2], ['Sicca', 8.71, 36.18, 'carthage', 2], ['Rusucurru', 3.9, 36.9, 'carthage', 2],
   ['Venusia', 15.81, 40.96, 'rome', 3], ['Luceria', 15.33, 41.5, 'rome', 3], ['Paestum', 15.0, 40.42, 'rome', 2], ['Cosa', 11.29, 42.41, 'rome', 2], ['Firmum', 13.72, 43.16, 'rome', 2],
   ['Tauromenion', 15.29, 37.85, 'rome', 2], ['Tarracina', 13.25, 41.29, 'rome', 2], ['Spoletium', 12.73, 42.73, 'rome', 2], ['Korkyra', 19.92, 39.62, 'rome', 3], ['Ilici', -0.7, 38.27, 'rome', 2],
   ['Sitifis', 5.4, 36.19, 'numidia', 2], ['Capsa', 8.78, 34.42, 'numidia', 2],

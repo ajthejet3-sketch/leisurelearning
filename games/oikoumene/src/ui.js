@@ -7,7 +7,7 @@ const esc = (s) => String(s).replace(/[&<>"]/g, (m) => ({ '&': '&amp;', '<': '&l
 const fmt = (v) => (Math.abs(v) >= 100 ? Math.round(v) : Math.abs(v) > 0 && Math.abs(v) < 0.1 ? Math.round(v * 100) / 100 : Math.round(v * 10) / 10).toLocaleString('en');
 const UI = { sel: null, mode: null, mapMode: 'political', tab: 'econ', hover: null, dipSel: null, startPick: 'rome' };
 let MAPCTX, SCENE, SCENECTX;
-const SAVE_KEY = 'oikoumene-save-v2';
+const SAVE_KEY = 'oikoumene-save-v3';
 
 const chip = (f) => '<span class="fchip" style="--c:' + FAC[f].col + '">' + esc(FAC[f].short) + '</span>';
 const gchip = (g, extra) => '<span class="gchip" style="--c:' + GD[g].c + '">' + esc(GD[g].n) + (extra != null ? ' <b>' + extra + '</b>' : '') + '</span>';
@@ -55,6 +55,7 @@ function cityPanel(c) {
   let h = head(c.name, chip(c.owner) + ' · ' + cul.lbl + (c.capital ? ' · capital' : '') + (c.colony ? ' · colony' : '') + ' · ' + TNAME[terr[c.y * W + c.x]], FAC[c.owner].col);
   h += '<div class="scene"><div id="scene-slot"></div><div class="scap">' + (q ? 'Building <b>' + esc(bname(q.b, c.culture)) + ' ' + roman((c.b[q.b] || 0) + 1) + '</b> · ' + Math.max(1, Math.ceil((q.need - q.done) / (0.6 + 0.4 * (c.fl.timber ?? 1)))) + ' season(s) left' + ((c.fl.timber ?? 1) < 0.7 ? ' · <span class="neg">short of timber, work is slow</span>' : '') : 'No construction under way') + '</div></div>';
   h += '<div class="kv"><div><span>People</span><b>' + fmt(c.pop) + 'k</b><small>ceiling ' + fmt(popCap(c)) + 'k</small></div><div><span>Order</span><b class="' + (c.order < 35 ? 'neg' : c.order > 60 ? 'pos' : '') + '">' + Math.round(c.order) + '</b>' + bar(c.order, 100, c.order < 35 ? 'bad' : '') + '</div><div><span>Food</span><b class="' + (s.food < 0.9 ? 'neg' : 'pos') + '">' + Math.round(s.food * 100) + '%</b><small>' + fmt(c.stock.grain || 0) + ' in store</small></div><div><span>Comforts</span><b>' + Math.round(s.comfort * 100) + '%</b><small>luxuries ' + Math.round(s.lux * 100) + '%</small></div></div>';
+  h += peopleBlock(c);
   const tabs = [['econ', 'Economy'], ['build', mine ? 'Build' : 'Buildings'], ['trade', 'Trade'], ['army', mine ? 'Army & colonies' : 'Defences']];
   h += '<nav class="tabs">' + tabs.map(([k, n]) => '<button data-a="tab" data-v="' + k + '" class="' + (UI.tab === k ? 'on' : '') + '">' + n + '</button>').join('') + '</nav>';
   if (UI.tab === 'econ') h += cityEcon(c);
@@ -62,6 +63,14 @@ function cityPanel(c) {
   else if (UI.tab === 'trade') h += cityTrade(c, mine);
   else h += cityArmy(c, mine, armies);
   if (!mine) h += '<div class="row gap"><button data-a="dipwith" data-v="' + c.owner + '">Diplomacy with ' + esc(FAC[c.owner].short) + '</button></div>';
+  return h;
+}
+function peopleBlock(c) {
+  const ps = topPeoples(c, 8), rp = facPeople(c.owner), fs = foreignShare(c);
+  let h = '<h3>Peoples of ' + esc(c.name) + ' <small>' + fmt(c.pop) + 'k souls · rulers are ' + esc(PEOPLES[rp][0]) + '</small></h3>';
+  h += '<div class="pbar" role="img" aria-label="Population by people">' + ps.map(([p, v]) => '<i style="width:' + (v * 100).toFixed(1) + '%;background:' + PEOPLES[p][1] + '" title="' + esc(PEOPLES[p][0]) + ' ' + Math.round(v * 100) + '%"></i>').join('') + '</div>';
+  h += '<ul class="plist">' + ps.map(([p, v]) => '<li><span class="sw" style="--c:' + PEOPLES[p][1] + '"></span><b>' + esc(PEOPLES[p][0]) + '</b><span class="pct">' + (v * 100 < 1 ? '<1' : Math.round(v * 100)) + '%</span><span class="muted">' + fmt(c.pop * v) + 'k · ' + esc(PEOPLES[p][3]) + '</span></li>').join('') + '</ul>';
+  if (fs > 0.08) h += '<p class="small ' + (fs > 0.4 ? 'warn' : 'muted') + '">' + (fs > 0.4 ? 'Most people here are not ' + esc(PEOPLES[rp][0]) + '. ' : '') + 'Foreign rule costs ' + Math.round(18 * fs) + ' public order. Temples and time assimilate people to their rulers; trade routes bring newcomers.</p>';
   return h;
 }
 function wants(c) {
@@ -105,11 +114,20 @@ function flowLine(r, c) {
   return (outs.length ? '<span class="gold">→ ' + outs.map((f) => esc(GD[f.g].n) + ' ' + fmt(f.amt)).join(', ') + '</span> ' : '') + (ins.length ? '<span class="pos">← ' + ins.map((f) => esc(GD[f.g].n) + ' ' + fmt(f.amt)).join(', ') + '</span>' : '') || '<span class="muted">idle</span>';
 }
 function cityTrade(c, mine) {
-  const rs = G.routes.filter((r) => r.a === c.id || r.b === c.id);
-  let h = '<h3>Trade routes <small>' + rs.length + ' of ' + slots(c) + ' slots</small></h3><ul class="routes">';
-  for (const r of rs) { const o = C(r.a === c.id ? r.b : r.a); h += '<li data-a="selroute" data-v="' + r.id + '"><div><b>' + esc(o.name) + '</b> ' + chip(o.owner) + ' <span class="muted small">' + (r.k === 'sea' ? 'by sea' : 'overland') + (r.pin ? ' · kept open' : '') + (r.pirate ? ' · <span class="warn">pirate waters</span>' : '') + '</span></div><div class="small">' + flowLine(r, c) + '</div><div class="val">' + fmt(r.val) + '</div></li>'; }
-  h += rs.length ? '</ul>' : '<li class="muted">No routes yet.</li></ul>';
-  if (mine) h += '<div class="row gap"><button data-a="newroute" ' + (rs.length >= slots(c) ? 'disabled' : '') + '>Open a route from ' + esc(c.name) + '</button></div><p class="muted small">Merchants open profitable routes on their own each season. Open one yourself, keep a route open even when trade dries up, or close routes you dislike. More slots come from harbours and markets.</p>';
+  const rs = G.routes.filter((r) => r.a === c.id || r.b === c.id).sort((x, y) => y.val - x.val);
+  let h = '<h3>Trade routes <small>' + rs.length + ' of ' + slots(c) + ' slots · ' + fmt(rs.reduce((s, r) => s + r.val, 0)) + ' per season</small></h3>';
+  if (!rs.length) h += '<p class="muted">No routes yet.</p>';
+  for (const r of rs) {
+    const o = C(r.a === c.id ? r.b : r.a), outs = [], ins = [];
+    for (const f of r.flows) ((f.dir === 0 ? r.b : r.a) === c.id ? ins : outs).push(f);
+    const days = Math.round((r.d * KM_PER_CELL) / (r.k === 'sea' ? 90 : 30));
+    const list = (fl) => fl.length ? fl.map((f) => gchip(f.g, fmt(f.amt))).join('') : '<span class="muted small">nothing</span>';
+    h += '<div class="rcard"><div class="rh" data-a="selroute" data-v="' + r.id + '"><b>' + esc(o.name) + '</b>' + chip(o.owner) + '<span class="muted small">' + (r.k === 'sea' ? 'sea' : 'road') + ' · ~' + days + ' days' + (r.pirate ? ' · <span class="warn">pirates</span>' : '') + (r.pin ? ' · kept open' : '') + '</span><span class="val">' + fmt(r.val) + '</span></div>';
+    h += '<div class="rc"><div><span class="lbl">Sends</span><p class="chips">' + list(outs) + '</p></div><div><span class="lbl">Receives</span><p class="chips">' + list(ins) + '</p></div></div>';
+    if (mine) h += '<div class="row gap ra"><button class="sm" data-a="pinr" data-v="' + r.id + '">' + (r.pin ? 'Let merchants decide' : 'Keep open') + '</button><button class="sm danger" data-a="closer" data-v="' + r.id + '">Close</button><button class="sm" data-a="selroute" data-v="' + r.id + '">Details</button></div>';
+    h += '</div>';
+  }
+  if (mine) h += '<div class="row gap"><button data-a="newroute" ' + (rs.length >= slots(c) ? 'disabled' : '') + '>Open a route from ' + esc(c.name) + '</button></div><p class="muted small">Every route is drawn on the map while this town is selected, and its ships and carts come and go in the town view above. Merchants open profitable routes by themselves each season; harbours and markets add slots.</p>';
   const w = wants(c).slice(0, 5), sp = Object.entries(c.S || {}).filter(([, v]) => v > 0.05).sort((a, b) => b[1] * price(b[0]) - a[1] * price(a[0])).slice(0, 6);
   h += '<h3>Unmet demand</h3><p class="chips">' + (w.length ? w.map(([g]) => gchip(g)).join('') : '<span class="muted">None</span>') + '</p>';
   h += '<h3>Unsold surplus</h3><p class="chips">' + (sp.length ? sp.map(([g, v]) => gchip(g, fmt(v))).join('') : '<span class="muted">None</span>') + '</p>';
@@ -246,6 +264,8 @@ const ACT = {
   selcity: (v) => { select({ type: 'city', id: +v }); lookAtCity(C(+v)); },
   selarmy: (v) => select({ type: 'army', id: +v }),
   newroute: () => { const c = C(UI.sel.id); const targets = c.cand.map((n) => n.id).filter((id) => { const o = C(id); return o.owner && access(c.owner, o.owner) && !G.routes.some((r) => dk(r.a, r.b) === dk(c.id, id)); }); UI.mode = { type: 'route', from: c.id, targets, msg: 'Pick a partner for ' + c.name + ' (ringed cities have trade access)' }; renderMode(); },
+  pinr: (v) => { const r = G.routes.find((x) => x.id === +v); if (r) r.pin = !r.pin; renderPanel(); },
+  closer: (v) => { const r = G.routes.find((x) => x.id === +v); if (!r) return; G.routes = G.routes.filter((x) => x !== r); G.black[dk(r.a, r.b)] = G.turn + 8; toast('Route closed. Merchants will stay away for two years.'); renderAll(); },
   pin: () => { const r = G.routes.find((x) => x.id === UI.sel.id); r.pin = !r.pin; renderPanel(); },
   closeroute: () => { const r = G.routes.find((x) => x.id === UI.sel.id); G.routes = G.routes.filter((x) => x !== r); G.black[dk(r.a, r.b)] = G.turn + 8; toast('Route closed. Merchants will stay away for two years.'); UI.sel = { type: 'city', id: r.a }; renderAll(); },
   raise: () => { const c = C(UI.sel.id), e = raiseArmy(c); if (e) toast(e, 'bad'); else toast('Troops levied in ' + c.name, 'good'); renderAll(); },
@@ -293,7 +313,7 @@ function onMapClick(sx, sy) {
 }
 function tooltipFor(h) {
   if (!h) return '';
-  if (h.type === 'city') { const c = C(h.id); const top = Object.entries(c.P || {}).sort((p, q) => q[1] * price(q[0]) - p[1] * price(p[0])).slice(0, 3).map(([g]) => GD[g].n).join(', '); return '<b>' + esc(c.name) + '</b> ' + chip(c.owner) + '<br>' + fmt(c.pop) + 'k people' + (c.q.length ? ' · building ' + esc(bname(c.q[0].b, c.culture)) : '') + '<br><span class="muted">' + esc(top) + '</span>'; }
+  if (h.type === 'city') { const c = C(h.id); const top = Object.entries(c.P || {}).sort((p, q) => q[1] * price(q[0]) - p[1] * price(p[0])).slice(0, 3).map(([g]) => GD[g].n).join(', '); return '<b>' + esc(c.name) + '</b> ' + chip(c.owner) + '<br>' + fmt(c.pop) + 'k people' + (c.q.length ? ' · building ' + esc(bname(c.q[0].b, c.culture)) : '') + '<br><span class="muted">' + esc(top) + '</span><br>' + topPeoples(c, 3).map(([p, v]) => esc(PEOPLES[p][0]) + ' ' + Math.round(v * 100) + '%').join(' · '); }
   if (h.type === 'route') { const r = G.routes.find((x) => x.id === h.id); if (!r) return ''; return '<b>' + esc(C(r.a).name) + ' ⇄ ' + esc(C(r.b).name) + '</b><br>' + (r.flows.slice(0, 3).map((f) => esc(GD[f.g].n)).join(', ') || 'idle') + ' · ' + fmt(r.val); }
   if (h.type === 'army') { const a = G.armies.find((x) => x.id === h.id); return '<b>' + esc(a.name) + '</b> ' + chip(a.f) + ' · ' + fmt(a.str); }
   if (h.type === 'land') { const i = h.y * W + h.x; if (!land[i]) return ''; if (UI.mode && UI.mode.type === 'colony') { const s = siteInfo(h.x, h.y, C(UI.mode.origin)); if (!s.ok) return esc(s.why); return '<b>' + esc(colonyName(h.x, h.y, C(UI.mode.origin).culture)) + '?</b> ' + s.turns + ' season(s)<br>' + Object.entries(s.res).sort((a, b) => b[1] * price(b[0]) - a[1] * price(a[0])).slice(0, 4).map(([g]) => esc(GD[g].n)).join(', '); } return esc(TNAME[terr[i]]) + ' · unclaimed'; }
@@ -360,7 +380,7 @@ function showStart() {
 function saveGame() { try { const s = JSON.stringify(G, (k, v) => (k === '_disp' || k === 'flash' || k === 'cand' || k === 'seaN' || k === 'landN' ? undefined : v)); localStorage.setItem(SAVE_KEY, s); return true; } catch (e) { return false; } }
 function loadGame() {
   try { const s = localStorage.getItem(SAVE_KEY); if (!s) return false; G = JSON.parse(s); } catch (e) { return false; }
-  PATHS.clear(); for (const c of G.cities) { c.seaN = null; c.landN = null; } for (const c of G.cities) linkCity(c); for (const c of G.cities) c.cand = tradeCands(c);
+  PATHS.clear(); for (const c of G.cities) { c.seaN = null; c.landN = null; } for (const c of G.cities) if (!c.ppl) initPeople(c); for (const c of G.cities) linkCity(c); for (const c of G.cities) c.cand = tradeCands(c);
   const now = performance.now(); for (const c of G.cities) for (const q of c.q) q.ts = now; for (const a of G.armies) if (a.mv) a.mv.ts = now; for (const f of G.fleets) f.ts = now;
   computeTerritory(); flagPirates(); afterLoad(); return true;
 }

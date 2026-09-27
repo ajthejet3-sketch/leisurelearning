@@ -124,6 +124,19 @@ ul.dip li.open{border-color:var(--bronze)}
 .rel{font:19px var(--num);min-width:34px;text-align:right}
 .dbody{padding:0 9px 9px}
 .help p{font-size:14px}
+.pbar{display:flex;height:12px;border:1px solid var(--line);background:#0b151b;margin:4px 0 6px}
+.pbar i{display:block;height:100%;box-shadow:inset -1px 0 0 rgba(0,0,0,.35)}
+.plist{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:2px;font-size:13px}
+.plist li{display:grid;grid-template-columns:10px auto 38px 1fr;gap:6px;align-items:baseline}
+.plist .sw{align-self:center}.plist b{font:600 13px var(--disp)}.plist .pct{font:17px var(--num);text-align:right}
+.plist .muted{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.rcard{background:var(--panel2);border:1px solid var(--line);margin:0 0 6px;padding:7px 9px}
+.rcard:hover{border-color:var(--line2)}
+.rh{display:flex;gap:6px;align-items:baseline;flex-wrap:wrap;cursor:pointer}
+.rh b{font:600 14px var(--disp)}.rh .val{margin-left:auto;font:22px var(--num);color:var(--bronze)}
+.rc{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:4px}
+.rc .lbl{font:11px var(--disp);text-transform:uppercase;letter-spacing:.08em;color:var(--mute)}
+.rc p{margin:2px 0}.ra{margin-top:4px}
 /* chronicle */
 #chron{position:absolute;left:12px;bottom:12px;width:min(430px,calc(100% - 24px));background:rgba(14,26,33,.9);border:2px solid var(--line);padding:6px 10px;z-index:3;cursor:pointer;max-height:40%;overflow:auto}
 #chron h5{margin:0 0 3px;font:600 11px var(--disp);text-transform:uppercase;letter-spacing:.12em;color:var(--bronze);display:flex;justify-content:space-between}
@@ -232,7 +245,7 @@ const BLD = {
   olive: { n: 'Olive groves', cost: 80, t: 3, max: 3, e: 'Olive oil (Mediterranean climate only)' },
   lumber: { n: 'Timber camp', cost: 50, t: 2, max: 3, e: 'Timber, plus furs or amber where found' },
   mine: { n: 'Mines', cost: 150, t: 4, max: 3, e: 'Ore from the local seams; silver and gold are partly minted' },
-  harbor: { n: 'Harbour', cost: 120, t: 3, max: 3, e: 'Fish and salt, +1 route slot, larger cargoes, launches colonies' },
+  harbor: { n: 'Harbour', cost: 120, t: 3, max: 4, e: 'Fish and salt, +1 route slot, larger cargoes, launches colonies. Level III adds a lighthouse, level IV a great enclosed harbour' },
   workshop: { n: 'Workshops', cost: 120, t: 3, max: 3, e: 'Pottery; weaves wool into textiles; purple, glass, papyrus where found' },
   forge: { n: 'Forges', cost: 140, t: 3, max: 3, e: 'Iron into arms, copper and tin into bronze' },
   market: { n: 'Market', cost: 100, t: 3, max: 3, e: '+1 route slot, +10% merchant income, draws eastern luxuries' },
@@ -356,7 +369,7 @@ const CITY_DATA = [
   ['Apollonia', 19.47, 40.72, 'rome', 3], ['Epidamnos', 19.45, 41.32, 'rome', 4], ['Ancona', 13.5, 43.62, 'rome', 3], ['Kroton', 17.12, 39.08, 'rome', 3],
   ['Carthago', 10.32, 36.85, 'carthage', 32, 1], ['Hadrumetum', 10.64, 35.83, 'carthage', 5], ['Hippo Regius', 7.77, 36.9, 'carthage', 4], ['Leptis Magna', 14.29, 32.63, 'carthage', 4],
   ['Oea', 13.18, 32.9, 'carthage', 3], ['Ebusus', 1.43, 38.91, 'carthage', 3],
-  ['Cirta', 6.61, 36.36, 'numidia', 8, 1], ['Siga', -1.46, 35.26, 'numidia', 4], ['Iol', 2.19, 36.6, 'numidia', 3], ['Thugga', 9.22, 36.42, 'numidia', 3], ['Theveste', 8.12, 35.4, 'numidia', 2],
+  ['Cirta', 6.61, 36.36, 'numidia', 8, 1], ['Siga', -1.46, 35.26, 'numidia', 4], ['Iol', 2.19, 36.6, 'numidia', 3], ['Thugga', 9.22, 36.42, 'carthage', 3], ['Theveste', 8.12, 35.4, 'numidia', 2],
   ['Volubilis', -5.55, 34.07, 'mauretania', 3, 1], ['Tingis', -5.8, 35.77, 'mauretania', 4], ['Lixus', -6.13, 35.2, 'mauretania', 3],
   ['Pella', 22.52, 40.76, 'macedon', 12, 1], ['Thessalonike', 22.94, 40.64, 'macedon', 9], ['Amphipolis', 23.85, 40.82, 'macedon', 6], ['Demetrias', 22.94, 39.34, 'macedon', 6],
   ['Larisa', 22.42, 39.64, 'macedon', 5], ['Chalkis', 23.6, 38.46, 'macedon', 4], ['Korinthos', 22.93, 37.9, 'macedon', 8], ['Herakleia Lynkestis', 21.33, 41.01, 'macedon', 3],
@@ -665,6 +678,8 @@ FDEF.push(
   ['garamantes', 'Garamantes', 'Garamantes', '#b07a4a', 'numidian', 'shekels', [0.5, 0.4, 0.1], 'Chariot lords of the Fezzan oases, masters of underground canals.'],
 );
 CITY_DATA.push(
+  ['Hippo Diarrhytus', 9.87, 37.27, 'carthage', 4], ['Kerkouane', 11.1, 36.95, 'carthage', 2], ['Thapsus', 11.05, 35.62, 'carthage', 3], ['Tacape', 10.1, 33.88, 'carthage', 2],
+  ['Sabratha', 12.48, 32.8, 'carthage', 2], ['Thaenae', 10.7, 34.67, 'carthage', 2], ['Sicca', 8.71, 36.18, 'carthage', 2], ['Rusucurru', 3.9, 36.9, 'carthage', 2],
   ['Venusia', 15.81, 40.96, 'rome', 3], ['Luceria', 15.33, 41.5, 'rome', 3], ['Paestum', 15.0, 40.42, 'rome', 2], ['Cosa', 11.29, 42.41, 'rome', 2], ['Firmum', 13.72, 43.16, 'rome', 2],
   ['Tauromenion', 15.29, 37.85, 'rome', 2], ['Tarracina', 13.25, 41.29, 'rome', 2], ['Spoletium', 12.73, 42.73, 'rome', 2], ['Korkyra', 19.92, 39.62, 'rome', 3], ['Ilici', -0.7, 38.27, 'rome', 2],
   ['Sitifis', 5.4, 36.19, 'numidia', 2], ['Capsa', 8.78, 34.42, 'numidia', 2],
@@ -717,6 +732,130 @@ Object.assign(GOALS, {
 });
 HISTORY.push([-200, 0, 'In Upper Egypt the rebel pharaoh Ankhwennefer holds Thebes; Alexandria\'s writ stops at Abydos.'],
   [-200, 2, 'At Nisa, Arsaces of Parthia keeps the oath he swore to Antiochus. For now.'], [-190, 2, 'In Armenia, Artaxias and Zariadres wait for a Seleucid defeat to call themselves kings.']);
+
+'use strict';
+// ============================================================================
+// Peoples: every settlement holds a mix of ethnic groups. Rulers of another
+// people cost public order; peoples assimilate slowly toward the ruler, move
+// along trade routes, sail out with colonists and arrive with conquerors.
+// ============================================================================
+
+// id: [name, dress colour, family, one-line description]
+const PEOPLES = {
+  latin: ['Latins', '#b23a2e', 'italic', 'Citizens of Rome and the Latin colonies'],
+  oscan: ['Oscans', '#b0703a', 'italic', 'Samnites, Campanians and Lucanians of the south'],
+  etruscan: ['Etruscans', '#8a4a2a', 'italic', 'An ancient people of Tuscany, masters of bronze and augury'],
+  venetic: ['Veneti', '#a86b6b', 'italic', 'Horse breeders of the Adriatic lagoons'],
+  ligurian: ['Ligurians', '#7f8a4a', 'italic', 'Hill folk of the Maritime Alps'],
+  sardinian: ['Sardinians', '#8a7a5a', 'italic', 'Builders of the nuraghe towers of Sardinia and Corsica'],
+  greek: ['Greeks', '#3d6ea8', 'hellenic', 'Hellenes of the cities, from Massalia to the Euxine'],
+  macedonian: ['Macedonians', '#2f55a0', 'hellenic', 'The kingdom\'s own people and the soldier-settlers of the east'],
+  punic: ['Punics', '#7b46a8', 'semitic', 'Carthaginians and the western Phoenicians'],
+  phoenician: ['Phoenicians', '#8e3a9a', 'semitic', 'Tyrians, Sidonians and Aradians of the Levant coast'],
+  syrian: ['Syrians', '#b88a3a', 'semitic', 'Aramaic-speaking farmers and townsfolk of Syria and Mesopotamia'],
+  jewish: ['Judaeans', '#4a7ab0', 'semitic', 'People of Judaea and the diaspora'],
+  arab: ['Arabs', '#c9924a', 'semitic', 'Nabataeans, Lihyanites, Gerrhaeans and the desert tribes'],
+  babylonian: ['Babylonians', '#a0603a', 'semitic', 'Heirs of Babylon: temple scholars, astronomers, farmers of the canals'],
+  libyan: ['Libyans', '#c2a060', 'berber', 'Farmers and herders of Africa, subjects of Carthage'],
+  numidian: ['Numidians', '#b08a4a', 'berber', 'Horse peoples of Numidia and Mauretania'],
+  egyptian: ['Egyptians', '#e8dcb0', 'nilotic', 'The native people of the Nile'],
+  nubian: ['Nubians', '#6a4a2a', 'nilotic', 'People of Kush and the cataracts'],
+  iberian: ['Iberians', '#b5744a', 'iberian', 'Peoples of the Mediterranean coast and the south of Iberia'],
+  celtiberian: ['Celtiberians', '#a0673a', 'iberian', 'Celts of the Iberian meseta'],
+  lusitanian: ['Lusitanians', '#86562f', 'iberian', 'Peoples of the western hills of Iberia'],
+  gaulish: ['Gauls', '#4f8a3a', 'celtic', 'Celts of Gaul, the Alps, the Po and the Danube'],
+  galatian: ['Galatians', '#72a038', 'celtic', 'Celts settled in the heart of Anatolia'],
+  british: ['Britons', '#4f8898', 'celtic', 'Celts of Britain'],
+  gaelic: ['Gaels', '#3f9a5a', 'celtic', 'Celts of Ireland'],
+  germanic: ['Germani', '#5a70a0', 'northern', 'Peoples of the northern forests and Scandza'],
+  baltic: ['Balts', '#7a8a6a', 'northern', 'Amber gatherers and forest folk east of the Vistula'],
+  finnic: ['Finns', '#8aa0a0', 'northern', 'Hunters of the far north'],
+  illyrian: ['Illyrians', '#9a523c', 'balkan', 'Peoples of the Adriatic hills'],
+  thracian: ['Thracians', '#b4622f', 'balkan', 'Horsemen and peltasts of Thrace and Bithynia'],
+  dacian: ['Dacians', '#8e7a40', 'balkan', 'Getae and Dacians of the Danube and Carpathians'],
+  scythian: ['Scythians', '#c29640', 'steppe', 'Horse nomads of the Pontic steppe and the Kara Kum'],
+  sarmatian: ['Sarmatians', '#a88e5a', 'steppe', 'Armoured horsemen from beyond the Don'],
+  anatolian: ['Anatolians', '#9a7a6a', 'anatolian', 'Phrygians, Lydians, Carians, Cappadocians and their kin'],
+  armenian: ['Armenians', '#c05a3a', 'caucasian', 'People of the Armenian highlands'],
+  kartvelian: ['Kartvelians', '#8a6aa0', 'caucasian', 'Colchians and Iberians of the Caucasus'],
+  caucasian: ['Albanians', '#6a9a9a', 'caucasian', 'Caucasian Albanians of the Caspian shore'],
+  persian: ['Persians', '#b8742a', 'iranian', 'The people of Cyrus and Darius'],
+  median: ['Medes', '#6a8ab0', 'iranian', 'The people of Ekbatana and the Zagros'],
+  parthian: ['Parthians', '#8a4a8a', 'iranian', 'Parni horsemen and Parthian farmers'],
+  chorasmian: ['Chorasmians', '#9aa05a', 'iranian', 'Oasis people of the lower Oxus'],
+};
+const NATIVE = [
+  ['latin', 12.6, 41.8], ['oscan', 14.8, 41.2], ['oscan', 16, 40.2], ['etruscan', 11.4, 43.1], ['venetic', 12, 45.5], ['ligurian', 8.2, 44.4], ['gaulish', 9.5, 45.4], ['gaulish', 11.2, 44.6],
+  ['sardinian', 9, 40], ['sardinian', 9.2, 42.1], ['greek', 17.1, 40.4], ['greek', 16.6, 39.1], ['greek', 14.8, 37.3], ['greek', 22.5, 37.5], ['greek', 23.5, 38.3], ['greek', 21.3, 38.7],
+  ['greek', 20.5, 39.6], ['greek', 25.0, 35.2], ['greek', 26.5, 38.8], ['greek', 27.3, 37.7], ['greek', 28.2, 36.4], ['greek', 33.3, 35.1], ['greek', 25.5, 37.1], ['greek', 21.9, 32.8],
+  ['greek', 25, 40.2], ['greek', 36.5, 45.3], ['greek', 33.5, 44.6], ['greek', 31.9, 46.6], ['greek', 28.8, 44.2], ['greek', 27.8, 42.6], ['greek', 35, 42], ['greek', 31.4, 41.3], ['greek', 29, 41],
+  ['macedonian', 22.4, 40.6], ['macedonian', 22.3, 39.6], ['punic', 10.3, 36.8], ['punic', 10.8, 35.5], ['punic', 13.5, 32.8], ['punic', -6.2, 36.5], ['punic', 1.4, 38.9], ['punic', 12.5, 37.9],
+  ['libyan', 9.2, 35.8], ['libyan', 12, 31], ['libyan', 13, 27], ['libyan', 8.5, 30.5], ['libyan', 20, 30.5], ['libyan', 25, 30.5],
+  ['numidian', 6.5, 36.2], ['numidian', 2.5, 35.8], ['numidian', -1.5, 35], ['numidian', -5.5, 34.5], ['numidian', -8, 31],
+  ['iberian', -0.8, 38.5], ['iberian', 0.5, 41.5], ['iberian', -4.5, 37.6], ['iberian', -6.5, 37.3], ['iberian', 2.8, 39.6], ['iberian', -0.5, 43.3],
+  ['celtiberian', -2.6, 41.5], ['celtiberian', -4.5, 40.3], ['celtiberian', -4.8, 42.3], ['lusitanian', -8.3, 39.3], ['lusitanian', -8, 42.5],
+  ['gaulish', 2.5, 46.5], ['gaulish', 0, 45], ['gaulish', 4, 48.5], ['gaulish', -2.5, 48], ['gaulish', 5, 44.5], ['gaulish', 7.5, 47], ['gaulish', 14, 47], ['gaulish', 14.5, 50],
+  ['gaulish', 20.5, 45], ['gaulish', 16.5, 45.5], ['gaulish', 4.5, 50.5], ['british', -1, 52], ['british', -4, 51], ['british', -3, 55], ['british', -4, 57], ['gaelic', -7.5, 53.5],
+  ['germanic', 9, 53], ['germanic', 12, 51.5], ['germanic', 9.5, 56], ['germanic', 13.5, 55.8], ['germanic', 16, 57.5], ['germanic', 8, 59.5], ['germanic', 17.5, 60], ['germanic', 17, 51.5],
+  ['germanic', 19, 53.8], ['germanic', 26.5, 47.5], ['baltic', 21.5, 55.5], ['baltic', 24, 53.5], ['baltic', 27, 52.5], ['finnic', 25, 61], ['finnic', 30, 61], ['finnic', 36, 51],
+  ['illyrian', 19.5, 42], ['illyrian', 17, 43.5], ['illyrian', 15, 45], ['illyrian', 14, 45.2], ['thracian', 25, 42.3], ['thracian', 22, 43], ['thracian', 26.5, 41.2],
+  ['dacian', 24, 45.8], ['dacian', 26.5, 44.2], ['dacian', 27.5, 46.2], ['scythian', 34, 46.5], ['scythian', 31, 48], ['scythian', 55, 39.5], ['sarmatian', 42, 47], ['sarmatian', 40, 45.3], ['sarmatian', 46, 48.5],
+  ['anatolian', 32, 39], ['anatolian', 29, 38.5], ['anatolian', 35.5, 38.5], ['anatolian', 36, 40.8], ['anatolian', 30.5, 37], ['anatolian', 32.5, 36.6], ['anatolian', 29.5, 40.3], ['anatolian', 33.6, 40.8], ['anatolian', 39.7, 41],
+  ['galatian', 33, 39.8], ['armenian', 43.5, 39.5], ['armenian', 40.3, 38.8], ['kartvelian', 43.5, 42], ['kartvelian', 42, 42.2], ['caucasian', 47.8, 41.3],
+  ['syrian', 36.8, 35.8], ['syrian', 36.3, 33.6], ['syrian', 38.5, 37], ['syrian', 40.7, 34.8], ['syrian', 41.5, 37], ['syrian', 44, 36.2], ['phoenician', 35.3, 33.5], ['phoenician', 35.8, 34.8],
+  ['jewish', 35.2, 31.9], ['arab', 35.5, 30.3], ['arab', 38.3, 27], ['arab', 40, 29.8], ['arab', 50, 25.7], ['arab', 36.5, 32.5],
+  ['babylonian', 44.5, 32.6], ['babylonian', 46, 31.3], ['persian', 48.3, 32.2], ['persian', 52.8, 29.9], ['persian', 57, 29], ['persian', 51, 29], ['median', 48.5, 34.8], ['median', 47.5, 36.6],
+  ['median', 51.4, 35.6], ['parthian', 57, 37.5], ['parthian', 54.4, 36.4], ['chorasmian', 60, 41.8], ['egyptian', 31, 29.5], ['egyptian', 32.6, 25.7], ['egyptian', 30, 31], ['nubian', 31.5, 22.3], ['nubian', 32.7, 23.3],
+];
+const FPEOPLE = { rome: 'latin', carthage: 'punic', macedon: 'macedonian', seleucid: 'greek', ptolemaic: 'greek', massilia: 'greek', euxine: 'greek', bosporus: 'greek', byzantium: 'greek',
+  pergamon: 'greek', rhodes: 'greek', crete: 'greek', ionians: 'greek', galatia: 'galatian', nabataea: 'arab', veneti: 'venetic', ligures: 'ligurian', thebaid: 'egyptian', kush: 'nubian',
+  gerrha: 'arab', arabs: 'arab', parthia: 'parthian', persis: 'persian', atropatene: 'median', bithynia: 'thracian', pontus: 'persian', cappadocia: 'anatolian', armenia: 'armenian',
+  mauretania: 'numidian', numidia: 'numidian', garamantes: 'libyan', scythia: 'scythian', sarmatia: 'sarmatian', budini: 'finnic', dahae: 'scythian', chorasmia: 'chorasmian',
+  colchis: 'kartvelian', kartli: 'kartvelian', albania: 'caucasian', scordisci: 'gaulish', bastarnae: 'germanic', venedi: 'baltic', fenni: 'finnic', insubres: 'gaulish', boii: 'gaulish' };
+// Famous cities with well-attested mixed populations.
+const PEOPLE_OVERRIDE = {
+  Alexandreia: { greek: 0.34, macedonian: 0.04, egyptian: 0.44, jewish: 0.14, syrian: 0.04 }, Antiocheia: { greek: 0.4, macedonian: 0.06, syrian: 0.46, jewish: 0.05, phoenician: 0.03 },
+  'Seleukeia-Tigris': { greek: 0.33, macedonian: 0.04, babylonian: 0.42, syrian: 0.12, jewish: 0.05, persian: 0.04 }, Babylon: { babylonian: 0.8, greek: 0.1, jewish: 0.07, persian: 0.03 },
+  Roma: { latin: 0.78, oscan: 0.06, greek: 0.08, etruscan: 0.04, punic: 0.02, gaulish: 0.02 }, Carthago: { punic: 0.68, libyan: 0.2, greek: 0.05, numidian: 0.05, iberian: 0.02 },
+  Syracusae: { greek: 0.8, latin: 0.08, punic: 0.06, oscan: 0.06 }, Massalia: { greek: 0.8, ligurian: 0.13, gaulish: 0.07 }, Gades: { punic: 0.72, iberian: 0.22, latin: 0.06 },
+  Hierosolyma: { jewish: 0.9, greek: 0.05, syrian: 0.05 }, Memphis: { egyptian: 0.84, greek: 0.1, jewish: 0.04, syrian: 0.02 }, Tyros: { phoenician: 0.85, greek: 0.1, syrian: 0.05 },
+  Sidon: { phoenician: 0.85, greek: 0.1, syrian: 0.05 }, Sardeis: { anatolian: 0.68, greek: 0.25, persian: 0.05, jewish: 0.02 }, Ankyra: { galatian: 0.5, anatolian: 0.5 },
+  Pergamon: { greek: 0.75, anatolian: 0.22, galatian: 0.03 }, Byzantion: { greek: 0.84, thracian: 0.16 }, Pantikapaion: { greek: 0.6, scythian: 0.4 }, Olbia: { greek: 0.7, scythian: 0.3 },
+  Emporion: { greek: 0.6, iberian: 0.4 }, Sousa: { persian: 0.55, babylonian: 0.2, greek: 0.2, jewish: 0.05 }, Ekbatana: { median: 0.85, greek: 0.1, persian: 0.05 },
+  Gerrha: { arab: 0.8, babylonian: 0.1, persian: 0.1 }, Kyrene: { greek: 0.7, libyan: 0.2, jewish: 0.1 }, Athenai: { greek: 0.9, anatolian: 0.03, thracian: 0.03, phoenician: 0.02, jewish: 0.02 },
+  Rhodos: { greek: 0.86, anatolian: 0.06, phoenician: 0.05, syrian: 0.03 }, Korinthos: { greek: 0.86, macedonian: 0.08, anatolian: 0.03, jewish: 0.03 }, Petra: { arab: 0.92, greek: 0.04, syrian: 0.04 },
+};
+const pdist = (lon, lat, a) => Math.hypot((lon - a[1]) * KX, lat - a[2]);
+function nativeAt(lon, lat) { let best = NATIVE[0], bd = 1e9; for (const a of NATIVE) { const d = pdist(lon, lat, a); if (d < bd) { bd = d; best = a; } } return best[0]; }
+function secondNative(lon, lat, first) { let best = null, bd = 2.4; for (const a of NATIVE) { if (a[0] === first) continue; const d = pdist(lon, lat, a); if (d < bd) { bd = d; best = a[0]; } } return best; }
+const facPeople = (f) => FPEOPLE[f] || (G && G.facPeople && G.facPeople[f]) || 'greek';
+const pfam = (p) => PEOPLES[p][2];
+function normPeople(m) { let s = 0; for (const k in m) { if (m[k] < 0.004) delete m[k]; else s += m[k]; } for (const k in m) m[k] /= s || 1; return m; }
+function mixIn(m, other, w) { for (const k in m) m[k] *= 1 - w; for (const k in other) m[k] = (m[k] || 0) + other[k] * w; return normPeople(m); }
+function initPeople(c) {
+  if (PEOPLE_OVERRIDE[c.name]) { c.ppl = Object.assign({}, PEOPLE_OVERRIDE[c.name]); return; }
+  const nat = nativeAt(c.lon, c.lat), rp = facPeople(c.owner), sec = secondNative(c.lon, c.lat, nat), m = {};
+  const add = (k, v) => { m[k] = (m[k] || 0) + v; };
+  if (nat === rp) add(nat, 1);
+  else if (pfam(nat) === pfam(rp)) { add(rp, 0.55); add(nat, 0.45); }
+  else if (c.capital || c.pop >= 8) { add(rp, 0.5); add(nat, 0.5); }
+  else { add(rp, 0.28); add(nat, 0.72); }
+  if (sec) add(sec, 0.1);
+  if (c.port && rp !== 'greek' && nat !== 'greek' && ['semitic', 'italic', 'anatolian', 'hellenic', 'berber', 'nilotic', 'iberian'].includes(pfam(nat))) add('greek', 0.04);
+  c.ppl = normPeople(m);
+}
+function foreignShare(c) { const rp = facPeople(c.owner); let f = 0; for (const k in c.ppl) if (k !== rp) f += c.ppl[k] * (pfam(k) === pfam(rp) ? 0.4 : 1); return f; }
+function peopleTurn() {
+  for (const c of G.cities) {
+    if (!c.owner || !c.ppl) continue; const rp = facPeople(c.owner);
+    if (c.order > 40) { const rate = 0.0012 * (1 + 0.3 * (c.b.temple || 0)) * (c.capital ? 1.3 : 1); mixIn(c.ppl, { [rp]: 1 }, rate); }
+  }
+  for (const r of G.routes) {
+    if ((r.val || 0) < 3) continue; const a = C(r.a), b = C(r.b); if (!a.ppl || !b.ppl) continue;
+    const pa = Object.assign({}, a.ppl), pb = Object.assign({}, b.ppl); mixIn(a.ppl, pb, 0.003); mixIn(b.ppl, pa, 0.003);
+  }
+}
+function topPeoples(c, n) { return Object.entries(c.ppl || {}).sort((a, b) => b[1] - a[1]).slice(0, n); }
 
 'use strict';
 // ============================================================================
@@ -967,7 +1106,7 @@ function seedBuildings(c) {
   if ((c.res.timber || 0) > 1) b.lumber = 1;
   if ((c.res.wool || 0) > 0.8 || (c.res.horses || 0) > 1) b.pasture = 1;
   if (c.culture === 'roman' && p >= 4) b.road = 1;
-  const S = { Carthago: { harbor: 3, market: 3, workshop: 2, walls: 3, olive: 2 }, Alexandreia: { harbor: 3, market: 3, workshop: 2, granary: 2, temple: 3 }, Roma: { market: 2, road: 2, temple: 3, aqueduct: 1 },
+  const S = { Carthago: { harbor: 4, market: 3, workshop: 2, walls: 3, olive: 2 }, Alexandreia: { harbor: 4, market: 3, workshop: 2, granary: 2, temple: 3 }, Roma: { market: 2, road: 2, temple: 3, aqueduct: 1 },
     Athenai: { temple: 3, workshop: 2, harbor: 2 }, Rhodos: { harbor: 3, market: 2 }, Antiocheia: { market: 3, workshop: 2 }, Syracusae: { harbor: 2, walls: 3 },
     Massalia: { harbor: 2, market: 2, vineyard: 2 }, Tyros: { workshop: 2, harbor: 2 }, Sidon: { workshop: 2 }, Byzantion: { harbor: 2, walls: 2 }, Korinthos: { walls: 3, harbor: 2, market: 2 },
     Pergamon: { temple: 2, workshop: 1 }, Gades: { harbor: 2 }, Memphis: { farm: 3, temple: 2 }, Krokodilopolis: { farm: 3 }, Numantia: { walls: 2 }, Petra: { market: 2 } };
@@ -1021,6 +1160,8 @@ function newGame(pid) {
     prices: {}, log: [], black: {}, nid: 1, hist: {}, lastPrices: {}, done: {}, raided: {} };
   for (const f of FIDS) G.fac[f] = { gold: 0, tax: 0.15, tariff: 0.1, alive: true, last: {}, colonies: 0, gifts: 0, weary: 0 };
   for (const [n, lon, lat, o, p, cap] of CITY_DATA) { const c = makeCity(n, lon, lat, o, p, cap); if (n === 'Gades') c.culture = 'punic'; seedBuildings(c); c.gar = garMax(c); }
+  G.facPeople = {}; for (const f of FIDS) { const cs = citiesOf(f), cap = cs.find((c) => c.capital) || cs[0]; if (cap) G.facPeople[f] = nativeAt(cap.lon, cap.lat); }
+  for (const c of G.cities) initPeople(c);
   for (const f of FIDS) { const pop = citiesOf(f).reduce((s, c) => s + c.pop, 0); const g = G.fac[f]; g.gold = Math.round(isBarb(FAC[f].cul) ? 80 + pop * 6 : 250 + pop * 5); }
   Object.assign(G.fac.rome, { gold: 500 }); Object.assign(G.fac.carthage, { gold: 650 }); Object.assign(G.fac.ptolemaic, { gold: 800 }); Object.assign(G.fac.seleucid, { gold: 600 });
   // diplomacy
@@ -1171,7 +1312,7 @@ function satisfaction(c) {
 function growth() {
   for (const c of G.cities) {
     if (!c.owner) continue; const s = satisfaction(c), fac = G.fac[c.owner], cap = popCap(c);
-    let target = 38 + 26 * s.comfort + 10 * s.lux + 8 * (c.b.temple || 0) + (c.capital ? 8 : 0) - (fac.tax - 0.12) * 160 - Math.min(14, fac.weary * 2) - (s.food < 0.9 ? 30 * (0.9 - s.food) : 0) - (fac.gold < 0 ? 12 : 0);
+    let target = 38 - 18 * foreignShare(c) + 26 * s.comfort + 10 * s.lux + 8 * (c.b.temple || 0) + (c.capital ? 8 : 0) - (fac.tax - 0.12) * 160 - Math.min(14, fac.weary * 2) - (s.food < 0.9 ? 30 * (0.9 - s.food) : 0) - (fac.gold < 0 ? 12 : 0);
     if (G.armies.some((a) => a.at === c.id && a.f === c.owner)) target += 4;
     c.order = clamp(c.order + (target - c.order) * 0.35, 0, 100);
     if (s.food >= 0.97) c.pop += Math.max(0.02, c.pop * 0.014 * (1 - c.pop / cap)) * (c.pop < cap ? 1 : 0);
@@ -1262,7 +1403,7 @@ function battle(army, c) {
     return 'back';
   }
   if (att > def) {
-    const old = c.owner; c.owner = army.f; c.capital = false; c.order = 22; c.pop = R1(c.pop * 0.9); c.gar = 2; c.q = [];
+    const old = c.owner; c.owner = army.f; c.capital = false; if (c.ppl) mixIn(c.ppl, { [facPeople(army.f)]: 1 }, 0.08); c.order = 22; c.pop = R1(c.pop * 0.9); c.gar = 2; c.q = [];
     for (const a of defArmies) a.str = 0; army.str = Math.max(3, Math.round(army.str - def * 0.45));
     G.armies = G.armies.filter((a) => a.str > 0);
     G._terrDirty = true; addRel(army.f, old, -20);
@@ -1342,6 +1483,7 @@ function moveFleets() {
     if (cellCity[i] >= 0 && C(cellCity[i]).owner !== fl.f) { if (fl.f === G.player) logMsg('The colonists bound for ' + fl.name + ' found the land taken and turned home.', 'bad'); continue; }
     const [lon, lat] = cellLL(fl.x, fl.y);
     const c = makeCity(fl.name, lon, lat, fl.f, 1.6, false, { culture: fl.culture, colony: true }); c.pop0 = 1.6; c.b = {}; c.order = 70; c.gar = garMax(c);
+    { const o = C(fl.from), nat = nativeAt(c.lon, c.lat), m = { [facPeople(fl.f)]: 0.7, [nat]: 0.15 }; for (const k in o.ppl || {}) m[k] = (m[k] || 0) + o.ppl[k] * 0.15; c.ppl = normPeople(m); }
     linkCity(c); c.cand = tradeCands(c); for (const n of [...c.seaN, ...c.landN]) { const o = C(n.id); o.cand = tradeCands(o); }
     G.fac[fl.f].colonies++; G._terrDirty = true;
     const near = G.cities.filter((o) => o.owner && o.owner !== fl.f && Math.hypot(o.x - c.x, o.y - c.y) < 16);
@@ -1498,7 +1640,7 @@ function goalStatus(f, g) {
 function endTurn() {
   const p = G.player;
   for (const f of FIDS) if (f !== p && G.fac[f].alive) aiTurn(f);
-  econ(false); construction(); growth(); moveArmies(); moveFleets();
+  econ(false); construction(); growth(); peopleTurn(); moveArmies(); moveFleets();
   for (const f of FIDS) { const wars = FIDS.filter((o) => atWar(f, o)).length; G.fac[f].weary = wars ? Math.min(8, G.fac[f].weary + 0.25) : Math.max(0, G.fac[f].weary - 0.5); if (G.fac[f].gold < -50) for (const a of G.armies) if (a.f === f) a.str = Math.max(1, Math.round(a.str * 0.9)); }
   for (const k in G.rel) { const b = G.relBase[k] ?? 0, r = G.rel[k]; if (!G.war[k]) G.rel[k] = r + Math.sign(b - r) * Math.min(1, Math.abs(b - r)); }
   const lost = G.routes.filter((r) => r._lost); for (const r of lost) delete r._lost;
@@ -1615,7 +1757,7 @@ function drawMap(t) {
   for (const r of vr) {
     const a = C(r.a), b = C(r.b), path = pathBetween(a, b, r.k), g = mainGood(r), col = g ? GD[g].c : '#cbbd96';
     const hi = r.id === selR || r.a === selC || r.b === selC, mine = a.owner === G.player || b.owner === G.player;
-    ctx.globalAlpha = hi ? 1 : UI.mapMode === 'trade' ? (mine ? 0.9 : 0.55) : 0.75;
+    ctx.globalAlpha = hi ? 1 : selC >= 0 ? 0.18 : UI.mapMode === 'trade' ? (mine ? 0.9 : 0.55) : 0.75;
     ctx.lineWidth = Math.max(1, z / (hi ? 2.2 : 4)); ctx.strokeStyle = r.id === selR ? '#fff4c8' : col;
     ctx.setLineDash(r.k === 'sea' ? [Math.max(2, z), Math.max(2, z)] : [Math.max(1, z / 2), Math.max(2, z)]); ctx.lineDashOffset = -t / 60;
     ctx.beginPath(); path.forEach((p, i) => { const [sx, sy] = w2s(p[0], p[1]); i ? ctx.lineTo(sx, sy) : ctx.moveTo(sx, sy); }); ctx.stroke();
@@ -1642,7 +1784,8 @@ function drawMap(t) {
   for (const c of G.cities) {
     if (!c.owner) continue; const [sx, sy] = w2s(c.x + 0.5, c.y + 0.5); if (sx < -60 || sy < -60 || sx > VW + 60 || sy > VH + 60) continue;
     drawCityIcon(ctx, c, Math.round(sx), Math.round(sy), u, t);
-    const showName = z >= 8 || (z >= 6 && c.pop >= 3) || (z >= 3 && (c.capital || c.pop >= 9 || c.owner === G.player)) || c.id === selC || (UI.hover && UI.hover.type === 'city' && UI.hover.id === c.id);
+    const partner = selC >= 0 && G.routes.some((r) => (r.a === selC && r.b === c.id) || (r.b === selC && r.a === c.id));
+    const showName = partner || z >= 8 || (z >= 6 && c.pop >= 3) || (z >= 3 && (c.capital || c.pop >= 9 || c.owner === G.player)) || c.id === selC || (UI.hover && UI.hover.type === 'city' && UI.hover.id === c.id);
     if (showName) label(ctx, c.name, sx, sy + 5 * u + 6, c.owner === G.player ? '#fff1c4' : '#f1e8d2', c.capital ? 12 : 11, c.capital);
     if (UI.mapMode === 'goods' && z >= 3) {
       const top = Object.entries(c.P || {}).sort((p, q) => q[1] * price(q[0]) - p[1] * price(p[0])).slice(0, 3);
@@ -1690,29 +1833,78 @@ function drawBanner(ctx, x, y, u, a, t) {
   if (a.mv && a.mv.order !== 'move') { ctx.fillStyle = a.mv.order === 'raid' ? '#ffb040' : '#ff5a3a'; ctx.fillRect(x + u, y - 4 * u, u, u); }
 }
 function drawCityIcon(ctx, c, x, y, u, t) {
-  const P = CULT[c.culture].pal, st = CULT[c.culture].st, tier = c.pop < 3 ? 0 : c.pop < 8 ? 1 : c.pop < 18 ? 2 : 3, col = FAC[c.owner].col;
+  const P = CULT[c.culture].pal, st = CULT[c.culture].st, tier = c.pop < 3 ? 0 : c.pop < 8 ? 1 : c.pop < 18 ? 2 : 3, col = FAC[c.owner].col, b = c.b;
   const R = (dx, dy, w, h, cc) => { ctx.fillStyle = cc; ctx.fillRect(x + dx * u, y + dy * u, w * u, h * u); };
+  const wooden = st === 'long' || st === 'yurt' || st === 'hut';
+  if (cam.z >= 4) drawSurroundings(ctx, c, x, y, u, t, P);
+  if (c.port && b.harbor) drawHarbor(ctx, c, x, y, u, t, P);
+  if (b.road) { const rc = '#b8a47a'; for (let k = 0; k < b.road * 2; k++) { const a = k * (Math.PI / b.road) + 0.4; for (let s = 7; s < 12 + b.road * 2; s++) R(Math.round(Math.cos(a) * s), Math.round(Math.sin(a) * s * 0.7) + 1, 1, 1, rc); } }
   R(-6, 2, 12, 2, '#141414'); R(-5, 2, 10, 1, col);
-  if (c.b.walls) { R(-6, -5, 12, 1, P.stone); R(-6, -5, 1, 7, P.stone); R(5, -5, 1, 7, P.stone); if (c.b.walls > 1) { R(-7, -6, 2, 2, P.stone); R(5, -6, 2, 2, P.stone); } }
-  if (c.port && c.b.harbor) { const w = st === 'hut' ? '#6a4a2c' : P.wood; R(6, 1, 4, 1, w); if (c.b.harbor > 2) { R(9, -4, 1, 5, P.stone); R(9, -5, 1, 1, Math.sin(t / 200) > 0 ? '#ffd24a' : '#ff8a2a'); } }
-  const spots = [[-3, -1], [1, -1], [-1, -3], [3, -3], [-4, -3], [0, -5], [2, 0]].slice(0, 2 + tier + (tier > 2 ? 2 : 0));
+  if (b.aqueduct) { const n = 3 + b.aqueduct * 3; R(-7 - n * 2, -4, n * 2, 1, P.stone); for (let k = 0; k < n; k++) R(-7 - n * 2 + k * 2, -3, 1, 2, P.stone); if (b.aqueduct > 1) R(-7 - n * 2, -5, n * 2, 1, P.stone); }
+  const wl = b.walls || 0;
+  if (wl) {
+    const s = wooden && st !== 'hut' ? P.wood : P.stone, ww = 6 + (tier > 2 ? 1 : 0);
+    R(-ww, -6, 2 * ww, 1, s); R(-ww, -6, 1, 8, s); R(ww - 1, -6, 1, 8, s);
+    if (wl > 1) { R(-ww - 1, -7, 2, 2, s); R(ww - 1, -7, 2, 2, s); R(-ww - 1, 0, 2, 2, s); R(ww - 1, 0, 2, 2, s); }
+    if (wl > 2) { R(-ww - 2, -9, 2 * ww + 4, 1, s); R(-ww - 2, -9, 1, 11, s); R(ww + 1, -9, 1, 11, s); R(-1, -9, 2, 1, '#2a1a10'); }
+  }
+  const spots = [[-3, -1], [1, -1], [-1, -3], [3, -3], [-4, -3], [0, -5], [2, 0], [-5, 0], [4, -1]].slice(0, 2 + tier + (tier > 2 ? 4 : tier > 1 ? 1 : 0));
   for (const [dx, dy] of spots) {
     if (st === 'hut' || st === 'yurt') { R(dx, dy, 3, 2, st === 'yurt' ? P.wall : P.wall2); R(dx, dy - 1, 3, 1, P.roof); R(dx + 1, dy - 2, 1, 1, P.roof); }
     else if (st === 'long') { R(dx - 1, dy, 4, 2, P.wall); R(dx - 1, dy - 1, 4, 1, P.roof); }
     else { R(dx, dy, 2, 2, P.wall); R(dx, dy - 1, 2, 1, st === 'punic' || st === 'egypt' ? P.roof2 : P.roof); }
   }
-  if (c.b.temple) {
-    if (st === 'classic') { R(-2, -8, 5, 1, P.roof); R(-1, -9, 3, 1, P.roof); R(-2, -7, 1, 3, P.trim); R(0, -7, 1, 3, P.trim); R(2, -7, 1, 3, P.trim); }
-    else if (st === 'punic' || st === 'egypt') { R(-2, -8, 5, 4, P.wall); R(-1, -9, 3, 1, P.wall2); R(0, -6, 1, 2, '#3a2a1a'); }
-    else { R(-1, -8, 3, 3, P.wood); R(-2, -9, 5, 1, P.roof); }
+  if (b.granary) { R(3, -6, 2, 3 + b.granary, P.wall); R(3, -7, 2, 1, P.roof); }
+  if (b.barracks) { R(-6, -4, 3, 2, P.wall2); R(-6, -5, 3, 1, P.roof2); R(-4, -8, 1, 3, '#2a1a10'); R(-3, -8, 2, 1, col); }
+  if (b.market) for (let k = 0; k < b.market + 1; k++) R(-3 + k * 2, 1, 1, 1, k % 2 ? P.acc : '#f0e2b8');
+  if (b.temple) {
+    const L = b.temple, g = L > 2 ? '#f2c83c' : P.roof;
+    if (st === 'classic') { const w = 3 + L * 2, x0 = -Math.floor(w / 2); R(x0, -8, w, 1, g); R(x0 + 1, -9, w - 2, 1, g); for (let k = 0; k < w; k += 2) R(x0 + k, -7, 1, 3, P.trim); if (L > 1) R(x0, -4, w, 1, P.stone); }
+    else if (st === 'punic' || st === 'egypt') { R(-2, -8, 5, 4, P.wall); R(-1, -9, 3, 1, P.wall2); R(0, -6, 1, 2, '#3a2a1a'); if (L > 1) { R(-3, -9, 1, 5, P.stone); R(3, -9, 1, 5, P.stone); } if (L > 2) R(0, -10, 1, 1, '#f2c83c'); }
+    else { R(-1, -8, 3, 3, P.wood); R(-2, -9, 5, 1, P.roof); if (L > 1) { R(-4, -6, 1, 2, P.wood); R(4, -6, 1, 2, P.wood); } if (L > 2) R(0, -10, 1, 1, '#f2c83c'); }
   }
-  if (c.b.aqueduct) { R(-10, -4, 5, 1, P.stone); R(-10, -3, 1, 2, P.stone); R(-8, -3, 1, 2, P.stone); R(-6, -3, 1, 2, P.stone); }
-  if (c.capital) { R(4, -10, 1, 5, '#2a1a10'); R(5, -10, 3, 2, col); }
-  if (c.q.length) { // little treadwheel crane
-    const sw = Math.round(Math.sin(t / 300) * 1);
-    R(-8, -9, 1, 8, P.wood); R(-8, -9, 5, 1, P.wood); R(-4 + sw, -8, 1, 3, '#d8d0b8'); R(-5 + sw, -5, 3, 1, P.stone);
-  }
+  if (b.forge || b.workshop) { const ph = (t / 90) % 8; ctx.fillStyle = b.forge ? 'rgba(60,55,50,' + (0.8 - ph / 10) + ')' : 'rgba(225,225,225,' + (0.8 - ph / 10) + ')'; ctx.fillRect(x + 5 * u, y - (5 + ph) * u, u, u); }
+  if (c.capital) { R(4, -11, 1, 5, '#2a1a10'); R(5, -11, 3, 2, col); }
+  if (c.q.length) { const sw = Math.round(Math.sin(t / 300) * 1); R(-8, -10, 1, 9, P.wood); R(-8, -10, 5, 1, P.wood); R(-4 + sw, -9, 1, 3, '#d8d0b8'); R(-5 + sw, -6, 3, 1, P.stone); }
   if (c.flash && c.owner === G.player && performance.now() - c.flash.t < 4000) { const k = (performance.now() - c.flash.t) / 4000; ctx.strokeStyle = 'rgba(255,230,140,' + (1 - k) + ')'; ctx.lineWidth = 2; ctx.beginPath(); ctx.arc(x, y - 2 * u, (6 + k * 14) * u, 0, 7); ctx.stroke(); }
+}
+// Production buildings appear as fields, vines, groves, pastures, timber and mines around the town.
+function drawSurroundings(ctx, c, x, y, u, t, P) {
+  const items = [];
+  for (const [bk, kind] of [['farm', 'farm'], ['vineyard', 'vine'], ['olive', 'olive'], ['pasture', 'past'], ['lumber', 'wood'], ['mine', 'mine']]) for (let k = 0; k < (c.b[bk] || 0); k++) items.push(kind);
+  let slot = 0;
+  for (const kind of items) {
+    let px, py, ok = false;
+    for (let tries = 0; tries < 6 && !ok; tries++, slot++) {
+      const a = slot * 2.39996 + c.id * 1.7, r = 10 + 2.6 * Math.sqrt(slot + 1);
+      px = x + Math.cos(a) * r * u; py = y + Math.sin(a) * r * u * 0.75;
+      const [wx, wy] = s2w(px, py), i = Math.floor(wy) * W + Math.floor(wx); ok = wx >= 0 && wy >= 0 && wx < W && wy < H && land[i] === 1;
+    }
+    if (!ok) continue; slot++;
+    const R = (dx, dy, w, h, cc) => { ctx.fillStyle = cc; ctx.fillRect(Math.round(px + dx * u), Math.round(py + dy * u), w * u, h * u); };
+    if (kind === 'farm') { R(-2, -1, 5, 1, '#d9b54a'); R(-2, 0, 5, 1, '#b8913a'); R(-2, 1, 5, 1, '#d9b54a'); }
+    else if (kind === 'vine') { for (let k = 0; k < 3; k++) { R(-2 + k * 2, -1, 1, 3, '#4f8a38'); R(-2 + k * 2, 0, 1, 1, '#6b2a5a'); } }
+    else if (kind === 'olive') { R(-2, -1, 2, 2, '#8a9a60'); R(1, 0, 2, 2, '#7e8f5a'); R(-1, 1, 1, 1, '#5a4430'); R(2, 2, 1, 1, '#5a4430'); }
+    else if (kind === 'past') { R(-2, -1, 5, 3, '#7fa855'); R(-1 + ((t / 900) % 3), 0, 1, 1, '#f0ece0'); R(1, -1, 1, 1, '#f0ece0'); }
+    else if (kind === 'wood') { R(-1, -2, 1, 1, '#2f5a2a'); R(-2, -1, 3, 2, '#2f5a2a'); R(1, -1, 1, 1, '#3a6a32'); R(0, 0, 3, 2, '#3a6a32'); R(-2, 1, 3, 1, '#9a6a35'); }
+    else { R(-2, 0, 5, 2, '#7c7263'); R(-1, -1, 3, 1, '#8a8070'); R(0, 0, 1, 2, '#1c1814'); }
+  }
+}
+// Harbour grows from a wooden jetty (I) to a pier with shipping (II), a stone mole and lighthouse (III)
+// and a great enclosed harbour like Carthage's cothon or Alexandria's Pharos (IV).
+function drawHarbor(ctx, c, x, y, u, t, P) {
+  const L = c.b.harbor; let dx = 1, dy = 0;
+  if (c.w >= 0) { dx = (c.w % W) - c.x; dy = ((c.w / W) | 0) - c.y; const m = Math.hypot(dx, dy) || 1; dx /= m; dy /= m; }
+  const px = -dy, py = dx, at = (k, off) => [x + (dx * k + px * off) * u, y + (dy * k + py * off) * u];
+  const sq = (k, off, cc, s) => { const [a, b] = at(k, off); ctx.fillStyle = cc; ctx.fillRect(Math.round(a - (s || 1) * u / 2), Math.round(b - (s || 1) * u / 2), (s || 1) * u, (s || 1) * u); };
+  const len = [0, 4, 7, 9, 11][L];
+  for (let k = 6; k < 6 + len; k++) sq(k, 0, L >= 3 ? P.stone : P.wood);
+  if (L >= 2) for (let k = 7; k < 6 + len; k += 2) sq(k, 1, P.wood);
+  if (L >= 3) for (let o = 1; o <= 4; o++) sq(6 + len, o, P.stone);
+  if (L >= 4) { const [cx, cy] = at(5 + len / 2, -4.5); ctx.strokeStyle = P.stone; ctx.lineWidth = u; ctx.beginPath(); ctx.arc(cx, cy, 3.4 * u, 0.5, 6.0); ctx.stroke(); ctx.fillStyle = P.wall; ctx.fillRect(cx - u, cy - u, 2 * u, 2 * u); ctx.fillStyle = FAC[c.owner].col; ctx.fillRect(cx - u / 2, cy - 2 * u, u, u); }
+  const boats = [0, 0, 1, 2, 4][L], bu = Math.max(1, Math.round(u * 0.75));
+  for (let k = 0; k < boats; k++) { const [bx, by] = at(7 + (k % 3) * 3, k % 2 ? 2.8 : -2.4 - (k > 2 ? 2 : 0)); drawBoat(ctx, bx, by, bu, dx >= 0, FAC[c.owner].col, '#b89a60', t + k * 300); }
+  if (L >= 3) { const [lx, ly] = at(6 + len, 0), big = L >= 4 ? 1.6 : 1; ctx.fillStyle = P.stone; ctx.fillRect(lx - u * big / 2, ly - 5 * u * big, u * big, 5 * u * big); ctx.fillStyle = Math.sin(t / 200) > 0 ? '#ffd24a' : '#ff8a2a'; ctx.fillRect(lx - u * big / 2 - u / 2, ly - 6 * u * big, u * big + u, u * big); }
 }
 
 // ---- city scene ------------------------------------------------------------------
@@ -1753,7 +1945,15 @@ function drawScene(sc, c, t) {
   }
   // people walking on the road
   const people = Math.min(10, 2 + Math.floor(c.pop / 3));
-  for (let k = 0; k < people; k++) { const px = ((t / (60 + k * 7) + k * 31) % 170) - 8, dir = k % 2 ? 1 : -1, x = dir > 0 ? px : 156 - px; r(x, 76, 1, 1, '#e3b98c'); r(x, 77, 1, 2, [P.acc, '#d8d0b8', '#8a6a4a'][k % 3]); }
+  const pp = Object.entries(c.ppl || {}).sort((p, q) => q[1] - p[1]); const dress = (k) => { let h = hash2(k, c.id * 7 + 3), acc = 0; for (const [p, v] of pp) { acc += v; if (h <= acc) return PEOPLES[p][1]; } return P.acc; };
+  for (let k = 0; k < people + 2; k++) { const px = ((t / (60 + k * 7) + k * 31) % 170) - 8, dir = k % 2 ? 1 : -1, x = dir > 0 ? px : 156 - px, bob = Math.floor(t / 180 + k) % 2; r(x, 75 + bob * 0, 1, 1, '#e3b98c'); r(x, 76, 1, 2, dress(k)); r(x, 78, 1, 1, bob ? '#3a2a1a' : dress(k)); }
+  // one ship per sea route, one cart per land route, sailing out to each partner
+  const rts = G.routes.filter((q) => q.a === c.id || q.b === c.id); let si = 0, li = 0;
+  for (const q of rts) {
+    const o = C(q.a === c.id ? q.b : q.a), g = mainGood(q), gc = g ? GD[g].c : '#b89a60', ph = ((t / (5200 + q.id % 7 * 600)) + q.id * 0.31) % 2, fr = ph < 1 ? ph : 2 - ph, out = ph < 1;
+    if (q.k === 'sea' && c.port && si < 5) { const y0 = 84 + (si % 3) * 5 + (si > 2 ? 2 : 0), bx = 162 + fr * 44, bob = Math.sin(t / 300 + si) > 0 ? 1 : 0; r(bx, y0 + bob, 7, 2, '#3a2a1a'); r(bx + 1, y0 + 2 + bob, 5, 1, '#3a2a1a'); r(bx + 3, y0 - 6 + bob, 1, 6, '#5a3a20'); r(bx + 1, y0 - 5 + bob, 5, 4, '#efe6cf'); r(bx + 1, y0 - 3 + bob, 5, 1, FAC[o.owner].col); r(bx + (out ? 5 : 0), y0 - 1 + bob, 2, 1, gc); si++; }
+    else if (q.k === 'land' && li < 4) { const yy = 78 + (li % 2) * 2, cx = 150 - fr * 160; r(cx, yy - 2, 4, 2, '#6a4a2a'); r(cx, yy - 3, 4, 1, gc); r(cx - 3, yy - 2, 2, 2, '#b08a5a'); r(cx, yy, 1, 1, '#222'); r(cx + 3, yy, 1, 1, '#222'); li++; }
+  }
   // buildings
   const q = c.q[0];
   for (const b of BORDER) {
@@ -1825,7 +2025,8 @@ function drawB(sc, b, s, L, P, st, c, t) {
     case 'granary': { if (st === 'classic' || st === 'punic' || st === 'egypt') { r(x, by - 13, w, 13, P.wall); r(x - 1, by - 15, w + 2, 2, P.roof); r(x + 4, by - 10, 3, 2, '#3a2a1a'); r(x + 4, by - 4, 4, 4, '#5a4a3a'); if (L > 1) r(x + w, by - 8, 3, 8, P.wall2); } else { for (let k = 0; k < 4; k++) r(x + 1 + k * 3, by - 3, 1, 3, P.wood); r(x, by - 9, w, 6, P.wall2); r(x - 1, by - 12, w + 2, 3, P.roof); } break; }
     case 'barracks': { const fc = FAC[c.owner].col; if (st === 'classic' || st === 'punic' || st === 'egypt') { r(x, by - 9, w, 9, P.wall2); r(x - 1, by - 10, w + 2, 1, P.stone); for (let k = 0; k < w; k += 3) r(x + k, by - 11, 2, 1, P.stone); r(x + w / 2 - 2, by - 5, 4, 5, '#3a2a1a'); } else { r(x, by - 7, w, 7, P.wall); r(x - 2, by - 10, w + 4, 3, P.roof); } r(x + w - 2, by - 20, 1, 12, '#2a1a10'); const wv = Math.floor(t / 250) % 2; r(x + w - 1, by - 20, 5, 3 - wv, fc); if (FAC[c.owner].cul === 'roman') r(x + w - 3, by - 22, 3, 1, '#f2c83c'); for (let k = 0; k < L + 1; k++) { const sx = x + 2 + ((t / 500 + k * 5) % (w - 4)); r(sx, by - 3, 1, 1, '#e3b98c'); r(sx, by - 2, 1, 2, fc); } break; }
     case 'aqueduct': { r(x, by - h, w, 3, P.stone); r(x, by - h - 1, w, 1, '#6a9ab0'); for (let k = 0; k <= w - 2; k += 6) { r(x + k, by - h + 3, 2, h - 3, P.stone); } for (let k = 2; k < w - 2; k += 6) { r(x + k, by - h + 3, 4, 1, P.stone); r(x + k + 1, by - h + 4, 2, 1, P.stone); } if (L > 1) for (let k = 3; k < w - 3; k += 3) r(x + k, by - h + 1, 1, 1, P.wall2); break; }
-    case 'harbor': { r(x, by - 2, w, 2, P.wood); for (let k = 0; k < w; k += 5) r(x + k, by, 1, 5, '#4a3420'); if (c.culture === 'punic' && L > 1) { r(x + 6, by + 4, w - 12, 1, P.stone); r(x + w / 2 - 3, by + 2, 6, 2, P.wall); } for (let k = 0; k < L + 1; k++) { const bx = x + 4 + k * 11, bob = Math.sin(t / 400 + k) > 0 ? 1 : 0; r(bx, by + 3 + bob, 8, 2, '#3a2a1a'); r(bx + 1, by + 5 + bob, 6, 1, '#3a2a1a'); r(bx + 3, by - 5 + bob, 1, 8, '#5a3a20'); r(bx + 1, by - 4 + bob, 5, 5, '#efe6cf'); r(bx + 1, by - 2 + bob, 5, 1, FAC[c.owner].col); } if (L > 2) { r(x + w - 4, by - 14, 4, 12, P.stone); r(x + w - 5, by - 15, 6, 1, P.trim); r(x + w - 3, by - 17, 2, 2, Math.floor(t / 250) % 2 ? '#ffd24a' : '#ff8a2a'); } r(x + 2, by - 9, 1, 7, P.wood); r(x + 2, by - 9, 6, 1, P.wood); r(x + 7, by - 8, 1, 3, '#e8e0c8'); break; }
+    case 'harbor': { r(x, by - 2, w, 2, P.wood); for (let k = 0; k < w; k += 5) r(x + k, by, 1, 5, '#4a3420'); if (c.culture === 'punic' && L > 1) { r(x + 6, by + 4, w - 12, 1, P.stone); r(x + w / 2 - 3, by + 2, 6, 2, P.wall); } for (let k = 0; k < Math.min(3, L + 1); k++) { const bx = x + 4 + k * 11, bob = Math.sin(t / 400 + k) > 0 ? 1 : 0; r(bx, by + 3 + bob, 8, 2, '#3a2a1a'); r(bx + 1, by + 5 + bob, 6, 1, '#3a2a1a'); r(bx + 3, by - 5 + bob, 1, 8, '#5a3a20'); r(bx + 1, by - 4 + bob, 5, 5, '#efe6cf'); r(bx + 1, by - 2 + bob, 5, 1, FAC[c.owner].col); } if (L > 3) { r(x + 2, by + 6, w - 4, 2, P.stone); r(x + 2, by + 2, 2, 4, P.stone); r(x + w / 2 - 4, by + 1, 8, 3, P.wall); r(x + w / 2 - 1, by - 2, 2, 3, P.trim); }
+      if (L > 2) { r(x + w - 4, by - 14, 4, 12, P.stone); r(x + w - 5, by - 15, 6, 1, P.trim); r(x + w - 3, by - 17, 2, 2, Math.floor(t / 250) % 2 ? '#ffd24a' : '#ff8a2a'); } r(x + 2, by - 9, 1, 7, P.wood); r(x + 2, by - 9, 6, 1, P.wood); r(x + 7, by - 8, 1, 3, '#e8e0c8'); break; }
     case 'road': { r(x, by, w, 2, '#a8a08a'); for (let k = 0; k < w; k += 3) r(x + k, by, 1, 1, '#8e8672'); if (L > 1) { r(x, by - 1, w, 1, '#9a9280'); r(x + 40, by - 4, 1, 4, P.stone); } break; }
     case 'walls': { if (st === 'long' || st === 'yurt') { for (let k = 0; k < w; k += 2) r(x + k, by - 5 - (k % 4 ? 0 : 1), 1, 6, P.wood); } else { r(x, by - 4, w, 5, P.stone); for (let k = 0; k < w; k += 4) r(x + k, by - 6, 2, 2, P.stone); if (st === 'hut') for (let k = 1; k < w; k += 5) r(x + k, by - 2, 2, 1, P.wood); for (let k = 0; k < L + 1; k++) { const tx = 20 + k * 60; r(tx, by - 9, 7, 10, P.stone); r(tx - 1, by - 10, 9, 1, P.stone); r(tx + 3, by - 5, 1, 2, '#2a1a10'); } r(96, by - 5, 8, 6, '#3a2a1a'); } break; }
   }
@@ -1840,7 +2041,7 @@ const esc = (s) => String(s).replace(/[&<>"]/g, (m) => ({ '&': '&amp;', '<': '&l
 const fmt = (v) => (Math.abs(v) >= 100 ? Math.round(v) : Math.abs(v) > 0 && Math.abs(v) < 0.1 ? Math.round(v * 100) / 100 : Math.round(v * 10) / 10).toLocaleString('en');
 const UI = { sel: null, mode: null, mapMode: 'political', tab: 'econ', hover: null, dipSel: null, startPick: 'rome' };
 let MAPCTX, SCENE, SCENECTX;
-const SAVE_KEY = 'oikoumene-save-v2';
+const SAVE_KEY = 'oikoumene-save-v3';
 
 const chip = (f) => '<span class="fchip" style="--c:' + FAC[f].col + '">' + esc(FAC[f].short) + '</span>';
 const gchip = (g, extra) => '<span class="gchip" style="--c:' + GD[g].c + '">' + esc(GD[g].n) + (extra != null ? ' <b>' + extra + '</b>' : '') + '</span>';
@@ -1888,6 +2089,7 @@ function cityPanel(c) {
   let h = head(c.name, chip(c.owner) + ' · ' + cul.lbl + (c.capital ? ' · capital' : '') + (c.colony ? ' · colony' : '') + ' · ' + TNAME[terr[c.y * W + c.x]], FAC[c.owner].col);
   h += '<div class="scene"><div id="scene-slot"></div><div class="scap">' + (q ? 'Building <b>' + esc(bname(q.b, c.culture)) + ' ' + roman((c.b[q.b] || 0) + 1) + '</b> · ' + Math.max(1, Math.ceil((q.need - q.done) / (0.6 + 0.4 * (c.fl.timber ?? 1)))) + ' season(s) left' + ((c.fl.timber ?? 1) < 0.7 ? ' · <span class="neg">short of timber, work is slow</span>' : '') : 'No construction under way') + '</div></div>';
   h += '<div class="kv"><div><span>People</span><b>' + fmt(c.pop) + 'k</b><small>ceiling ' + fmt(popCap(c)) + 'k</small></div><div><span>Order</span><b class="' + (c.order < 35 ? 'neg' : c.order > 60 ? 'pos' : '') + '">' + Math.round(c.order) + '</b>' + bar(c.order, 100, c.order < 35 ? 'bad' : '') + '</div><div><span>Food</span><b class="' + (s.food < 0.9 ? 'neg' : 'pos') + '">' + Math.round(s.food * 100) + '%</b><small>' + fmt(c.stock.grain || 0) + ' in store</small></div><div><span>Comforts</span><b>' + Math.round(s.comfort * 100) + '%</b><small>luxuries ' + Math.round(s.lux * 100) + '%</small></div></div>';
+  h += peopleBlock(c);
   const tabs = [['econ', 'Economy'], ['build', mine ? 'Build' : 'Buildings'], ['trade', 'Trade'], ['army', mine ? 'Army & colonies' : 'Defences']];
   h += '<nav class="tabs">' + tabs.map(([k, n]) => '<button data-a="tab" data-v="' + k + '" class="' + (UI.tab === k ? 'on' : '') + '">' + n + '</button>').join('') + '</nav>';
   if (UI.tab === 'econ') h += cityEcon(c);
@@ -1895,6 +2097,14 @@ function cityPanel(c) {
   else if (UI.tab === 'trade') h += cityTrade(c, mine);
   else h += cityArmy(c, mine, armies);
   if (!mine) h += '<div class="row gap"><button data-a="dipwith" data-v="' + c.owner + '">Diplomacy with ' + esc(FAC[c.owner].short) + '</button></div>';
+  return h;
+}
+function peopleBlock(c) {
+  const ps = topPeoples(c, 8), rp = facPeople(c.owner), fs = foreignShare(c);
+  let h = '<h3>Peoples of ' + esc(c.name) + ' <small>' + fmt(c.pop) + 'k souls · rulers are ' + esc(PEOPLES[rp][0]) + '</small></h3>';
+  h += '<div class="pbar" role="img" aria-label="Population by people">' + ps.map(([p, v]) => '<i style="width:' + (v * 100).toFixed(1) + '%;background:' + PEOPLES[p][1] + '" title="' + esc(PEOPLES[p][0]) + ' ' + Math.round(v * 100) + '%"></i>').join('') + '</div>';
+  h += '<ul class="plist">' + ps.map(([p, v]) => '<li><span class="sw" style="--c:' + PEOPLES[p][1] + '"></span><b>' + esc(PEOPLES[p][0]) + '</b><span class="pct">' + (v * 100 < 1 ? '<1' : Math.round(v * 100)) + '%</span><span class="muted">' + fmt(c.pop * v) + 'k · ' + esc(PEOPLES[p][3]) + '</span></li>').join('') + '</ul>';
+  if (fs > 0.08) h += '<p class="small ' + (fs > 0.4 ? 'warn' : 'muted') + '">' + (fs > 0.4 ? 'Most people here are not ' + esc(PEOPLES[rp][0]) + '. ' : '') + 'Foreign rule costs ' + Math.round(18 * fs) + ' public order. Temples and time assimilate people to their rulers; trade routes bring newcomers.</p>';
   return h;
 }
 function wants(c) {
@@ -1938,11 +2148,20 @@ function flowLine(r, c) {
   return (outs.length ? '<span class="gold">→ ' + outs.map((f) => esc(GD[f.g].n) + ' ' + fmt(f.amt)).join(', ') + '</span> ' : '') + (ins.length ? '<span class="pos">← ' + ins.map((f) => esc(GD[f.g].n) + ' ' + fmt(f.amt)).join(', ') + '</span>' : '') || '<span class="muted">idle</span>';
 }
 function cityTrade(c, mine) {
-  const rs = G.routes.filter((r) => r.a === c.id || r.b === c.id);
-  let h = '<h3>Trade routes <small>' + rs.length + ' of ' + slots(c) + ' slots</small></h3><ul class="routes">';
-  for (const r of rs) { const o = C(r.a === c.id ? r.b : r.a); h += '<li data-a="selroute" data-v="' + r.id + '"><div><b>' + esc(o.name) + '</b> ' + chip(o.owner) + ' <span class="muted small">' + (r.k === 'sea' ? 'by sea' : 'overland') + (r.pin ? ' · kept open' : '') + (r.pirate ? ' · <span class="warn">pirate waters</span>' : '') + '</span></div><div class="small">' + flowLine(r, c) + '</div><div class="val">' + fmt(r.val) + '</div></li>'; }
-  h += rs.length ? '</ul>' : '<li class="muted">No routes yet.</li></ul>';
-  if (mine) h += '<div class="row gap"><button data-a="newroute" ' + (rs.length >= slots(c) ? 'disabled' : '') + '>Open a route from ' + esc(c.name) + '</button></div><p class="muted small">Merchants open profitable routes on their own each season. Open one yourself, keep a route open even when trade dries up, or close routes you dislike. More slots come from harbours and markets.</p>';
+  const rs = G.routes.filter((r) => r.a === c.id || r.b === c.id).sort((x, y) => y.val - x.val);
+  let h = '<h3>Trade routes <small>' + rs.length + ' of ' + slots(c) + ' slots · ' + fmt(rs.reduce((s, r) => s + r.val, 0)) + ' per season</small></h3>';
+  if (!rs.length) h += '<p class="muted">No routes yet.</p>';
+  for (const r of rs) {
+    const o = C(r.a === c.id ? r.b : r.a), outs = [], ins = [];
+    for (const f of r.flows) ((f.dir === 0 ? r.b : r.a) === c.id ? ins : outs).push(f);
+    const days = Math.round((r.d * KM_PER_CELL) / (r.k === 'sea' ? 90 : 30));
+    const list = (fl) => fl.length ? fl.map((f) => gchip(f.g, fmt(f.amt))).join('') : '<span class="muted small">nothing</span>';
+    h += '<div class="rcard"><div class="rh" data-a="selroute" data-v="' + r.id + '"><b>' + esc(o.name) + '</b>' + chip(o.owner) + '<span class="muted small">' + (r.k === 'sea' ? 'sea' : 'road') + ' · ~' + days + ' days' + (r.pirate ? ' · <span class="warn">pirates</span>' : '') + (r.pin ? ' · kept open' : '') + '</span><span class="val">' + fmt(r.val) + '</span></div>';
+    h += '<div class="rc"><div><span class="lbl">Sends</span><p class="chips">' + list(outs) + '</p></div><div><span class="lbl">Receives</span><p class="chips">' + list(ins) + '</p></div></div>';
+    if (mine) h += '<div class="row gap ra"><button class="sm" data-a="pinr" data-v="' + r.id + '">' + (r.pin ? 'Let merchants decide' : 'Keep open') + '</button><button class="sm danger" data-a="closer" data-v="' + r.id + '">Close</button><button class="sm" data-a="selroute" data-v="' + r.id + '">Details</button></div>';
+    h += '</div>';
+  }
+  if (mine) h += '<div class="row gap"><button data-a="newroute" ' + (rs.length >= slots(c) ? 'disabled' : '') + '>Open a route from ' + esc(c.name) + '</button></div><p class="muted small">Every route is drawn on the map while this town is selected, and its ships and carts come and go in the town view above. Merchants open profitable routes by themselves each season; harbours and markets add slots.</p>';
   const w = wants(c).slice(0, 5), sp = Object.entries(c.S || {}).filter(([, v]) => v > 0.05).sort((a, b) => b[1] * price(b[0]) - a[1] * price(a[0])).slice(0, 6);
   h += '<h3>Unmet demand</h3><p class="chips">' + (w.length ? w.map(([g]) => gchip(g)).join('') : '<span class="muted">None</span>') + '</p>';
   h += '<h3>Unsold surplus</h3><p class="chips">' + (sp.length ? sp.map(([g, v]) => gchip(g, fmt(v))).join('') : '<span class="muted">None</span>') + '</p>';
@@ -2079,6 +2298,8 @@ const ACT = {
   selcity: (v) => { select({ type: 'city', id: +v }); lookAtCity(C(+v)); },
   selarmy: (v) => select({ type: 'army', id: +v }),
   newroute: () => { const c = C(UI.sel.id); const targets = c.cand.map((n) => n.id).filter((id) => { const o = C(id); return o.owner && access(c.owner, o.owner) && !G.routes.some((r) => dk(r.a, r.b) === dk(c.id, id)); }); UI.mode = { type: 'route', from: c.id, targets, msg: 'Pick a partner for ' + c.name + ' (ringed cities have trade access)' }; renderMode(); },
+  pinr: (v) => { const r = G.routes.find((x) => x.id === +v); if (r) r.pin = !r.pin; renderPanel(); },
+  closer: (v) => { const r = G.routes.find((x) => x.id === +v); if (!r) return; G.routes = G.routes.filter((x) => x !== r); G.black[dk(r.a, r.b)] = G.turn + 8; toast('Route closed. Merchants will stay away for two years.'); renderAll(); },
   pin: () => { const r = G.routes.find((x) => x.id === UI.sel.id); r.pin = !r.pin; renderPanel(); },
   closeroute: () => { const r = G.routes.find((x) => x.id === UI.sel.id); G.routes = G.routes.filter((x) => x !== r); G.black[dk(r.a, r.b)] = G.turn + 8; toast('Route closed. Merchants will stay away for two years.'); UI.sel = { type: 'city', id: r.a }; renderAll(); },
   raise: () => { const c = C(UI.sel.id), e = raiseArmy(c); if (e) toast(e, 'bad'); else toast('Troops levied in ' + c.name, 'good'); renderAll(); },
@@ -2126,7 +2347,7 @@ function onMapClick(sx, sy) {
 }
 function tooltipFor(h) {
   if (!h) return '';
-  if (h.type === 'city') { const c = C(h.id); const top = Object.entries(c.P || {}).sort((p, q) => q[1] * price(q[0]) - p[1] * price(p[0])).slice(0, 3).map(([g]) => GD[g].n).join(', '); return '<b>' + esc(c.name) + '</b> ' + chip(c.owner) + '<br>' + fmt(c.pop) + 'k people' + (c.q.length ? ' · building ' + esc(bname(c.q[0].b, c.culture)) : '') + '<br><span class="muted">' + esc(top) + '</span>'; }
+  if (h.type === 'city') { const c = C(h.id); const top = Object.entries(c.P || {}).sort((p, q) => q[1] * price(q[0]) - p[1] * price(p[0])).slice(0, 3).map(([g]) => GD[g].n).join(', '); return '<b>' + esc(c.name) + '</b> ' + chip(c.owner) + '<br>' + fmt(c.pop) + 'k people' + (c.q.length ? ' · building ' + esc(bname(c.q[0].b, c.culture)) : '') + '<br><span class="muted">' + esc(top) + '</span><br>' + topPeoples(c, 3).map(([p, v]) => esc(PEOPLES[p][0]) + ' ' + Math.round(v * 100) + '%').join(' · '); }
   if (h.type === 'route') { const r = G.routes.find((x) => x.id === h.id); if (!r) return ''; return '<b>' + esc(C(r.a).name) + ' ⇄ ' + esc(C(r.b).name) + '</b><br>' + (r.flows.slice(0, 3).map((f) => esc(GD[f.g].n)).join(', ') || 'idle') + ' · ' + fmt(r.val); }
   if (h.type === 'army') { const a = G.armies.find((x) => x.id === h.id); return '<b>' + esc(a.name) + '</b> ' + chip(a.f) + ' · ' + fmt(a.str); }
   if (h.type === 'land') { const i = h.y * W + h.x; if (!land[i]) return ''; if (UI.mode && UI.mode.type === 'colony') { const s = siteInfo(h.x, h.y, C(UI.mode.origin)); if (!s.ok) return esc(s.why); return '<b>' + esc(colonyName(h.x, h.y, C(UI.mode.origin).culture)) + '?</b> ' + s.turns + ' season(s)<br>' + Object.entries(s.res).sort((a, b) => b[1] * price(b[0]) - a[1] * price(a[0])).slice(0, 4).map(([g]) => esc(GD[g].n)).join(', '); } return esc(TNAME[terr[i]]) + ' · unclaimed'; }
@@ -2193,7 +2414,7 @@ function showStart() {
 function saveGame() { try { const s = JSON.stringify(G, (k, v) => (k === '_disp' || k === 'flash' || k === 'cand' || k === 'seaN' || k === 'landN' ? undefined : v)); localStorage.setItem(SAVE_KEY, s); return true; } catch (e) { return false; } }
 function loadGame() {
   try { const s = localStorage.getItem(SAVE_KEY); if (!s) return false; G = JSON.parse(s); } catch (e) { return false; }
-  PATHS.clear(); for (const c of G.cities) { c.seaN = null; c.landN = null; } for (const c of G.cities) linkCity(c); for (const c of G.cities) c.cand = tradeCands(c);
+  PATHS.clear(); for (const c of G.cities) { c.seaN = null; c.landN = null; } for (const c of G.cities) if (!c.ppl) initPeople(c); for (const c of G.cities) linkCity(c); for (const c of G.cities) c.cand = tradeCands(c);
   const now = performance.now(); for (const c of G.cities) for (const q of c.q) q.ts = now; for (const a of G.armies) if (a.mv) a.mv.ts = now; for (const f of G.fleets) f.ts = now;
   computeTerritory(); flagPirates(); afterLoad(); return true;
 }

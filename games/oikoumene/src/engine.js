@@ -247,7 +247,7 @@ function seedBuildings(c) {
   if ((c.res.timber || 0) > 1) b.lumber = 1;
   if ((c.res.wool || 0) > 0.8 || (c.res.horses || 0) > 1) b.pasture = 1;
   if (c.culture === 'roman' && p >= 4) b.road = 1;
-  const S = { Carthago: { harbor: 3, market: 3, workshop: 2, walls: 3, olive: 2 }, Alexandreia: { harbor: 3, market: 3, workshop: 2, granary: 2, temple: 3 }, Roma: { market: 2, road: 2, temple: 3, aqueduct: 1 },
+  const S = { Carthago: { harbor: 4, market: 3, workshop: 2, walls: 3, olive: 2 }, Alexandreia: { harbor: 4, market: 3, workshop: 2, granary: 2, temple: 3 }, Roma: { market: 2, road: 2, temple: 3, aqueduct: 1 },
     Athenai: { temple: 3, workshop: 2, harbor: 2 }, Rhodos: { harbor: 3, market: 2 }, Antiocheia: { market: 3, workshop: 2 }, Syracusae: { harbor: 2, walls: 3 },
     Massalia: { harbor: 2, market: 2, vineyard: 2 }, Tyros: { workshop: 2, harbor: 2 }, Sidon: { workshop: 2 }, Byzantion: { harbor: 2, walls: 2 }, Korinthos: { walls: 3, harbor: 2, market: 2 },
     Pergamon: { temple: 2, workshop: 1 }, Gades: { harbor: 2 }, Memphis: { farm: 3, temple: 2 }, Krokodilopolis: { farm: 3 }, Numantia: { walls: 2 }, Petra: { market: 2 } };
@@ -301,6 +301,8 @@ function newGame(pid) {
     prices: {}, log: [], black: {}, nid: 1, hist: {}, lastPrices: {}, done: {}, raided: {} };
   for (const f of FIDS) G.fac[f] = { gold: 0, tax: 0.15, tariff: 0.1, alive: true, last: {}, colonies: 0, gifts: 0, weary: 0 };
   for (const [n, lon, lat, o, p, cap] of CITY_DATA) { const c = makeCity(n, lon, lat, o, p, cap); if (n === 'Gades') c.culture = 'punic'; seedBuildings(c); c.gar = garMax(c); }
+  G.facPeople = {}; for (const f of FIDS) { const cs = citiesOf(f), cap = cs.find((c) => c.capital) || cs[0]; if (cap) G.facPeople[f] = nativeAt(cap.lon, cap.lat); }
+  for (const c of G.cities) initPeople(c);
   for (const f of FIDS) { const pop = citiesOf(f).reduce((s, c) => s + c.pop, 0); const g = G.fac[f]; g.gold = Math.round(isBarb(FAC[f].cul) ? 80 + pop * 6 : 250 + pop * 5); }
   Object.assign(G.fac.rome, { gold: 500 }); Object.assign(G.fac.carthage, { gold: 650 }); Object.assign(G.fac.ptolemaic, { gold: 800 }); Object.assign(G.fac.seleucid, { gold: 600 });
   // diplomacy
@@ -451,7 +453,7 @@ function satisfaction(c) {
 function growth() {
   for (const c of G.cities) {
     if (!c.owner) continue; const s = satisfaction(c), fac = G.fac[c.owner], cap = popCap(c);
-    let target = 38 + 26 * s.comfort + 10 * s.lux + 8 * (c.b.temple || 0) + (c.capital ? 8 : 0) - (fac.tax - 0.12) * 160 - Math.min(14, fac.weary * 2) - (s.food < 0.9 ? 30 * (0.9 - s.food) : 0) - (fac.gold < 0 ? 12 : 0);
+    let target = 38 - 18 * foreignShare(c) + 26 * s.comfort + 10 * s.lux + 8 * (c.b.temple || 0) + (c.capital ? 8 : 0) - (fac.tax - 0.12) * 160 - Math.min(14, fac.weary * 2) - (s.food < 0.9 ? 30 * (0.9 - s.food) : 0) - (fac.gold < 0 ? 12 : 0);
     if (G.armies.some((a) => a.at === c.id && a.f === c.owner)) target += 4;
     c.order = clamp(c.order + (target - c.order) * 0.35, 0, 100);
     if (s.food >= 0.97) c.pop += Math.max(0.02, c.pop * 0.014 * (1 - c.pop / cap)) * (c.pop < cap ? 1 : 0);
@@ -542,7 +544,7 @@ function battle(army, c) {
     return 'back';
   }
   if (att > def) {
-    const old = c.owner; c.owner = army.f; c.capital = false; c.order = 22; c.pop = R1(c.pop * 0.9); c.gar = 2; c.q = [];
+    const old = c.owner; c.owner = army.f; c.capital = false; if (c.ppl) mixIn(c.ppl, { [facPeople(army.f)]: 1 }, 0.08); c.order = 22; c.pop = R1(c.pop * 0.9); c.gar = 2; c.q = [];
     for (const a of defArmies) a.str = 0; army.str = Math.max(3, Math.round(army.str - def * 0.45));
     G.armies = G.armies.filter((a) => a.str > 0);
     G._terrDirty = true; addRel(army.f, old, -20);
@@ -622,6 +624,7 @@ function moveFleets() {
     if (cellCity[i] >= 0 && C(cellCity[i]).owner !== fl.f) { if (fl.f === G.player) logMsg('The colonists bound for ' + fl.name + ' found the land taken and turned home.', 'bad'); continue; }
     const [lon, lat] = cellLL(fl.x, fl.y);
     const c = makeCity(fl.name, lon, lat, fl.f, 1.6, false, { culture: fl.culture, colony: true }); c.pop0 = 1.6; c.b = {}; c.order = 70; c.gar = garMax(c);
+    { const o = C(fl.from), nat = nativeAt(c.lon, c.lat), m = { [facPeople(fl.f)]: 0.7, [nat]: 0.15 }; for (const k in o.ppl || {}) m[k] = (m[k] || 0) + o.ppl[k] * 0.15; c.ppl = normPeople(m); }
     linkCity(c); c.cand = tradeCands(c); for (const n of [...c.seaN, ...c.landN]) { const o = C(n.id); o.cand = tradeCands(o); }
     G.fac[fl.f].colonies++; G._terrDirty = true;
     const near = G.cities.filter((o) => o.owner && o.owner !== fl.f && Math.hypot(o.x - c.x, o.y - c.y) < 16);
@@ -778,7 +781,7 @@ function goalStatus(f, g) {
 function endTurn() {
   const p = G.player;
   for (const f of FIDS) if (f !== p && G.fac[f].alive) aiTurn(f);
-  econ(false); construction(); growth(); moveArmies(); moveFleets();
+  econ(false); construction(); growth(); peopleTurn(); moveArmies(); moveFleets();
   for (const f of FIDS) { const wars = FIDS.filter((o) => atWar(f, o)).length; G.fac[f].weary = wars ? Math.min(8, G.fac[f].weary + 0.25) : Math.max(0, G.fac[f].weary - 0.5); if (G.fac[f].gold < -50) for (const a of G.armies) if (a.f === f) a.str = Math.max(1, Math.round(a.str * 0.9)); }
   for (const k in G.rel) { const b = G.relBase[k] ?? 0, r = G.rel[k]; if (!G.war[k]) G.rel[k] = r + Math.sign(b - r) * Math.min(1, Math.abs(b - r)); }
   const lost = G.routes.filter((r) => r._lost); for (const r of lost) delete r._lost;

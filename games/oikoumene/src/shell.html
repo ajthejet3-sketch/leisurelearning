@@ -117,6 +117,19 @@ ul.dip li.open{border-color:var(--bronze)}
 .rel{font:19px var(--num);min-width:34px;text-align:right}
 .dbody{padding:0 9px 9px}
 .help p{font-size:14px}
+.pbar{display:flex;height:12px;border:1px solid var(--line);background:#0b151b;margin:4px 0 6px}
+.pbar i{display:block;height:100%;box-shadow:inset -1px 0 0 rgba(0,0,0,.35)}
+.plist{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:2px;font-size:13px}
+.plist li{display:grid;grid-template-columns:10px auto 38px 1fr;gap:6px;align-items:baseline}
+.plist .sw{align-self:center}.plist b{font:600 13px var(--disp)}.plist .pct{font:17px var(--num);text-align:right}
+.plist .muted{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.rcard{background:var(--panel2);border:1px solid var(--line);margin:0 0 6px;padding:7px 9px}
+.rcard:hover{border-color:var(--line2)}
+.rh{display:flex;gap:6px;align-items:baseline;flex-wrap:wrap;cursor:pointer}
+.rh b{font:600 14px var(--disp)}.rh .val{margin-left:auto;font:22px var(--num);color:var(--bronze)}
+.rc{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:4px}
+.rc .lbl{font:11px var(--disp);text-transform:uppercase;letter-spacing:.08em;color:var(--mute)}
+.rc p{margin:2px 0}.ra{margin-top:4px}
 /* chronicle */
 #chron{position:absolute;left:12px;bottom:12px;width:min(430px,calc(100% - 24px));background:rgba(14,26,33,.9);border:2px solid var(--line);padding:6px 10px;z-index:3;cursor:pointer;max-height:40%;overflow:auto}
 #chron h5{margin:0 0 3px;font:600 11px var(--disp);text-transform:uppercase;letter-spacing:.12em;color:var(--bronze);display:flex;justify-content:space-between}
