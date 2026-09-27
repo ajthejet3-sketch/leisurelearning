@@ -148,6 +148,24 @@ ul.dip li.open{border-color:var(--bronze)}
 .gname{font:600 15px var(--disp)!important}
 #chron li button{margin-left:4px}
 .battlecv{aspect-ratio:2/1}
+.fchip.link{cursor:pointer;text-decoration:underline dotted rgba(236,223,194,.35);text-underline-offset:3px}.fchip.link:hover{color:var(--bronze)}
+.wlist{list-style:none;margin:4px 0;padding:0;display:flex;flex-direction:column;gap:3px}
+.wlist li{display:flex;gap:6px;align-items:baseline;flex-wrap:wrap;background:var(--panel2);border:1px solid var(--line);padding:5px 8px}
+.wlist li.war{border-left:3px solid var(--bad)}.wlist li.ally{border-left:3px solid var(--good)}.wlist .vs{font:11px var(--disp);color:var(--mute);text-transform:uppercase}.wlist .muted{margin-left:auto}
+.rellist{list-style:none;margin:4px 0;padding:0;display:flex;flex-direction:column;gap:3px}
+.rellist li{display:grid;grid-template-columns:110px 1fr 38px;gap:8px;align-items:center}
+.rellist b{font:17px var(--num);text-align:right;font-weight:400}
+.relbar{position:relative;height:6px;background:#0b151b;border:1px solid var(--line)}.relbar::after{content:"";position:absolute;left:50%;top:-2px;bottom:-2px;width:1px;background:var(--line2)}
+.relbar i{position:absolute;top:0;bottom:0}.relbar i.p{background:var(--good)}.relbar i.n{background:var(--bad)}
+#legend{position:absolute;left:12px;top:var(--toph,74px);z-index:3;background:rgba(14,26,33,.94);border:2px solid var(--line);padding:6px 10px;display:flex;flex-direction:column;gap:3px;font-size:13px}
+#legend span{display:flex;gap:6px;align-items:center}#legend i{width:12px;height:10px;background:var(--c);box-shadow:0 0 0 1px #000}
+.olist{list-style:none;margin:4px 0;padding:0;font-size:14px}
+.olist li{display:grid;grid-template-columns:1fr 50px;border-bottom:1px dashed var(--line);padding:2px 0}
+.olist b{font:18px var(--num);text-align:right;font-weight:400}.olist li.tot{border-bottom:0;border-top:2px solid var(--line)}
+.lore{font-style:italic;color:#d8ccb0;border-left:3px solid var(--bronze2);padding-left:10px}
+.bgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(118px,1fr));gap:4px}
+.bgrid div{background:var(--panel2);border:1px solid var(--line);padding:4px 6px;font-size:12px;display:flex;justify-content:space-between;gap:4px}
+.bgrid div.no{opacity:.4}.bgrid b{font:16px var(--num);color:var(--bronze);font-weight:400}
 .acard{background:var(--panel2);border:1px solid var(--line);padding:7px 9px;margin:0 0 6px;display:flex;flex-direction:column;gap:4px}
 .acard:hover{border-color:var(--line2)}.acard.idle{border-left:3px solid var(--bronze)}.acard.hurt{border-left:3px solid var(--bad)}.acard.go{border-left:3px solid #7fb3d8}
 .ahead{display:flex;gap:8px;align-items:baseline;flex-wrap:wrap;cursor:pointer}
@@ -214,13 +232,14 @@ ul.dip li.open{border-color:var(--bronze)}
     <div class="tb tb-realm" data-open="realm" role="button" tabindex="0" title="Your realm: treasury, policy, ambitions"><span id="tb-crest" class="crest"></span><span id="tb-name">Oikoumene</span></div>
     <div class="tb tb-stats"><span id="tb-date"></span><span id="tb-sea" hidden>Mare clausum</span><b id="tb-gold"></b><span id="tb-inc"></span><span id="tb-pop"></span></div>
     <div class="tb tb-btns"><button data-open="armies">Armies</button><button data-open="dip">Diplomacy</button><button data-open="ledger">Trade</button><button data-open="market">Market</button><button data-open="help">?</button><button id="musicbtn" aria-pressed="false" title="Music in the ancient modes">Music: off</button></div>
-    <div class="tb tb-btns modes" aria-label="Map mode"><button data-mapmode="political">Political</button><button data-mapmode="trade">Routes</button><button data-mapmode="goods">Goods</button><button data-mapmode="terrain">Terrain</button></div>
+    <div class="tb tb-btns modes" aria-label="Map mode"><button data-mapmode="political">Political</button><button data-mapmode="trade">Routes</button><button data-mapmode="goods">Goods</button><button data-mapmode="terrain">Terrain</button><button data-mapmode="dip">Relations</button></div>
     <button id="endturn" class="primary">End season</button>
   </div>
   <aside id="panel" hidden></aside>
   <div id="chron" title="Click to expand"><h5><span>Chronicle</span><span>▾</span></h5><ul id="chron-list"></ul></div>
   <div id="zoom"><button id="zin" aria-label="Zoom in">+</button><button id="zout" aria-label="Zoom out">−</button></div>
   <div id="modebar" hidden><span id="modemsg"></span><button id="modecancel" class="sm">Cancel</button></div>
+  <div id="legend" hidden></div>
   <div id="tip" hidden></div>
   <div id="toasts"></div>
   <div id="start" hidden></div>

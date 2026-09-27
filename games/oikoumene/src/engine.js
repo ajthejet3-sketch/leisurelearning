@@ -447,11 +447,22 @@ function satisfaction(c) {
   const grp = (gs) => { let s = 0, w = 0; for (const g of gs) if (c.D[g]) { s += c.fl[g] * c.D[g] * price(g); w += c.D[g] * price(g); } return w ? s / w : 1; };
   return { food: c.fl.grain == null ? 1 : c.fl.grain, comfort: grp(['wine', 'oil', 'textiles', 'pottery', 'salt', 'fish']), lux: grp(LUX) };
 }
+// What pushes public order up or down in a city; the UI shows the same list.
+function orderParts(c) {
+  const s = satisfaction(c), fac = G.fac[c.owner], P = [['Base contentment', 38]];
+  P.push(['Comforts: wine, oil, cloth, salt', Math.round(26 * s.comfort)], ['Luxuries', Math.round(10 * s.lux)]);
+  if (c.b.temple) P.push(['Temples', 8 * c.b.temple]); if (c.capital) P.push(['Seat of government', 8]);
+  if (G.armies.some((a) => a.at === c.id && a.f === c.owner)) P.push(['Soldiers in town', 4]);
+  P.push(['Taxes at ' + Math.round(fac.tax * 100) + '%', -Math.round((fac.tax - 0.12) * 160)]);
+  const fs = foreignShare(c); if (fs > 0.02) P.push(['Foreign rule', -Math.round(18 * fs)]);
+  if (fac.weary > 0.1) P.push(['War weariness', -Math.round(Math.min(14, fac.weary * 2))]);
+  if (s.food < 0.9) P.push(['Hunger', -Math.round(30 * (0.9 - s.food))]); if (fac.gold < 0) P.push(['Unpaid treasury', -12]);
+  return P;
+}
 function growth() {
   for (const c of G.cities) {
     if (!c.owner) continue; const s = satisfaction(c), fac = G.fac[c.owner], cap = popCap(c);
-    let target = 38 - 18 * foreignShare(c) + 26 * s.comfort + 10 * s.lux + 8 * (c.b.temple || 0) + (c.capital ? 8 : 0) - (fac.tax - 0.12) * 160 - Math.min(14, fac.weary * 2) - (s.food < 0.9 ? 30 * (0.9 - s.food) : 0) - (fac.gold < 0 ? 12 : 0);
-    if (G.armies.some((a) => a.at === c.id && a.f === c.owner)) target += 4;
+    const target = orderParts(c).reduce((a, p) => a + p[1], 0); c.popPrev = c.pop;
     c.order = clamp(c.order + (target - c.order) * 0.35, 0, 100);
     if (s.food >= 0.97) c.pop += Math.max(0.02, c.pop * 0.014 * (1 - c.pop / cap)) * (c.pop < cap ? 1 : 0);
     else if (s.food < 0.8) { const loss = c.pop * 0.05 * (0.8 - s.food) * 2; c.pop = Math.max(0.8, c.pop - loss); if (c.owner === G.player && loss > 0.1) logMsg('Famine in ' + c.name + ': the granaries are empty and people are leaving.', 'bad'); }

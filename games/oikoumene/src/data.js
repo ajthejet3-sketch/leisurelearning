@@ -57,6 +57,38 @@ const BNAME = {
   harbor: { punic: 'Cothon harbour' },
   aqueduct: { _: 'Aqueduct' },
 };
+const CULT_GODS = { roman: ['Jupiter Optimus Maximus', 'Mars', 'Ceres', 'Vesta', 'Mercury'], greek: ['Zeus', 'Athena', 'Apollo', 'Demeter', 'Dionysos', 'Poseidon'], punic: ['Baal Hammon', 'Tanit', 'Melqart', 'Eshmun'],
+  egyptian: ['Serapis', 'Isis', 'Osiris', 'Amun', 'Horus'], eastern: ['Bel', 'Atargatis', 'Nabu', 'Mithra', 'Anahita'], numidian: ['Baal Hammon', 'Gurzil', 'Ifru', 'Tanit'], celtic: ['Taranis', 'Lugus', 'Epona', 'Teutates', 'Belenos'],
+  iberian: ['Endovelicus', 'Ataecina', 'Neton', 'Lugus'], germanic: ['Wodanaz', 'Thunraz', 'Nerthus', 'Tiwaz'], thracian: ['Zalmoxis', 'the Thracian Rider', 'Bendis', 'Sabazios'], scythian: ['Tabiti', 'Papaios', 'Api', 'Argimpasa'] };
+const CULT_FEASTS = { roman: ['Floralia', 'Vestalia', 'Ludi Romani', 'Saturnalia'], greek: ['Anthesteria', 'Olympic truce', 'Thesmophoria', 'Lenaia'], punic: ['Awakening of Melqart', 'Feast of Tanit', 'Harvest of the Bagradas', 'Night of Baal'],
+  egyptian: ['Festival of the Valley', 'Rising of the Nile', 'Opet', 'Khoiak mysteries'], eastern: ['Akitu new year', 'Feast of Atargatis', 'Harvest of Bel', 'Mihragan'], numidian: ['Spring sacrifice', 'Horse fair', 'Harvest', 'Winter vigil'],
+  celtic: ['Beltane', 'Lughnasa', 'Samain', 'Imbolc'], iberian: ['Spring rites', 'Summer games', 'Harvest', 'Winter fires'], germanic: ['Ostara', 'Midsummer', 'Harvest blot', 'Yule'], thracian: ['Spring of Zalmoxis', 'Rider games', 'Vintage', 'Winter mysteries'], scythian: ['Horse offering', 'Summer camp', 'Kurgan rites', 'Winter camp'] };
+const CITY_LORE = {
+  Roma: 'Seven hills above the Tiber ford. The Senate meets in the Curia Hostilia; the Capitoline temple of Jupiter watches over the Forum.',
+  Carthago: 'The Byrsa citadel above twin harbours: the rectangular merchant port and the round naval Cothon with its admiral\'s island.',
+  Alexandreia: 'Laid out by Alexander\'s architect Deinokrates. The Pharos lights the harbour, the Museion and its Library draw every scholar alive.',
+  Athenai: 'The Acropolis crowned by the Parthenon, the long walls down to the Piraeus now in ruins, philosophers still arguing in the Stoa.',
+  Antiocheia: 'Seleucus\' city on the Orontes, grid-planned under Mount Silpius, with the pleasure groves of Daphne just outside.',
+  Syracusae: 'Ortygia island and its spring of Arethusa. Archimedes\' engines held off Rome for two years before the city fell in 212.',
+  Pella: 'Birthplace of Alexander, a palace city of painted halls and pebble mosaics on the Macedonian plain.',
+  Korinthos: 'One of the Fetters of Greece: Acrocorinth towers over the isthmus and the diolkos drags ships between two seas.',
+  Rhodos: 'The fallen Colossus still lies where the earthquake threw it. Rhodian sea law governs every harbour in the Aegean.',
+  Massalia: 'Founded by Phocaeans six centuries ago; Pytheas sailed from here to Thule. Wine goes up the Rhône, tin comes down.',
+  Pergamon: 'An acropolis of terraces, the steepest theatre in the world and a library to rival Alexandria\'s.',
+  Gades: 'The oldest Phoenician city of the west, at the edge of the Ocean, with the famous temple of Melqart-Herakles.',
+  Byzantion: 'Holding the Bosporus, it taxes every grain ship from the Euxine.',
+  Babylon: 'Esagila still stands and astronomers still record the heavens, though Seleukeia-on-the-Tigris is drawing its people away.',
+  'Seleukeia-Tigris': 'The eastern capital of the Seleucids, a Greek city of perhaps a hundred thousand on the Tigris.',
+  Hierosolyma: 'The Temple on its mount, ruled by high priests under whatever king holds Coele-Syria.',
+  Tyros: 'The island city that Alexander took with a causeway; its purple dye works stain the air.',
+  Memphis: 'The ancient capital of Egypt, where each Ptolemy is crowned pharaoh and the Apis bull is kept.',
+  Waset: 'Thebes of the hundred gates. Karnak and Luxor stand behind a native pharaoh who defies Alexandria.',
+  Sparte: 'Unwalled for centuries, walled now under Nabis. The agoge is broken but the name still carries.',
+  Numantia: 'A hill city at the head of the Duero whose people will one day starve rather than surrender.',
+  Petra: 'A city carved from rose rock, fed by hidden cisterns, the treasury of the incense trade.',
+  Gergovia: 'The great oppidum of the Arverni on its basalt plateau.', Bibracte: 'The Aedui\'s hill town on Mont Beuvray, a market for all central Gaul.',
+  Tanais: 'The furthest Greek trading post, at the mouth of the Don, where steppe and sea meet.', Nisa: 'The Parthian royal seat, its palaces full of ivory rhytons.',
+};
 const bname = (b, cul) => (BNAME[b] && (BNAME[b][cul] || BNAME[b]._)) || BLD[b].n;
 const GB = { grain: 'farm', fish: 'harbor', salt: 'harbor', wine: 'vineyard', oil: 'olive', timber: 'lumber', amber: 'lumber', furs: 'lumber', iron: 'mine', copper: 'mine', tin: 'mine', silver: 'mine', gold: 'mine', wool: 'pasture', horses: 'pasture', purple: 'workshop', papyrus: 'workshop', glass: 'workshop', incense: 'market', spices: 'market' };
 

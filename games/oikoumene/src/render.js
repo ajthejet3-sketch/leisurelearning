@@ -46,7 +46,20 @@ function buildPolitical() {
   }
   ctx.putImageData(im, 0, 0);
 }
-function onTerritory() { if (polC) buildPolitical(); }
+let relC = null;
+function buildRelations(f) {
+  if (!relC) { relC = document.createElement('canvas'); relC.width = W; relC.height = H; }
+  const ctx = relC.getContext('2d'), im = ctx.createImageData(W, H), d = im.data, col = {};
+  for (const o of FIDS) col[o] = hex(o === f ? '#f2e6c8' : atWar(f, o) ? '#d0402a' : allied(f, o) ? '#5fb04a' : rights(f, o) ? '#d9b54a' : '#8a8a80');
+  for (let i = 0; i < N; i++) {
+    const cid = cellCity[i]; if (cid < 0) continue; const o = G.cities[cid].owner; if (!o) continue; const x = i % W, y = (i / W) | 0; let border = false;
+    for (const [dx, dy] of NB4) { const nx = x + dx, ny = y + dy; if (nx < 0 || ny < 0 || nx >= W || ny >= H) continue; const j = ny * W + nx; if (!land[j]) continue; const q = cellCity[j]; if (q < 0 || G.cities[q].owner !== o) border = true; }
+    const c = col[o], k = i * 4, neutral = o !== f && !atWar(f, o) && !allied(f, o) && !rights(f, o);
+    d[k] = c[0] * (border ? 0.7 : 1); d[k + 1] = c[1] * (border ? 0.7 : 1); d[k + 2] = c[2] * (border ? 0.7 : 1); d[k + 3] = border ? 230 : o === f ? 170 : neutral ? 60 : 140;
+  }
+  ctx.putImageData(im, 0, 0); relC._f = f;
+}
+function onTerritory() { if (polC) buildPolitical(); if (relC && UI.mapMode === 'dip') buildRelations(relC._f || G.player); }
 function buildColonyOverlay(origin) {
   colC = document.createElement('canvas'); colC.width = W; colC.height = H; const ctx = colC.getContext('2d'), im = ctx.createImageData(W, H), d = im.data;
   const f = origin.port ? colonyField(origin) : null;
@@ -94,7 +107,8 @@ function drawMap(t) {
   ctx.fillStyle = 'rgba(190,225,240,0.55)'; const pz = Math.max(1, Math.floor(z / 2));
   for (let k = 0; k < SPARK.length; k++) { const i = SPARK[k], ph = hash2(i, 7) * 50 + t * 0.0009; if ((ph % 6) > 0.35) continue; const [sx, sy] = w2s(i % W, (i / W) | 0); if (sx < -10 || sy < -10 || sx > VW + 10 || sy > VH + 10) continue; ctx.fillRect(Math.round(sx), Math.round(sy), pz * 2, pz); }
   if (!G) return;
-  if (UI.mapMode !== 'terrain') { ctx.globalAlpha = UI.mapMode === 'trade' ? 0.45 : 1; ctx.drawImage(polC, ox, oy, W * z, H * z); ctx.globalAlpha = 1; }
+  if (UI.mapMode === 'dip' && relC) ctx.drawImage(relC, ox, oy, W * z, H * z);
+  else if (UI.mapMode !== 'terrain') { ctx.globalAlpha = UI.mapMode === 'trade' ? 0.45 : 1; ctx.drawImage(polC, ox, oy, W * z, H * z); ctx.globalAlpha = 1; }
   if (UI.mode && UI.mode.type === 'colony' && colC) { ctx.globalAlpha = 0.6 + 0.25 * Math.sin(t / 300); ctx.drawImage(colC, ox, oy, W * z, H * z); ctx.globalAlpha = 1; }
   const u = Math.max(1, Math.round(z / 3));
   // routes
@@ -303,6 +317,12 @@ function drawScene(sc, c, t) {
     else if (st === 'long') { r(hx, by - 4, w + 4, 4, P.wall); r(hx - 1, by - 6, w + 6, 2, P.roof); }
     else { r(hx, by - h, w, h, k % 2 ? P.wall : P.wall2); r(hx - 1, by - h - 1, w + 2, 1, st === 'classic' ? P.roof : P.roof2); r(hx + 1, by - h + 1, 1, 1, '#3a2a1a'); if (w > 6) r(hx + w - 2, by - h + 1, 1, 1, '#3a2a1a'); }
   }
+  // life in the town: chimney smoke, birds, festival garlands or riot fires
+  for (let k = 0; k < Math.min(6, nh); k += 2) { const hx = 2 + ((k * 37 + c.id * 11) % 148) + 2, ph = (t / 70 + k * 13) % 14; r(hx + Math.sin((t / 400) + k) * 1.5, 66 - ph, 1, 1, 'rgba(220,220,215,' + (0.7 - ph / 20) + ')'); }
+  for (let k = 0; k < 3; k++) { const bx = ((t / (40 + k * 9)) + k * 70) % 230 - 15, by = 16 + k * 7 + Math.sin(t / 300 + k) * 3, w = Math.floor(t / 180 + k) % 2; r(bx, by, 1, 1, '#2a2a30'); r(bx - 1, by - w, 1, 1, '#2a2a30'); r(bx + 1, by - w, 1, 1, '#2a2a30'); }
+  if (c.order > 75) { for (let x = 4; x < 150; x += 3) { const y = 64 + Math.round(Math.sin(x / 9) * 1.5); r(x, y, 1, 1, ['#d04a3a', '#e8c040', '#3a8ac0', '#f0f0e0'][(x / 3) % 4 | 0]); } r(30, 58, 1, 8, P.wood); r(31, 58, 3, 2, FAC[c.owner].col); r(120, 58, 1, 8, P.wood); r(121, 58, 3, 2, FAC[c.owner].col); }
+  if (c.order < 30) for (let k = 0; k < 2; k++) { const hx = 2 + (((k * 2 + 1) * 37 + c.id * 11) % 148) + 1, fl = Math.floor(t / 90 + k) % 3; r(hx, 70 - fl, 3, 3 + fl, ['#ff8a2a', '#ffb040', '#e0521e'][fl]); for (let q = 0; q < 4; q++) { const ph = (t / 50 + q * 5 + k * 9) % 18; r(hx + 1 + Math.sin(t / 200 + q) * 2, 66 - ph, 2, 2, 'rgba(40,36,34,' + (0.8 - ph / 24) + ')'); } }
+  if ((c.fl.grain ?? 1) < 0.8) for (let k = 0; k < 3; k++) r(20 + k * 40 + ((t / 90) % 6), 77, 1, 3, '#8a8078');
   // people walking on the road
   const people = Math.min(10, 2 + Math.floor(c.pop / 3));
   const pp = Object.entries(c.ppl || {}).sort((p, q) => q[1] - p[1]); const dress = (k) => { let h = hash2(k, c.id * 7 + 3), acc = 0; for (const [p, v] of pp) { acc += v; if (h <= acc) return PEOPLES[p][1]; } return P.acc; };

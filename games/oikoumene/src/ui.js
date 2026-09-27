@@ -5,17 +5,22 @@
 const $ = (s) => document.querySelector(s);
 const esc = (s) => String(s).replace(/[&<>"]/g, (m) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[m]));
 const fmt = (v) => (Math.abs(v) >= 100 ? Math.round(v) : Math.abs(v) > 0 && Math.abs(v) < 0.1 ? Math.round(v * 100) / 100 : Math.round(v * 10) / 10).toLocaleString('en');
-const UI = { sel: null, mode: null, mapMode: 'political', tab: 'econ', hover: null, dipSel: null, startPick: 'rome' };
+const UI = { sel: null, mode: null, mapMode: 'political', tab: 'over', hover: null, dipSel: null, startPick: 'rome' };
 let MAPCTX, SCENE, SCENECTX, BATTLECV, BATTLECTX;
 const SAVE_KEY = 'oikoumene-save-v4';
 
-const chip = (f) => '<span class="fchip" style="--c:' + FAC[f].col + '">' + esc(FAC[f].short) + '</span>';
+const chip = (f) => '<span class="fchip link" data-a="faction" data-v="' + f + '" title="' + esc(FAC[f].name) + ': open dossier" style="--c:' + FAC[f].col + '">' + esc(FAC[f].short) + '</span>';
+const turnDate = (t) => { const y0 = -200 + Math.floor(t / 4); return seasonName(((t % 4) + 4) % 4) + ' ' + yearStr(y0 >= 0 ? y0 + 1 : y0); };
 const gchip = (g, extra) => '<span class="gchip" style="--c:' + GD[g].c + '">' + esc(GD[g].n) + (extra != null ? ' <b>' + extra + '</b>' : '') + '</span>';
 const cur = (f) => FAC[f || G.player].cur;
 const bar = (v, max, cls) => '<span class="bar ' + (cls || '') + '"><i style="width:' + clamp((v / max) * 100, 0, 100) + '%"></i></span>';
 function toast(msg, kind) { const el = document.createElement('div'); el.className = 'toast ' + (kind || ''); el.textContent = msg; $('#toasts').appendChild(el); setTimeout(() => el.classList.add('out'), 3200); setTimeout(() => el.remove(), 3800); }
 
 // ---- top bar -------------------------------------------------------------------
+function renderLegend() {
+  const el = $('#legend'); if (!el) return; if (!G || UI.mapMode !== 'dip') { el.hidden = true; return; } const f = UI.dipFocus || G.player; el.hidden = false;
+  el.innerHTML = '<b>Relations of ' + chip(f) + '</b><span><i style="--c:#f2e6c8"></i>itself</span><span><i style="--c:#d0402a"></i>at war</span><span><i style="--c:#5fb04a"></i>ally</span><span><i style="--c:#d9b54a"></i>trade rights</span><span><i style="--c:#8a8a80"></i>neutral</span><span class="muted">Click a faction name to change</span>';
+}
 function renderTop() {
   if (!G) return; const p = G.player, F = G.fac[p], cs = citiesOf(p);
   $('#tb-crest').style.setProperty('--c', FAC[p].col); $('#tb-name').textContent = FAC[p].name;
@@ -23,7 +28,7 @@ function renderTop() {
   $('#tb-gold').textContent = fmt(F.gold) + ' ' + FAC[p].cur;
   const net = F.last.net || 0; $('#tb-inc').textContent = (net >= 0 ? '+' : '') + fmt(net) + ' / season'; $('#tb-inc').className = net >= 0 ? 'pos' : 'neg';
   $('#tb-pop').textContent = fmt(cs.reduce((s, c) => s + c.pop, 0)) + 'k people · ' + cs.length + ' cities';
-  document.querySelectorAll('[data-mapmode]').forEach((b) => b.classList.toggle('on', b.dataset.mapmode === UI.mapMode));
+  document.querySelectorAll('[data-mapmode]').forEach((b) => b.classList.toggle('on', b.dataset.mapmode === UI.mapMode)); renderLegend();
 }
 function onLog() { renderChron(); }
 function renderChron() {
@@ -39,6 +44,7 @@ function renderPanel() {
   else if (s.type === 'route') { const r = G.routes.find((x) => x.id === s.id); if (!r) { UI.sel = null; el.hidden = true; return; } h = routePanel(r); }
   else if (s.type === 'realm') h = realmPanel();
   else if (s.type === 'dip') h = dipPanel();
+  else if (s.type === 'faction') h = factionPanel(s.id);
   else if (s.type === 'armies') h = armiesPanel();
   else if (s.type === 'ledger') h = ledgerPanel();
   else if (s.type === 'market') h = marketPanel();
@@ -59,9 +65,10 @@ function cityPanel(c) {
   h += '<div class="scene"><div id="scene-slot"></div><div class="scap">' + (q ? 'Building <b>' + esc(bname(q.b, c.culture)) + ' ' + roman((c.b[q.b] || 0) + 1) + '</b> · ' + Math.max(1, Math.ceil((q.need - q.done) / (0.6 + 0.4 * (c.fl.timber ?? 1)))) + ' season(s) left' + ((c.fl.timber ?? 1) < 0.7 ? ' · <span class="neg">short of timber, work is slow</span>' : '') : 'No construction under way') + '</div></div>';
   h += '<div class="kv"><div><span>People</span><b>' + fmt(c.pop) + 'k</b><small>ceiling ' + fmt(popCap(c)) + 'k</small></div><div><span>Order</span><b class="' + (c.order < 35 ? 'neg' : c.order > 60 ? 'pos' : '') + '">' + Math.round(c.order) + '</b>' + bar(c.order, 100, c.order < 35 ? 'bad' : '') + '</div><div><span>Food</span><b class="' + (s.food < 0.9 ? 'neg' : 'pos') + '">' + Math.round(s.food * 100) + '%</b><small>' + fmt(c.stock.grain || 0) + ' in store</small></div><div><span>Comforts</span><b>' + Math.round(s.comfort * 100) + '%</b><small>luxuries ' + Math.round(s.lux * 100) + '%</small></div></div>';
   h += peopleBlock(c);
-  const tabs = [['econ', 'Economy'], ['build', mine ? 'Build' : 'Buildings'], ['trade', 'Trade'], ['army', mine ? 'Army & colonies' : 'Defences']];
+  const tabs = [['over', 'Overview'], ['econ', 'Economy'], ['build', mine ? 'Build' : 'Buildings'], ['trade', 'Trade'], ['army', mine ? 'Army & colonies' : 'Defences']];
   h += '<nav class="tabs">' + tabs.map(([k, n]) => '<button data-a="tab" data-v="' + k + '" class="' + (UI.tab === k ? 'on' : '') + '">' + n + '</button>').join('') + '</nav>';
-  if (UI.tab === 'econ') h += cityEcon(c);
+  if (UI.tab === 'over') h += cityOverview(c);
+  else if (UI.tab === 'econ') h += cityEcon(c);
   else if (UI.tab === 'build') h += cityBuild(c, mine);
   else if (UI.tab === 'trade') h += cityTrade(c, mine);
   else h += cityArmy(c, mine, armies);
@@ -74,6 +81,34 @@ function peopleBlock(c) {
   h += '<div class="pbar" role="img" aria-label="Population by people">' + ps.map(([p, v]) => '<i style="width:' + (v * 100).toFixed(1) + '%;background:' + PEOPLES[p][1] + '" title="' + esc(PEOPLES[p][0]) + ' ' + Math.round(v * 100) + '%"></i>').join('') + '</div>';
   h += '<ul class="plist">' + ps.map(([p, v]) => '<li><span class="sw" style="--c:' + PEOPLES[p][1] + '"></span><b>' + esc(PEOPLES[p][0]) + '</b><span class="pct">' + (v * 100 < 1 ? '<1' : Math.round(v * 100)) + '%</span><span class="muted">' + fmt(c.pop * v) + 'k · ' + esc(PEOPLES[p][3]) + '</span></li>').join('') + '</ul>';
   if (fs > 0.08) h += '<p class="small ' + (fs > 0.4 ? 'warn' : 'muted') + '">' + (fs > 0.4 ? 'Most people here are not ' + esc(PEOPLES[rp][0]) + '. ' : '') + 'Foreign rule costs ' + Math.round(18 * fs) + ' public order. Temples and time assimilate people to their rulers; trade routes bring newcomers.</p>';
+  return h;
+}
+function cityMoney(c) {
+  const F = G.fac[c.owner], tax = c.pop * 6 * F.tax * (c.order < 35 ? 0.6 : 1) * (0.7 + 0.006 * c.order); let trade = 0, dues = 0;
+  for (const r of G.routes) for (const f of r.flows) { const src = C(f.dir ? r.b : r.a), dst = C(f.dir ? r.a : r.b); if (src.id === c.id) trade += f.v * 0.3 * (1 + 0.1 * (c.b.market || 0)); if (dst.id === c.id) dues += f.v * (src.owner !== dst.owner ? F.tariff : 0.04); }
+  let sales = 0; for (const g in c.S || {}) sales += c.S[g] * price(g) * (g === 'silver' || g === 'gold' ? 0.5 : 0.12);
+  const up = levels(c) * 0.5; return { tax, trade, dues, sales, up, net: tax + trade + dues + sales - up };
+}
+function cityOverview(c) {
+  const mine = c.owner === G.player, gods = CULT_GODS[c.culture] || CULT_GODS.greek, feast = (CULT_FEASTS[c.culture] || CULT_FEASTS.greek)[G.season], patron = gods[c.id % gods.length], s = satisfaction(c);
+  let h = '';
+  if (CITY_LORE[c.name]) h += '<p class="lore">' + esc(CITY_LORE[c.name]) + '</p>';
+  else if (c.colony) h += '<p class="lore">A young colony, founded ' + esc(turnDate(c.founded || 0)) + ', still clearing its fields and building its first walls.</p>';
+  h += '<h3>Gods and festivals</h3><p class="small">Patron: <b>' + esc(patron) + '</b>. Also honoured: ' + esc(gods.filter((g) => g !== patron).slice(0, 3).join(', ')) + '. This season the city keeps the <b>' + esc(feast) + '</b>' + (c.order > 75 ? ', and the streets are hung with garlands.' : c.order < 30 ? ', though few have the heart to celebrate.' : '.') + '</p>';
+  const m = cityMoney(c), row = (n, v) => '<li><span>' + n + '</span><b class="' + (v < 0 ? 'neg' : 'pos') + '">' + (v >= 0 ? '+' : '') + fmt(v) + '</b></li>';
+  h += '<h3>Contribution to the treasury <small>per season, in ' + esc(FAC[c.owner].cur) + '</small></h3><ul class="olist">' + row('Taxes', m.tax) + row('Merchant profits on exports', m.trade) + row('Tariffs and dues on imports', m.dues) + row('Local sales and minting', m.sales) + row('Building upkeep', -m.up) + '<li class="tot"><span>Net</span><b class="' + (m.net < 0 ? 'neg' : 'pos') + '">' + fmt(m.net) + '</b></li></ul>';
+  const dp = c.pop - (c.popPrev ?? c.pop), cap = popCap(c), cap2 = c.pop * 0.25 * (0.6 + (c.b.granary || 0) * 1.5);
+  const state = s.food < 0.8 ? '<span class="neg">Starving: people are leaving</span>' : c.pop >= cap * 0.98 ? '<span class="warn">At its ceiling: build farms, a granary or an aqueduct</span>' : s.food < 0.97 ? '<span class="warn">Short of food: no growth</span>' : '<span class="pos">Growing</span>';
+  h += '<h3>Growth</h3><div class="kv"><div><span>Last season</span><b class="' + (dp < 0 ? 'neg' : dp > 0 ? 'pos' : '') + '">' + (dp >= 0 ? '+' : '') + fmt(dp) + 'k</b></div><div><span>Ceiling</span><b>' + fmt(cap) + 'k</b>' + bar(c.pop, cap) + '</div><div><span>Grain store</span><b>' + fmt(c.stock.grain || 0) + '</b><small>of ' + fmt(cap2) + '</small></div></div><p class="small">' + state + '</p>';
+  const parts = orderParts(c), target = parts.reduce((a, p) => a + p[1], 0);
+  h += '<h3>Public order <small>now ' + Math.round(c.order) + ', heading for ' + Math.round(clamp(target, 0, 100)) + '</small></h3><ul class="olist">' + parts.map(([n, v]) => '<li><span>' + esc(n) + '</span><b class="' + (v < 0 ? 'neg' : 'pos') + '">' + (v >= 0 ? '+' : '') + v + '</b></li>').join('') + '</ul>';
+  if (c.order < 35) h += '<p class="small warn">Below 35, taxes fall and workshops slow. Below 12, riots break out.</p>';
+  h += '<h3>Buildings</h3><div class="bgrid">' + BORDER.filter((b) => b !== 'harbor' || c.port).map((b) => { const L = c.b[b] || 0, q = c.q.find((x) => x.b === b); return '<div class="' + (L || q ? '' : 'no') + '"><span>' + esc(bname(b, c.culture)) + (q ? ' <span class="warn">(building)</span>' : '') + '</span><b>' + (roman(L) || '·') + '</b></div>'; }).join('') + '</div>';
+  const rs = G.routes.filter((r) => r.a === c.id || r.b === c.id), ex = Object.entries(c.exp || {}).sort((a, b) => b[1] * price(b[0]) - a[1] * price(a[0]))[0], im = Object.entries(c.imp || {}).sort((a, b) => b[1] * price(b[0]) - a[1] * price(a[0]))[0];
+  h += '<h3>Trade at a glance</h3><p class="small">' + rs.length + ' routes. ' + (ex ? 'Chief export ' + gchip(ex[0], fmt(ex[1])) : 'No exports. ') + (im ? ' Chief import ' + gchip(im[0], fmt(im[1])) : '') + '</p>';
+  const ev = G.log.filter((e) => e.t.includes(c.name)).slice(0, 6);
+  h += '<h3>Recent events</h3>' + (ev.length ? '<ul class="plain small">' + ev.map((e) => '<li><span class="muted">' + esc(e.d) + '</span> ' + esc(e.t) + (e.b ? ' <button class="sm" data-a="viewbattle" data-v="' + e.b + '">View battle</button>' : '') + '</li>').join('') + '</ul>' : '<p class="muted small">Nothing of note recorded.</p>');
+  if (!mine) h += '<p class="small">Held by ' + chip(c.owner) + '. ' + dipTags(G.player, c.owner) + '</p>';
   return h;
 }
 function wants(c) {
@@ -183,29 +218,64 @@ function realmPanel() {
   h += '<div class="row gap"><button data-a="save">Save game</button><button data-a="help">How to play</button><button class="danger" data-a="restart">New game</button></div>';
   return h;
 }
+function dipActions(f) {
+  const p = G.player; if (f === p) return ''; let h = '<div class="row wrap">';
+  if (atWar(p, f)) h += '<button data-a="dip" data-v="peace" data-f="' + f + '">Propose peace</button>';
+  else {
+    h += rights(p, f) ? '<button data-a="dip" data-v="revoke" data-f="' + f + '">Revoke trade rights</button>' : '<button data-a="dip" data-v="rights" data-f="' + f + '">Request trade rights</button>';
+    h += '<button data-a="dip" data-v="gift" data-f="' + f + '">Send gift · 100</button>';
+    h += allied(p, f) ? '<button data-a="dip" data-v="breakally" data-f="' + f + '">Dissolve alliance</button>' : '<button data-a="dip" data-v="ally" data-f="' + f + '">Propose alliance</button>';
+    h += UI.confirmWar === f ? '<button class="danger" data-a="dip" data-v="war" data-f="' + f + '">Confirm: declare war</button>' : '<button class="danger" data-a="confirmwar" data-v="' + f + '">Declare war…</button>';
+  }
+  return h + '</div>';
+}
+function dipTags(a, f) { const t = []; if (atWar(a, f)) t.push('<i class="t war">War</i>'); if (allied(a, f)) t.push('<i class="t ally">Ally</i>'); if (rights(a, f) && !atWar(a, f)) t.push('<i class="t trade">Trade</i>'); return t.join(''); }
 function dipPanel() {
-  const p = G.player; let h = head('Diplomacy', 'Relations, trade rights, war and peace', '#c9a24a');
+  const p = G.player; let h = head('Diplomacy', 'Your relations and the state of the world', '#c9a24a');
+  h += '<nav class="tabs">' + [['mine', 'Your relations'], ['world', 'The world']].map(([k, n]) => '<button data-a="diptab" data-v="' + k + '" class="' + ((UI.dipTab || 'mine') === k ? 'on' : '') + '">' + n + '</button>').join('') + '</nav>';
+  if (UI.dipTab === 'world') return h + worldDip();
   const nb = new Set(neighbours(p)); const list = FIDS.filter((f) => f !== p && G.fac[f].alive).sort((a, b) => (nb.has(b) - nb.has(a)) || (atWar(p, b) - atWar(p, a)) || rel(p, b) - rel(p, a));
-  h += '<p class="muted small">Trade rights let merchants open routes between your cities and theirs. Neighbours are listed first.</p><ul class="dip">';
+  h += '<p class="muted small">Trade rights let merchants open routes between your cities and theirs. Neighbours are listed first. Click any faction name for its full dossier.</p><ul class="dip">';
   for (const f of list) {
-    const r = rel(p, f), tags = [];
-    if (atWar(p, f)) tags.push('<i class="t war">War</i>'); if (allied(p, f)) tags.push('<i class="t ally">Ally</i>'); if (rights(p, f) && !atWar(p, f)) tags.push('<i class="t trade">Trade</i>'); if (nb.has(f)) tags.push('<i class="t nb">Neighbour</i>');
-    h += '<li class="' + (UI.dipSel === f ? 'open' : '') + '"><div class="dh" data-a="dipsel" data-v="' + f + '"><span class="sw" style="--c:' + FAC[f].col + '"></span><b>' + esc(FAC[f].name) + '</b>' + tags.join('') + '<span class="rel ' + (r < -20 ? 'neg' : r > 30 ? 'pos' : '') + '">' + (r > 0 ? '+' : '') + r + '</span></div>';
+    const r = rel(p, f);
+    h += '<li class="' + (UI.dipSel === f ? 'open' : '') + '"><div class="dh" data-a="dipsel" data-v="' + f + '"><span class="sw" style="--c:' + FAC[f].col + '"></span><b>' + esc(FAC[f].name) + '</b>' + dipTags(p, f) + (nb.has(f) ? '<i class="t nb">Neighbour</i>' : '') + '<span class="rel ' + (r < -20 ? 'neg' : r > 30 ? 'pos' : '') + '">' + (r > 0 ? '+' : '') + r + '</span></div>';
     if (UI.dipSel === f) {
-      const cs = citiesOf(f);
-      h += '<div class="dbody"><p class="small">' + esc(FAC[f].desc) + '</p><p class="small muted">' + cs.length + ' cities · ' + fmt(cs.reduce((s, c) => s + c.pop, 0)) + 'k people · army ' + fmt(G.armies.filter((a) => a.f === f).reduce((s, a) => s + a.str, 0)) + ' · treasury ~' + fmt(Math.round(G.fac[f].gold / 50) * 50) + '</p><div class="row wrap">';
-      if (atWar(p, f)) h += '<button data-a="dip" data-v="peace" data-f="' + f + '">Propose peace</button>';
-      else {
-        h += rights(p, f) ? '<button data-a="dip" data-v="revoke" data-f="' + f + '">Revoke trade rights</button>' : '<button data-a="dip" data-v="rights" data-f="' + f + '">Request trade rights</button>';
-        h += '<button data-a="dip" data-v="gift" data-f="' + f + '">Send gift · 100</button>';
-        h += allied(p, f) ? '<button data-a="dip" data-v="breakally" data-f="' + f + '">Dissolve alliance</button>' : '<button data-a="dip" data-v="ally" data-f="' + f + '">Propose alliance</button>';
-        h += UI.confirmWar === f ? '<button class="danger" data-a="dip" data-v="war" data-f="' + f + '">Confirm: declare war</button>' : '<button class="danger" data-a="confirmwar" data-v="' + f + '">Declare war…</button>';
-      }
-      h += '<button data-a="lookat" data-v="' + f + '">Show on map</button></div></div>';
+      const cs = citiesOf(f), wars = FIDS.filter((o) => atWar(f, o)), allies = FIDS.filter((o) => allied(f, o));
+      h += '<div class="dbody"><p class="small">' + esc(FAC[f].desc) + '</p><p class="small muted">' + cs.length + ' cities · ' + fmt(cs.reduce((s, c) => s + c.pop, 0)) + 'k people · army ' + fmt(G.armies.filter((a) => a.f === f).reduce((s, a) => s + a.str, 0)) + '</p>';
+      h += '<p class="small"><b>At war with:</b> ' + (wars.length ? wars.map(chip).join(' ') : '<span class="muted">nobody</span>') + '<br><b>Allies:</b> ' + (allies.length ? allies.map(chip).join(' ') : '<span class="muted">none</span>') + '</p>';
+      h += dipActions(f) + '<div class="row wrap"><button data-a="faction" data-v="' + f + '">Full dossier</button><button data-a="lookat" data-v="' + f + '">Show on map</button><button data-a="relmap" data-v="' + f + '">Map its relations</button></div></div>';
     }
     h += '</li>';
   }
   return h + '</ul>';
+}
+function worldDip() {
+  const wars = Object.keys(G.war).map((k) => k.split('|')).filter(([a, b]) => G.fac[a].alive && G.fac[b].alive), allies = Object.keys(G.ally).map((k) => k.split('|')).filter(([a, b]) => G.fac[a].alive && G.fac[b].alive);
+  const big = FIDS.filter((f) => G.fac[f].alive).sort((a, b) => strength(b) - strength(a)).slice(0, 14);
+  let h = '<h3>Wars <small>' + wars.length + ' under way</small></h3><ul class="wlist">';
+  for (const [a, b] of wars.sort((x, y) => (strength(y[0]) + strength(y[1])) - (strength(x[0]) + strength(x[1])))) { const k = dk(a, b); h += '<li class="war">' + chip(a) + ' <span class="vs">against</span> ' + chip(b) + '<span class="muted small">since ' + turnDate(G.warT[k] || 0) + ' · ' + fmt(strength(a)) + ' vs ' + fmt(strength(b)) + '</span></li>'; }
+  h += '</ul><h3>Alliances <small>' + allies.length + '</small></h3><ul class="wlist">' + allies.map(([a, b]) => '<li class="ally">' + chip(a) + ' <span class="vs">with</span> ' + chip(b) + '</li>').join('') + '</ul>';
+  h += '<h3>Great powers <small>by military strength</small></h3><div class="tbl"><table><thead><tr><th>State</th><th>Cities</th><th>Strength</th><th>Wars</th><th>Allies</th></tr></thead><tbody>' + big.map((f) => '<tr><td>' + chip(f) + '</td><td>' + citiesOf(f).length + '</td><td>' + fmt(strength(f)) + '</td><td class="neg">' + FIDS.filter((o) => atWar(f, o)).length + '</td><td class="pos">' + FIDS.filter((o) => allied(f, o)).length + '</td></tr>').join('') + '</tbody></table></div>';
+  return h + '<p class="muted small">Pick <b>Relations</b> in the map modes to colour the map by any faction\'s friends and enemies.</p>';
+}
+function factionPanel(f) {
+  const p = G.player, F = FAC[f], cs = citiesOf(f).sort((a, b) => b.pop - a.pop), cap = cs.find((c) => c.capital) || cs[0], ar = G.armies.filter((a) => a.f === f);
+  const alive = FIDS.filter((o) => o !== f && G.fac[o].alive), wars = alive.filter((o) => atWar(f, o)), allies = alive.filter((o) => allied(f, o)), trade = alive.filter((o) => rights(f, o) && !atWar(f, o));
+  let h = head(F.name, esc(CULT[F.cul].lbl) + (cap ? ' · capital ' + esc(cap.name) : '') + ' · rulers are ' + esc(PEOPLES[facPeople(f)][0]), F.col);
+  if (!G.fac[f].alive) return h + '<p>This state has fallen.</p>';
+  h += '<p class="small">' + esc(F.desc) + '</p>';
+  h += '<div class="kv"><div><span>Cities</span><b>' + cs.length + '</b><small>' + fmt(cs.reduce((s, c) => s + c.pop, 0)) + 'k people</small></div><div><span>Army</span><b>' + fmt(ar.reduce((s, a) => s + a.str, 0)) + '</b><small>' + ar.length + ' armies</small></div><div><span>Treasury</span><b>~' + fmt(Math.round(G.fac[f].gold / 50) * 50) + '</b><small>' + esc(F.cur) + '</small></div>' + (f !== p ? '<div><span>Towards you</span><b class="' + (rel(p, f) < -20 ? 'neg' : rel(p, f) > 30 ? 'pos' : '') + '">' + (rel(p, f) > 0 ? '+' : '') + rel(p, f) + '</b><small>' + (dipTags(p, f) || 'neutral') + '</small></div>' : '') + '</div>';
+  h += '<h3>At war with <small>' + wars.length + '</small></h3>' + (wars.length ? '<ul class="wlist">' + wars.map((o) => '<li class="war">' + chip(o) + '<span class="muted small">since ' + turnDate(G.warT[dk(f, o)] || 0) + ' · their strength ' + fmt(strength(o)) + ' vs ' + fmt(strength(f)) + '</span></li>').join('') + '</ul>' : '<p class="muted small">At peace with everyone.</p>');
+  h += '<h3>Allies <small>' + allies.length + '</small></h3><p class="chips">' + (allies.length ? allies.map(chip).join(' ') : '<span class="muted small">None</span>') + '</p>';
+  h += '<h3>Trade rights <small>' + trade.length + ' states</small></h3><p class="chips">' + (trade.length ? trade.slice(0, 24).map(chip).join(' ') + (trade.length > 24 ? ' <span class="muted small">and ' + (trade.length - 24) + ' more</span>' : '') : '<span class="muted small">None</span>') + '</p>';
+  const byRel = alive.map((o) => [o, rel(f, o)]).sort((a, b) => b[1] - a[1]), row = ([o, r]) => '<li>' + chip(o) + '<span class="relbar"><i class="' + (r < 0 ? 'n' : 'p') + '" style="width:' + Math.abs(r) / 2 + '%;' + (r < 0 ? 'right:50%' : 'left:50%') + '"></i></span><b class="' + (r < 0 ? 'neg' : 'pos') + '">' + (r > 0 ? '+' : '') + r + '</b></li>';
+  h += '<h3>Friends</h3><ul class="rellist">' + byRel.slice(0, 5).map(row).join('') + '</ul><h3>Rivals</h3><ul class="rellist">' + byRel.slice(-5).reverse().map(row).join('') + '</ul>';
+  h += '<h3>Armies <small>' + ar.length + '</small></h3><ul class="routes">' + (ar.length ? ar.sort((a, b) => b.str - a.str).map((a) => '<li data-a="goarmy" data-v="' + a.id + '"><div><b>' + esc(a.name) + '</b> <span class="muted small">' + esc(a.gen.name) + ' ' + stars(a.gen.skill) + ' · ' + (a.mv ? (a.mv.order === 'move' ? 'moving to ' : 'marching on ') + esc(C(a.mv.to).name) : 'at ' + esc(C(a.at).name)) + '</span></div><div class="val">' + fmt(a.str) + '</div></li>').join('') : '<li class="muted">None</li>') + '</ul>';
+  h += '<h3>Ambitions</h3><ul class="goals">' + goalsOf(f).map((g) => { const [ok, pr] = goalStatus(f, g); return '<li class="' + (ok ? 'done' : '') + '"><span>' + (ok ? '✓' : '○') + '</span>' + esc(g.d) + '<b>' + esc(pr) + '</b></li>'; }).join('') + '</ul>';
+  h += '<h3>Cities</h3><p class="chips">' + cs.slice(0, 30).map((c) => '<a href="#" class="gchip" style="--c:' + F.col + '" data-a="selcity" data-v="' + c.id + '">' + esc(c.name) + ' <b>' + fmt(c.pop) + 'k</b></a>').join('') + '</p>';
+  if (f !== p) h += '<h3>Your dealings</h3>' + dipActions(f);
+  h += '<div class="row wrap"><button data-a="lookat" data-v="' + f + '">Show on map</button><button data-a="relmap" data-v="' + f + '">Map its relations</button></div>';
+  return h;
 }
 function ledgerPanel() {
   const p = G.player, rs = G.routes.filter((r) => C(r.a).owner === p || C(r.b).owner === p).sort((x, y) => y.val - x.val);
@@ -375,6 +445,9 @@ const ACT = {
   colonymode: () => { const c = C(UI.sel.id); buildColonyOverlay(c); UI.mode = { type: 'colony', origin: c.id, msg: 'Click a green site to plant a colony from ' + c.name }; renderMode(); },
   found: (v) => { const s = UI.sel, name = ($('#colname') || {}).value; const e = launchColony(C(+v), s.x, s.y, (name || '').trim() || null); if (e) toast(e, 'bad'); else { toast('Colonists set out for ' + (name || 'the new site'), 'good'); Music.sfx('fanfare'); UI.mode = null; renderMode(); UI.sel = { type: 'realm' }; } UI.colName = null; renderAll(); },
   march: (v) => { const a = G.armies.find((x) => x.id === UI.sel.id), from = C(a.at); const targets = G.cities.filter((t) => t.owner && reach(from, t) && (v === 'move' ? t.owner === a.f || allied(a.f, t.owner) : atWar(a.f, t.owner))).map((t) => t.id); if (!targets.length) { toast(v === 'move' ? 'No friendly city within reach' : 'No enemy city within reach. Declare war first?', 'bad'); return; } UI.mode = { type: 'march', army: a.id, order: v, targets, msg: (v === 'attack' ? 'Choose a city to assault' : v === 'raid' ? 'Choose a city to raid' : 'Choose where to move') + ' (ringed cities are in reach)' }; renderMode(); },
+  faction: (v) => { UI.dipFocus = v; if (UI.mapMode === 'dip') buildRelations(v); select({ type: 'faction', id: v }); },
+  diptab: (v) => { UI.dipTab = v; renderPanel(); },
+  relmap: (v) => { UI.dipFocus = v; UI.mapMode = 'dip'; buildRelations(v); renderTop(); renderPanel(); },
   dipsel: (v) => { UI.dipSel = UI.dipSel === v ? null : v; UI.confirmWar = null; renderPanel(); },
   dipwith: (v) => { UI.dipSel = v; select({ type: 'dip' }); },
   confirmwar: (v) => { UI.confirmWar = v; renderPanel(); },
@@ -447,7 +520,7 @@ function setupInput() {
   $('#endturn').addEventListener('click', doEndTurn);
   $('#musicbtn').addEventListener('click', () => { Music.toggle(); if (Music.on) Music.refresh(); renderMusic(); });
   $('#modecancel').addEventListener('click', () => { UI.mode = null; renderMode(); });
-  document.querySelectorAll('[data-mapmode]').forEach((b) => b.addEventListener('click', () => { UI.mapMode = b.dataset.mapmode; renderTop(); }));
+  document.querySelectorAll('[data-mapmode]').forEach((b) => b.addEventListener('click', () => { UI.mapMode = b.dataset.mapmode; if (UI.mapMode === 'dip') buildRelations(UI.dipFocus || G.player); renderTop(); }));
   document.querySelectorAll('[data-open]').forEach((b) => b.addEventListener('click', () => { const t = b.dataset.open; select(UI.sel && UI.sel.type === t ? null : { type: t }); }));
   $('#chron').addEventListener('click', (ev) => { if (ev.target.closest('[data-a]')) return; UI.chronOpen = !UI.chronOpen; $('#chron').classList.toggle('open', UI.chronOpen); renderChron(); });
   $('#zin').addEventListener('click', () => zoomAt(1, VW / 2, VH / 2)); $('#zout').addEventListener('click', () => zoomAt(-1, VW / 2, VH / 2));
@@ -462,6 +535,7 @@ function doEndTurn() {
   setTimeout(() => {
     const before = G.fac[G.player].gold, warsBefore = FIDS.filter((f) => atWar(G.player, f)).length; endTurn(); Music.sfx(FIDS.filter((f) => atWar(G.player, f)).length > warsBefore ? 'war' : 'turn'); Music.refresh(); saveGame(); busy = false; $('#endturn').disabled = false; $('#endturn').textContent = 'End season';
     if (UI.mode && UI.mode.type === 'colony') buildColonyOverlay(C(UI.mode.origin));
+    if (UI.mapMode === 'dip') buildRelations(UI.dipFocus || G.player);
     renderAll(); const d = G.fac[G.player].gold - before; toast(dateStr() + ' · treasury ' + (d >= 0 ? '+' : '') + fmt(d), d >= 0 ? 'good' : 'bad');
   }, 30);
 }
