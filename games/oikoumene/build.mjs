@@ -7,7 +7,7 @@ import { fileURLToPath } from 'node:url'
 
 const here = dirname(fileURLToPath(import.meta.url))
 const read = (f) => readFileSync(join(here, 'src', f), 'utf8')
-const js = ['data.js', 'peoples.js', 'engine.js', 'render.js', 'music.js', 'ui.js'].map(read).join('\n')
+const js = ['data.js', 'peoples.js', 'engine.js', 'military.js', 'render.js', 'music.js', 'ui.js'].map(read).join('\n')
 const fragment = `${read('shell.html')}<script>\n${js}\n</script>\n`
 writeFileSync(join(here, 'oikoumene.html'), fragment)
 writeFileSync(

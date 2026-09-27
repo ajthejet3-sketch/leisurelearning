@@ -6,8 +6,8 @@ const $ = (s) => document.querySelector(s);
 const esc = (s) => String(s).replace(/[&<>"]/g, (m) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[m]));
 const fmt = (v) => (Math.abs(v) >= 100 ? Math.round(v) : Math.abs(v) > 0 && Math.abs(v) < 0.1 ? Math.round(v * 100) / 100 : Math.round(v * 10) / 10).toLocaleString('en');
 const UI = { sel: null, mode: null, mapMode: 'political', tab: 'econ', hover: null, dipSel: null, startPick: 'rome' };
-let MAPCTX, SCENE, SCENECTX;
-const SAVE_KEY = 'oikoumene-save-v3';
+let MAPCTX, SCENE, SCENECTX, BATTLECV, BATTLECTX;
+const SAVE_KEY = 'oikoumene-save-v4';
 
 const chip = (f) => '<span class="fchip" style="--c:' + FAC[f].col + '">' + esc(FAC[f].short) + '</span>';
 const gchip = (g, extra) => '<span class="gchip" style="--c:' + GD[g].c + '">' + esc(GD[g].n) + (extra != null ? ' <b>' + extra + '</b>' : '') + '</span>';
@@ -28,7 +28,7 @@ function renderTop() {
 function onLog() { renderChron(); }
 function renderChron() {
   if (!G) return; const el = $('#chron-list'); const items = G.log.slice(0, UI.chronOpen ? 40 : 4);
-  el.innerHTML = items.map((e) => '<li class="' + e.k + '"><span>' + esc(e.d) + '</span>' + esc(e.t) + '</li>').join('');
+  el.innerHTML = items.map((e) => '<li class="' + e.k + '"><span>' + esc(e.d) + '</span>' + esc(e.t) + (e.b ? ' <button class="sm" data-a="viewbattle" data-v="' + e.b + '">View battle</button>' : '') + '</li>').join('');
 }
 
 // ---- panel ---------------------------------------------------------------------
@@ -44,8 +44,10 @@ function renderPanel() {
   else if (s.type === 'land') h = landPanel(s.x, s.y);
   else if (s.type === 'army') { const a = G.armies.find((x) => x.id === s.id); if (!a) { UI.sel = null; el.hidden = true; return; } h = armyPanel(a); }
   else if (s.type === 'help') h = helpPanel();
+  else if (s.type === 'battle') { const b = (G.battles || []).find((x) => x.id === s.id); if (!b) { UI.sel = null; el.hidden = true; return; } h = battlePanel(b); }
   const key = s.type + ':' + (s.id ?? s.x ?? '') + ':' + (s.y ?? ''); const sc = key === UI._panelKey ? el.scrollTop : 0; UI._panelKey = key; el.innerHTML = h; el.scrollTop = sc;
   const slot = el.querySelector('#scene-slot'); if (slot) slot.appendChild(SCENE);
+  const bs = el.querySelector('#battle-slot'); if (bs) bs.appendChild(BATTLECV);
 }
 const head = (title, sub, col) => '<header class="ph"><span class="crest" style="--c:' + (col || '#c9a24a') + '"></span><div><h2>' + esc(title) + '</h2><div class="sub">' + sub + '</div></div><button class="x" data-a="close" aria-label="Close panel">×</button></header>';
 
@@ -138,7 +140,7 @@ function cityArmy(c, mine, armies) {
   let h = '<h3>Defences</h3><div class="kv"><div><span>Garrison</span><b>' + fmt(c.gar) + '</b><small>max ' + fmt(garMax(c)) + '</small></div><div><span>Walls</span><b>' + roman(c.b.walls || 0) + '</b><small>+' + 25 * (c.b.walls || 0) + '%</small></div><div><span>Defence</span><b>' + fmt(def) + '</b><small>vs assault</small></div></div>';
   h += '<h3>Armies here</h3><ul class="routes">' + (armies.length ? armies.map((a) => '<li data-a="selarmy" data-v="' + a.id + '"><div><b>' + esc(a.name) + '</b> ' + chip(a.f) + '</div><div class="val">' + fmt(a.str) + '</div></li>').join('') : '<li class="muted">None</li>') + '</ul>';
   if (!mine) return h;
-  h += '<div class="row gap"><button data-a="raise">Raise army · ' + raiseCost(c) + ' ' + cur() + ' (+' + raiseStr(c) + ')</button></div>';
+  h += recruitBlock(c, null);
   const why = c.pop < 3.5 ? 'Needs 3.5k people to spare colonists' : !c.port ? 'Inland: can settle nearby land only' : !(c.b.harbor >= 1) ? 'Build a harbour to send ships' : '';
   h += '<h3>Colonies</h3><p class="small">Send 1.5k settlers to unclaimed land. Sea colonies need a harbour; any city can settle land within a few days\' march. The colony takes the name of a historical site when founded near one.</p>';
   h += '<div class="row gap"><button data-a="colonymode" ' + (c.pop < 3.5 ? 'disabled' : '') + '>Choose a colony site · ' + colonyCost(c) + ' ' + cur() + '</button>' + (why ? '<span class="muted small">' + esc(why) + '</span>' : '') + '</div>';
@@ -173,6 +175,8 @@ function realmPanel() {
   h += '<h3>Cities</h3><ul class="routes">' + cs.map((c) => '<li data-a="selcity" data-v="' + c.id + '"><div><b>' + esc(c.name) + '</b> <span class="muted small">' + (c.q.length ? 'building ' + esc(bname(c.q[0].b, c.culture)) : '') + '</span></div><div class="small">order ' + Math.round(c.order) + ' · food ' + Math.round(satisfaction(c).food * 100) + '%</div><div class="val">' + fmt(c.pop) + 'k</div></li>').join('') + '</ul>';
   const ar = G.armies.filter((a) => a.f === p);
   h += '<h3>Armies</h3><ul class="routes">' + (ar.length ? ar.map((a) => '<li data-a="selarmy" data-v="' + a.id + '"><div><b>' + esc(a.name) + '</b> <span class="muted small">' + (a.mv ? 'marching on ' + esc(C(a.mv.to).name) : 'at ' + esc(C(a.at).name)) + '</span></div><div class="val">' + fmt(a.str) + '</div></li>').join('') : '<li class="muted">None</li>') + '</ul>';
+  const bl = (G.battles || []).filter((b) => b.sides.some((sd) => sd.f === p)).slice(0, 8);
+  if (bl.length) h += '<h3>Battles</h3><ul class="routes">' + bl.map((b) => '<li data-a="viewbattle" data-v="' + b.id + '"><div><b>' + esc(b.kind + ' ' + b.place) + '</b> <span class="muted small">' + esc(b.date) + '</span></div><div class="small ' + (b.sides[b.winner].f === p ? 'pos' : 'neg') + '">' + (b.sides[b.winner].f === p ? 'Victory' : 'Defeat') + ' · losses ' + b.lost[b.sides[0].f === p ? 0 : 1] + '</div></li>').join('') + '</ul>';
   if (G.fleets.some((f) => f.f === p)) h += '<h3>Colonists under way</h3><ul class="plain">' + G.fleets.filter((f) => f.f === p).map((f) => '<li>' + esc(f.name) + ' · arrives in ' + (f.turns - f.done) + ' season(s)</li>').join('') + '</ul>';
   h += '<h3>Music</h3><p class="small">' + (Music.on ? 'Now playing: ' + esc(Music.label()) + '. The music follows the people of the town you open, slows in winter and gathers drums in wartime.' : 'Music is off. Turn it on from the top bar.') + '</p>';
   h += '<div class="row gap"><button data-a="save">Save game</button><button data-a="help">How to play</button><button class="danger" data-a="restart">New game</button></div>';
@@ -235,12 +239,53 @@ function landPanel(x, y) {
   for (const [c, si] of origins) h += '<li><div><b>From ' + esc(c.name) + '</b> <span class="muted small">' + (si.k === 'sea' ? 'by sea' : 'overland') + ' · ' + si.turns + ' season(s)</span></div><button data-a="found" data-v="' + c.id + '" ' + (G.fac[p].gold >= colonyCost(c) ? '' : 'disabled') + '>Send · ' + colonyCost(c) + '</button></li>';
   return h + '</ul><p class="muted small">1.5k settlers leave the mother city. Neighbours may resent a colony planted near them.</p>';
 }
+const stars = (n) => '★'.repeat(n) + '☆'.repeat(5 - n);
+const statline = (U0) => '<span class="stats">' + [['Atk', U0.M, 'Melee attack'], ['Def', U0.D, 'Defence and armour'], ['Rng', U0.R, 'Missile power'], ['Chg', U0.C, 'Charge'], ['Mor', U0.Mo, 'Morale']].map(([k, v, t]) => '<span title="' + t + '">' + k + ' <b>' + v + '</b></span>').join('') + '</span>';
+function recruitBlock(c, army) {
+  const ro = rosterFor(c.owner);
+  let h = '<h3>Recruit in ' + esc(c.name) + ' <small>' + (army ? 'joins ' + esc(army.name) : 'joins the army here, or forms a new one') + '</small></h3><div class="ulist">';
+  for (const e of ro) {
+    const U0 = UNITS[e[0]], why = recruitWhy(c, e, true), cost = unitCost(c, e), fl = e[1] || '';
+    h += '<div class="urow' + (why ? ' dis' : '') + '"><img class="uico" src="' + unitIcon(e[0], FAC[c.owner].col) + '" alt=""><div class="ubody"><b>' + esc(U0.n) + '</b>' + (fl.includes('m') ? ' <i class="t merc">Mercenary</i>' : '') + (fl.includes('c') ? ' <i class="t elite">Elite</i>' : '') + ' <span class="muted small">' + UCLS[U0.cls] + ' · ' + U0.men + ' men</span><p class="small muted">' + esc(U0.desc) + '</p>' + statline(U0) + '</div>';
+    h += why ? '<span class="muted small why">' + esc(why) + '</span>' : '<button data-a="recruit" data-v="' + e[0] + '" data-c="' + c.id + '" data-army="' + (army ? army.id : '') + '" ' + (G.fac[c.owner].gold >= cost ? '' : 'disabled') + '>' + cost + '</button>';
+    h += '</div>';
+  }
+  return h + '</div>';
+}
 function armyPanel(a) {
-  const mine = a.f === G.player; let h = head(a.name, chip(a.f) + ' · strength ' + fmt(a.str), FAC[a.f].col);
-  if (a.mv) { h += '<p>' + (a.mv.order === 'attack' ? 'Marching to assault ' : a.mv.order === 'raid' ? 'Riding to raid ' : 'Moving to ') + '<b>' + esc(C(a.mv.to).name) + '</b> ' + (a.mv.k === 'sea' ? 'by sea' : 'overland') + '. Arrives in ' + (a.mv.turns - a.mv.done) + ' season(s).</p>'; return h; }
-  const c = C(a.at); h += '<p>Stationed at <a href="#" data-a="selcity" data-v="' + c.id + '">' + esc(c.name) + '</a>. Pay ' + fmt(a.str * 0.3) + ' per season.</p>';
+  const mine = a.f === G.player, g = a.gen || { name: 'No general', skill: 1 };
+  if (UI.unitArmy !== a.id) { UI.unitArmy = a.id; UI.unitSel = new Set(); }
+  let h = head(a.name, chip(a.f) + ' · ' + a.units.length + ' units · ' + armyMen(a).toLocaleString('en') + ' men', FAC[a.f].col);
+  h += '<div class="kv"><div><span>General</span><b class="gname">' + esc(g.name) + '</b><small class="gold">' + stars(g.skill) + '</small></div><div><span>Strength</span><b>' + fmt(a.str) + '</b><small>' + (g.wins || 0) + ' recent wins</small></div><div><span>Pay</span><b>' + fmt(armyUpkeep(a)) + '</b><small>per season</small></div></div>';
+  if (a.mv) h += '<p>' + (a.mv.order === 'attack' ? 'Marching to assault ' : a.mv.order === 'raid' ? 'Riding to raid ' : 'Moving to ') + '<b>' + esc(C(a.mv.to).name) + '</b> ' + (a.mv.k === 'sea' ? 'by sea' : 'overland') + '. Arrives in ' + (a.mv.turns - a.mv.done) + ' season(s).</p>';
+  else { const c = C(a.at); h += '<p>Stationed at <a href="#" data-a="selcity" data-v="' + c.id + '">' + esc(c.name) + '</a> (' + esc(TNAME[terr[c.y * W + c.x]]) + ').</p>'; }
+  const cls = {}; for (const u of a.units) { const k = UNITS[u.t].cls; cls[k] = (cls[k] || 0) + u.men; } const tot = armyMen(a) || 1;
+  const CC = { heavy: '#6f8fb0', spear: '#8aa0b8', pike: '#4f6f98', sword: '#b05a4a', light: '#b8a060', missile: '#d0b050', cav: '#a0703a', hcav: '#7a4a2a', hacav: '#c08a40', ele: '#9a9a98', chariot: '#8a6a50', camel: '#c8a060' };
+  h += '<h3>Composition</h3><div class="pbar">' + Object.entries(cls).map(([k, v]) => '<i style="width:' + (v / tot * 100).toFixed(1) + '%;background:' + CC[k] + '" title="' + UCLS[k] + '"></i>').join('') + '</div><p class="chips small">' + Object.entries(cls).map(([k, v]) => '<span class="gchip" style="--c:' + CC[k] + '">' + UCLS[k] + ' <b>' + Math.round(v / tot * 100) + '%</b></span>').join('') + '</p>';
+  h += '<div class="ulist">';
+  a.units.forEach((u, i) => {
+    const U0 = UNITS[u.t], sel = UI.unitSel.has(i);
+    h += '<div class="urow' + (sel ? ' on' : '') + '"' + (mine && !a.mv ? ' data-a="selunit" data-v="' + i + '"' : '') + '><img class="uico" src="' + unitIcon(u.t, FAC[a.f].col) + '" alt=""><div class="ubody"><b>' + esc(U0.n) + '</b> <span class="gold small">' + '▲'.repeat(u.xp || 0) + '</span> <span class="muted small">' + UCLS[U0.cls] + '</span>' + statline(U0) + '</div><div class="umen"><b>' + Math.round(u.men) + '</b><small>/' + U0.men + '</small>' + bar(u.men, U0.men, u.men < U0.men * 0.5 ? 'bad' : '') + '</div></div>';
+  });
+  h += '</div>';
   if (!mine) return h;
-  h += '<div class="row wrap"><button data-a="march" data-v="attack">Attack a city…</button><button data-a="march" data-v="raid">Raid a city…</button><button data-a="march" data-v="move">Move…</button><button class="danger" data-a="disband">Disband</button></div><p class="muted small">Attacks capture a city at war with you if you beat its garrison and walls. Raids carry off loot and come home. Sea moves need a harbour where you embark and a port where you land; winter doubles sailing time.</p>';
+  if (a.mv) return h + '<p class="muted small">Orders can be given when the army arrives.</p>';
+  const c = C(a.at), rc = replenishCost(a), others = G.armies.filter((x) => x !== a && x.f === a.f && x.at === a.at && !x.mv).length;
+  h += '<h3>Orders</h3><div class="row wrap"><button data-a="march" data-v="attack">Attack a city…</button><button data-a="march" data-v="raid">Raid a city…</button><button data-a="march" data-v="move">Move…</button></div>';
+  h += '<div class="row wrap"><button data-a="split" ' + (UI.unitSel.size && UI.unitSel.size < a.units.length ? '' : 'disabled') + '>Split selected (' + UI.unitSel.size + ')</button><button data-a="merge" ' + (others ? '' : 'disabled') + '>Merge armies here</button>' + (c.owner === a.f ? '<button data-a="replenish" ' + (rc ? '' : 'disabled') + '>Replenish · ' + rc + '</button>' : '') + '<button class="danger" data-a="disbandsel" ' + (UI.unitSel.size ? '' : 'disabled') + '>Disband selected</button></div>';
+  h += '<p class="muted small">Click units to select them. Pikes stop cavalry and elephants head-on but falter on hills, forest and marsh, where swordsmen cut them apart. Skirmishers and archers bleed elephants. Horse archers rule open steppe. Whoever wins the cavalry fight on the wings falls on the enemy flank.</p>';
+  if (c.owner === a.f) h += recruitBlock(c, a);
+  return h;
+}
+function battlePanel(rep) {
+  const W0 = rep.sides[rep.winner];
+  let h = head(rep.kind + ' ' + rep.place, rep.date + ' · ' + TNAME[rep.terr] + (rep.kind === 'Siege of' ? ' · walls ' + (roman(rep.walls) || 'none') : ''), FAC[W0.f].col);
+  h += '<div class="scene"><div id="battle-slot"></div><div class="scap"><b>' + esc(FAC[W0.f].name) + ' victorious.</b> Losses ' + rep.lost[0].toLocaleString('en') + ' against ' + rep.lost[1].toLocaleString('en') + '. <button class="sm" data-a="replay">Replay</button></div></div>';
+  rep.sides.forEach((sd, s) => {
+    h += '<h3>' + (s ? 'Defenders' : 'Attackers') + ' <small>' + chip(sd.f) + (sd.gen ? ' · ' + esc(sd.gen.name) + ' <span class="gold">' + stars(sd.gen.skill) + '</span>' : '') + (sd.armies.length ? ' · ' + esc(sd.armies.join(', ')) : '') + '</small></h3>';
+    h += '<div class="tbl"><table><thead><tr><th>Unit</th><th>Before</th><th>After</th><th>Lost</th></tr></thead><tbody>' + rep.units[s].map((u) => '<tr><td class="small"><img class="uico sm" src="' + unitIcon(u.t, FAC[sd.f].col) + '" alt=""> ' + esc(UNITS[u.t].n) + (u.gar ? ' (garrison)' : '') + (u.routed ? ' <span class="warn">routed</span>' : '') + '</td><td>' + u.men0 + '</td><td>' + u.men1 + '</td><td class="neg">' + (u.men0 - u.men1) + '</td></tr>').join('') + '</tbody></table></div>';
+  });
+  h += '<h3>How it went</h3><ul class="plain">' + rep.lines.map((l) => '<li>' + esc(l) + '</li>').join('') + '</ul>';
   return h;
 }
 function helpPanel() {
@@ -250,7 +295,8 @@ function helpPanel() {
 <p><b>Construction</b> is visible in the city scene: scaffolding, a treadwheel crane and workers raise each building. Builders need timber; a city short of timber builds slowly.</p>
 <p><b>Trade routes</b> form when one city has a surplus another lacks, and both sides are at peace with trade rights. Click any route line (or a ship) to see cargo in each direction, value, tariffs and risk. Winter closes the sea (mare clausum) and cuts cargoes.</p>
 <p><b>Colonies</b>: from a harbour city, choose <i>Army &amp; colonies → Choose a colony site</i>, or simply click unclaimed land. Green squares show where your ships can reach.</p>
-<p><b>War</b>: raise armies, then attack or raid enemy cities. Walls and garrisons defend. Declare war and make peace in Diplomacy.</p>
+<p><b>Armies</b> are built from your people's own units: legions of hastati, principes and triarii; Macedonian phalanxes and Companions; Carthage's Libyans, Sacred Band, Numidian horse and Balearic slingers; Seleucid cataphracts, scythed chariots and elephants; Gaulish warbands and Gaesatae; steppe horse archers. Recruit them in a city's Army tab. Elite units need barracks or the capital, cavalry needs horses, and mercenaries hire in ports and markets.</p>
+<p><b>Battles</b> are fought in phases: missiles, the cavalry fight on the wings, the charge, melee rounds with morale and rout, then pursuit. Terrain matters: pikes rule flat ground and falter on hills and in forest. Every battle has a report and a replay; click the crossed swords on the map or View battle in the chronicle.</p>
 <p><b>Map modes</b>: Political, Trade (every route in the world), Goods (each city's main products), Terrain.</p>
 <p><b>Music</b> is composed live in the ancient modes: Dorian lyre and aulos for Greeks and Romans, Phrygian harp and frame drum for the Levant and Carthage, Lydian harp and sistrum on the Nile, pentatonic pipes and carnyx in the north and west, and fiddle and horse drum on the steppe. It follows the people of the town you open.</p>
 <p><b>Controls</b>: drag to pan, wheel or pinch to zoom, <kbd>Esc</kbd> to cancel.</p></div>`;
@@ -270,11 +316,17 @@ const ACT = {
   closer: (v) => { const r = G.routes.find((x) => x.id === +v); if (!r) return; G.routes = G.routes.filter((x) => x !== r); G.black[dk(r.a, r.b)] = G.turn + 8; toast('Route closed. Merchants will stay away for two years.'); renderAll(); },
   pin: () => { const r = G.routes.find((x) => x.id === UI.sel.id); r.pin = !r.pin; renderPanel(); },
   closeroute: () => { const r = G.routes.find((x) => x.id === UI.sel.id); G.routes = G.routes.filter((x) => x !== r); G.black[dk(r.a, r.b)] = G.turn + 8; toast('Route closed. Merchants will stay away for two years.'); UI.sel = { type: 'city', id: r.a }; renderAll(); },
-  raise: () => { const c = C(UI.sel.id), e = raiseArmy(c); if (e) toast(e, 'bad'); else toast('Troops levied in ' + c.name, 'good'); renderAll(); },
+  recruit: (v, el) => { const c = C(+el.dataset.c), e = rosterFor(c.owner).find((x) => x[0] === v), army = el.dataset.army ? G.armies.find((x) => x.id === +el.dataset.army) : null; const err = recruit(c, e, army); if (err) toast(err, 'bad'); else { toast(UNITS[v].n + ' join the colours in ' + c.name, 'good'); Music.sfx('build'); } renderAll(); },
+  selunit: (v) => { const i = +v; if (UI.unitSel.has(i)) UI.unitSel.delete(i); else UI.unitSel.add(i); renderPanel(); },
+  split: () => { const a = G.armies.find((x) => x.id === UI.sel.id), b = splitArmy(a, [...UI.unitSel]); if (typeof b === 'string') toast(b, 'bad'); else { toast('New army formed: ' + b.name, 'good'); UI.unitSel = new Set(); select({ type: 'army', id: b.id }); } renderAll(); },
+  merge: () => { const a = G.armies.find((x) => x.id === UI.sel.id), e = mergeInto(a); if (e) toast(e, 'bad'); UI.unitSel = new Set(); renderAll(); },
+  replenish: () => { const a = G.armies.find((x) => x.id === UI.sel.id), e = replenish(a); toast(e || 'The ranks are filled with fresh recruits', e ? 'bad' : 'good'); renderAll(); },
+  disbandsel: () => { const a = G.armies.find((x) => x.id === UI.sel.id); a.units = a.units.filter((u, i) => !UI.unitSel.has(i)); UI.unitSel = new Set(); recalc(a); if (!a.units.length) { G.armies = G.armies.filter((x) => x !== a); UI.sel = null; } renderAll(); },
+  viewbattle: (v) => { UI.battleT0 = performance.now(); select({ type: 'battle', id: +v }); },
+  replay: () => { UI.battleT0 = performance.now(); },
   colonymode: () => { const c = C(UI.sel.id); buildColonyOverlay(c); UI.mode = { type: 'colony', origin: c.id, msg: 'Click a green site to plant a colony from ' + c.name }; renderMode(); },
   found: (v) => { const s = UI.sel, name = ($('#colname') || {}).value; const e = launchColony(C(+v), s.x, s.y, (name || '').trim() || null); if (e) toast(e, 'bad'); else { toast('Colonists set out for ' + (name || 'the new site'), 'good'); Music.sfx('fanfare'); UI.mode = null; renderMode(); UI.sel = { type: 'realm' }; } UI.colName = null; renderAll(); },
   march: (v) => { const a = G.armies.find((x) => x.id === UI.sel.id), from = C(a.at); const targets = G.cities.filter((t) => t.owner && reach(from, t) && (v === 'move' ? t.owner === a.f || allied(a.f, t.owner) : atWar(a.f, t.owner))).map((t) => t.id); if (!targets.length) { toast(v === 'move' ? 'No friendly city within reach' : 'No enemy city within reach. Declare war first?', 'bad'); return; } UI.mode = { type: 'march', army: a.id, order: v, targets, msg: (v === 'attack' ? 'Choose a city to assault' : v === 'raid' ? 'Choose a city to raid' : 'Choose where to move') + ' (ringed cities are in reach)' }; renderMode(); },
-  disband: () => { G.armies = G.armies.filter((x) => x.id !== UI.sel.id); UI.sel = null; renderAll(); },
   dipsel: (v) => { UI.dipSel = UI.dipSel === v ? null : v; UI.confirmWar = null; renderPanel(); },
   dipwith: (v) => { UI.dipSel = v; select({ type: 'dip' }); },
   confirmwar: (v) => { UI.confirmWar = v; renderPanel(); },
@@ -291,6 +343,7 @@ function renderMode() { const el = $('#modebar'); if (!UI.mode) { el.hidden = tr
 // ---- input -----------------------------------------------------------------------
 function hitTest(sx, sy) {
   if (!G) return null; const u = Math.max(1, Math.round(cam.z / 3));
+  for (const b of G.battles || []) { if (b.turn < G.turn - 2) continue; const [x, y] = w2s(b.x + 0.5, b.y + 0.5); if (Math.abs(sx - (x - 9 * u)) < 7 + u * 2 && Math.abs(sy - (y - 9 * u)) < 7 + u * 2) return { type: 'battle', id: b.id }; }
   for (const a of G.armies) { if (a.mv || a.at == null) continue; const c = C(a.at); const [x, y] = w2s(c.x + 0.5, c.y + 0.5); if (sx >= x + 6 * u - 3 && sx <= x + 12 * u + 3 && sy >= y - 12 * u - 3 && sy <= y - 2 * u) return { type: 'army', id: a.id }; }
   let best = null, bd = Math.max(10, 7 * u);
   for (const c of G.cities) { if (!c.owner) continue; const [x, y] = w2s(c.x + 0.5, c.y + 0.5); const d = Math.hypot(x - sx, y - sy + 2 * u); if (d < bd) { bd = d; best = c; } }
@@ -311,13 +364,15 @@ function onMapClick(sx, sy) {
     if (m.type === 'colony') { const [wx, wy] = s2w(sx, sy), x = Math.floor(wx), y = Math.floor(wy); const s = siteInfo(x, y, C(m.origin)); if (!s.ok) { toast(s.why, 'bad'); return; } UI.mode = null; renderMode(); UI.colName = null; select({ type: 'land', x, y }); return; }
   }
   if (h.type === 'city' && h.terr) { select({ type: 'city', id: h.id }); return; }
+  if (h.type === 'battle') { UI.battleT0 = performance.now(); }
   select(h);
 }
 function tooltipFor(h) {
   if (!h) return '';
   if (h.type === 'city') { const c = C(h.id); const top = Object.entries(c.P || {}).sort((p, q) => q[1] * price(q[0]) - p[1] * price(p[0])).slice(0, 3).map(([g]) => GD[g].n).join(', '); return '<b>' + esc(c.name) + '</b> ' + chip(c.owner) + '<br>' + fmt(c.pop) + 'k people' + (c.q.length ? ' · building ' + esc(bname(c.q[0].b, c.culture)) : '') + '<br><span class="muted">' + esc(top) + '</span><br>' + topPeoples(c, 3).map(([p, v]) => esc(PEOPLES[p][0]) + ' ' + Math.round(v * 100) + '%').join(' · '); }
   if (h.type === 'route') { const r = G.routes.find((x) => x.id === h.id); if (!r) return ''; return '<b>' + esc(C(r.a).name) + ' ⇄ ' + esc(C(r.b).name) + '</b><br>' + (r.flows.slice(0, 3).map((f) => esc(GD[f.g].n)).join(', ') || 'idle') + ' · ' + fmt(r.val); }
-  if (h.type === 'army') { const a = G.armies.find((x) => x.id === h.id); return '<b>' + esc(a.name) + '</b> ' + chip(a.f) + ' · ' + fmt(a.str); }
+  if (h.type === 'army') { const a = G.armies.find((x) => x.id === h.id); return '<b>' + esc(a.name) + '</b> ' + chip(a.f) + ' · ' + fmt(a.str) + '<br>' + esc(a.gen.name) + ' ' + stars(a.gen.skill) + '<br><span class="muted">' + a.units.length + ' units, ' + armyMen(a).toLocaleString('en') + ' men</span>'; }
+  if (h.type === 'battle') { const b = G.battles.find((x) => x.id === h.id); return '<b>' + esc(b.kind + ' ' + b.place) + '</b><br>' + esc(FAC[b.sides[b.winner].f].short) + ' victorious · ' + esc(b.date); }
   if (h.type === 'land') { const i = h.y * W + h.x; if (!land[i]) return ''; if (UI.mode && UI.mode.type === 'colony') { const s = siteInfo(h.x, h.y, C(UI.mode.origin)); if (!s.ok) return esc(s.why); return '<b>' + esc(colonyName(h.x, h.y, C(UI.mode.origin).culture)) + '?</b> ' + s.turns + ' season(s)<br>' + Object.entries(s.res).sort((a, b) => b[1] * price(b[0]) - a[1] * price(a[0])).slice(0, 4).map(([g]) => esc(GD[g].n)).join(', '); } return esc(TNAME[terr[i]]) + ' · unclaimed'; }
   return '';
 }
@@ -344,7 +399,7 @@ function setupInput() {
   $('#modecancel').addEventListener('click', () => { UI.mode = null; renderMode(); });
   document.querySelectorAll('[data-mapmode]').forEach((b) => b.addEventListener('click', () => { UI.mapMode = b.dataset.mapmode; renderTop(); }));
   document.querySelectorAll('[data-open]').forEach((b) => b.addEventListener('click', () => { const t = b.dataset.open; select(UI.sel && UI.sel.type === t ? null : { type: t }); }));
-  $('#chron').addEventListener('click', () => { UI.chronOpen = !UI.chronOpen; $('#chron').classList.toggle('open', UI.chronOpen); renderChron(); });
+  $('#chron').addEventListener('click', (ev) => { if (ev.target.closest('[data-a]')) return; UI.chronOpen = !UI.chronOpen; $('#chron').classList.toggle('open', UI.chronOpen); renderChron(); });
   $('#zin').addEventListener('click', () => zoomAt(1, VW / 2, VH / 2)); $('#zout').addEventListener('click', () => zoomAt(-1, VW / 2, VH / 2));
 }
 function zoomAt(dir, sx, sy) {
@@ -399,11 +454,12 @@ function renderMusic() { const b = $('#musicbtn'); if (!b) return; b.textContent
 // ---- boot --------------------------------------------------------------------
 function resize() { const tb = $('#top'); if (tb) document.documentElement.style.setProperty('--toph', tb.offsetHeight + 18 + 'px'); const cv = $('#map'); DPR = Math.min(2, window.devicePixelRatio || 1); VW = cv.clientWidth; VH = cv.clientHeight; cv.width = Math.round(VW * DPR); cv.height = Math.round(VH * DPR); clampCam(); }
 function frame(t) {
-  try { drawMap(t); if (G && UI.sel && UI.sel.type === 'city' && !$('#panel').hidden && SCENE.isConnected) { SCENECTX.imageSmoothingEnabled = false; drawScene(SCENECTX, C(UI.sel.id), t); } } catch (e) { console.error(e); }
+  try { drawMap(t); if (G && UI.sel && UI.sel.type === 'city' && !$('#panel').hidden && SCENE.isConnected) { SCENECTX.imageSmoothingEnabled = false; drawScene(SCENECTX, C(UI.sel.id), t); }
+    if (G && UI.sel && UI.sel.type === 'battle' && BATTLECV.isConnected) { const b = G.battles.find((x) => x.id === UI.sel.id); if (b) { BATTLECTX.imageSmoothingEnabled = false; drawBattle(BATTLECTX, b, performance.now() - (UI.battleT0 || 0)); } } } catch (e) { console.error(e); }
   requestAnimationFrame(frame);
 }
 function boot() {
-  MAPCTX = $('#map').getContext('2d'); SCENE = document.createElement('canvas'); SCENE.width = 200; SCENE.height = 100; SCENE.className = 'scenecv'; SCENECTX = SCENE.getContext('2d');
+  MAPCTX = $('#map').getContext('2d'); SCENE = document.createElement('canvas'); SCENE.width = 200; SCENE.height = 100; SCENE.className = 'scenecv'; SCENECTX = SCENE.getContext('2d'); BATTLECV = document.createElement('canvas'); BATTLECV.width = 240; BATTLECV.height = 120; BATTLECV.className = 'scenecv battlecv'; BATTLECTX = BATTLECV.getContext('2d');
   buildMap(); buildTerrainCanvas(); resize(); window.addEventListener('resize', resize);
   cam.z = VW > 1100 ? 4 : 3; cam.x = W * 0.55; cam.y = H * 0.6; clampCam();
   setupInput(); showStart(); requestAnimationFrame(frame);

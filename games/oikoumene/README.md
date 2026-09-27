@@ -13,7 +13,12 @@ Open `index.html` in a browser to play. It has no dependencies or build step. Th
 - **Trade routes** that merchants open automatically between a city with a surplus and one with a need, if both are at peace and have trade rights. A town's Trade tab lists each of its routes with the cargo going each way. Its ships and carts come and go in the town scene, and its routes stay highlighted on the map. Click any route to see cargo in each direction, value, tariffs, journey time and pirate risk. You can open, keep or close routes. Winter closes the sea (*mare clausum*).
 - **16 building types**, named by culture (Forum, Agora, Nemeton, Cothon harbour, Murus gallicus and so on). You watch each one go up in the city scene: scaffolding, a treadwheel crane and workers carrying stone. Construction slows when a city lacks timber. Buildings also show on the map: fields, vineyards, groves and mines ring each town, and walls, temples and aqueducts grow with their level. Harbours go from a wooden jetty (I) to an enclosed harbour with a lighthouse (IV).
 - **Colonies**: send settlers from a harbour city to unclaimed coastline. A colony founded near a known ancient site takes its name (Narbo, Aquileia, Mogador, Londinium and others).
-- **Diplomacy and war**: trade rights, gifts, alliances, war and peace. Armies attack, raid or garrison cities.
+- **Diplomacy**: trade rights, gifts, alliances, war and peace.
+- **Armies built from faction rosters**: 68 unit types. Rome fields velites, hastati, principes, triarii, socii and equites. Macedon has phalangites, royal peltasts, Companions and Thessalians. Carthage has Libyan spearmen, the Sacred Band, Numidian horse, Balearic slingers, Iberian and Gallic mercenaries, and elephants that the treaty of 201 BC forbids while at peace with Rome. The Seleucids have Argyraspides, cataphracts, scythed chariots and Indian elephants. There are also Gaesatae, Celtiberians, falxmen, Cretan archers, Parthian horse archers, Sarmatian lancers, Kushite archers and camel riders.
+  - **Recruiting**: elite units need barracks or the capital, cavalry needs horses, and mercenaries hire in ports and markets.
+  - **Generals**: armies have named generals with a skill rating, among them Hannibal, Philip V, Antiochus III, Masinissa, Philopoemen and Sulpicius Galba.
+  - **Army controls**: split, merge, replenish and disband armies, or attack, raid and move them.
+- **Phased battles**: missile exchange, the cavalry fight on the wings (the winner turns onto the enemy flank), charge, melee rounds with morale and rout, then pursuit. Terrain, walls, generals, veterancy and matchups all count: pikes against horse, swordsmen against pikes on broken ground, skirmishers against elephants, horse archers on open steppe. An enemy field army must be beaten before the walls are stormed. Every battle has a report and a pixel replay, reached from the crossed swords on the map or View battle in the chronicle.
 - **Music composed live in the ancient modes** with the Web Audio API and no audio files. Greeks and Romans get Dorian lyre and aulos in dactylic rhythm, Carthage and the Levant Phrygian harp, aulos and frame drum. The Nile gets Lydian harp and sistrum, the north and west pentatonic pipes and carnyx, and the steppe a fiddle and galloping drum. The style follows the people of the town you open, slows in winter and gains drums in wartime.
 - **Ambitions** for each faction, such as Macedon holding the Fetters of Greece or Carthage refilling its treasury.
 
@@ -22,7 +27,8 @@ Open `index.html` in a browser to play. It has no dependencies or build step. Th
 ```
 src/data.js     scenario data: goods, buildings, cultures, factions, cities, coastlines
 src/peoples.js  peoples, their homelands and population mixing
-src/engine.js   map generation, economy, trade, war, colonies, AI
+src/engine.js   map generation, economy, trade, colonies, AI
+src/military.js units, rosters, recruitment, generals, battle simulation and replays
 src/render.js   map renderer and city construction scene
 src/music.js    generative music and sound effects
 src/ui.js       panels, input, save/load

@@ -145,6 +145,13 @@ function drawMap(t) {
     else if (a.at != null) { const c = C(a.at); [x, y] = w2s(c.x + 0.5, c.y + 0.5); x += 6 * u; y -= 2 * u; } else continue;
     drawBanner(ctx, x, y, u, a, t);
   }
+  // recent battlefields
+  for (const b of G.battles || []) {
+    if (b.turn < G.turn - 2) continue; const [bx, by] = w2s(b.x + 0.5, b.y + 0.5), x = Math.round(bx - 9 * u), y = Math.round(by - 9 * u), fl = Math.sin(t / 250) > 0;
+    ctx.fillStyle = 'rgba(0,0,0,0.55)'; ctx.fillRect(x - 3 * u, y - 3 * u, 7 * u, 7 * u);
+    for (let k = -2; k <= 2; k++) { ctx.fillStyle = fl ? '#ffe08a' : '#e8e0c8'; ctx.fillRect(x + k * u, y + k * u, u, u); ctx.fillRect(x - k * u, y + k * u, u, u); }
+    ctx.fillStyle = FAC[b.sides[b.winner].f].col; ctx.fillRect(x - 3 * u, y + 3 * u, 7 * u, u);
+  }
   // mode targets
   if (UI.mode && (UI.mode.type === 'march' || UI.mode.type === 'route')) {
     for (const id of UI.mode.targets || []) { const c = C(id), [sx, sy] = w2s(c.x + 0.5, c.y + 0.5); ctx.strokeStyle = UI.mode.type === 'march' ? (UI.mode.order === 'move' ? '#9fd0ff' : '#ff8a6a') : '#ffe08a'; ctx.lineWidth = 2; const r = 7 * u + 3 + Math.sin(t / 200) * 2; ctx.beginPath(); ctx.arc(sx, sy, r, 0, 7); ctx.stroke(); }

@@ -316,11 +316,8 @@ function newGame(pid) {
   for (const k in G.rel) { G.relBase[k] = G.rel[k]; if (G.rel[k] >= 18 && !G.war[k]) G.rights[k] = 1; }
   for (const g of GIDS) G.prices[g] = GD[g].p;
   // armies
-  const place = (f, city, str) => { const c = G.cities.find((x) => x.name === city); if (c) G.armies.push({ id: G.nid++, f, str, at: c.id, mv: null, name: armyName(f) }); };
-  place('rome', 'Apollonia', 22); place('rome', 'Placentia', 16); place('rome', 'Roma', 10); place('macedon', 'Pella', 28); place('macedon', 'Korinthos', 10);
-  place('seleucid', 'Damaskos', 30); place('ptolemaic', 'Hierosolyma', 22); place('ptolemaic', 'Alexandreia', 10); place('boii', 'Felsina', 14); place('insubres', 'Mediolanum', 10);
-  place('carthage', 'Carthago', 6);
-  for (const f of FIDS) if (!G.armies.some((a) => a.f === f)) { const cs = citiesOf(f), cap = cs.find((c) => c.capital) || cs[0]; const pop = cs.reduce((s, c) => s + c.pop, 0); if (cap) place(f, cap.name, Math.round(4 + pop * 0.3 * (0.5 + FAC[f].ai.aggr))); }
+  G.battles = [];
+  setupStartingArmies();
   computeTerritory();
   for (const c of G.cities) linkCity(c);
   for (const c of G.cities) c.cand = tradeCands(c);
@@ -335,7 +332,7 @@ function armyName(f) {
   if (cul === 'roman') return 'Legio ' + ord; if (cul === 'greek' || cul === 'eastern' || cul === 'egyptian') return 'Phalanx ' + ord;
   if (cul === 'punic') return 'Mercenaries ' + ord; if (cul === 'scythian') return 'Horde ' + ord; return 'Warband ' + ord;
 }
-function logMsg(t, kind) { G.log.unshift({ t, k: kind || '', d: dateStr() }); if (G.log.length > 120) G.log.length = 120; if (typeof onLog === 'function') onLog(); }
+function logMsg(t, kind, b) { G.log.unshift({ t, k: kind || '', d: dateStr(), b }); if (G.log.length > 120) G.log.length = 120; if (typeof onLog === 'function') onLog(); }
 
 // ---- economy ------------------------------------------------------------------
 function prod(c) {
@@ -437,7 +434,7 @@ function econ(silent) {
     f.tax += c.pop * 6 * G.fac[c.owner].tax * (c.order < 35 ? 0.6 : 1) * (0.7 + 0.006 * c.order);
     f.bUp += levels(c) * 0.5;
   }
-  for (const a of G.armies) fin[a.f].aUp += a.str * 0.3;
+  for (const a of G.armies) fin[a.f].aUp += armyUpkeep(a);
   // prices
   if (!silent) {
     const sp = {}, sd = {}; for (const c of cs) { if (!c.owner) continue; for (const g in c.P) sp[g] = (sp[g] || 0) + c.P[g]; for (const g in c.D) sd[g] = (sd[g] || 0) + c.D[g]; }
@@ -498,16 +495,6 @@ function queueBuild(c, b) {
 }
 
 // ---- military -----------------------------------------------------------------
-function raiseCost(c) { return Math.round((c.b.barracks ? 90 : 130) * (isBarb(c.culture) ? 0.7 : 1)); }
-function raiseStr(c) { return Math.round(12 + (c.b.barracks || 0) * 4 + (c.fl.weapons != null ? c.fl.weapons * 3 : 0) + (c.res.horses ? 2 : 0)); }
-function raiseArmy(c) {
-  const f = G.fac[c.owner], cost = raiseCost(c);
-  if (f.gold < cost) return 'Not enough ' + FAC[c.owner].cur; if (c.pop < 2.5) return 'Too few people to levy';
-  f.gold -= cost; c.pop = R1(c.pop - 0.4);
-  const ex = G.armies.find((a) => a.at === c.id && a.f === c.owner && !a.mv);
-  if (ex) ex.str += raiseStr(c); else G.armies.push({ id: G.nid++, f: c.owner, str: raiseStr(c), at: c.id, mv: null, name: armyName(c.owner) });
-  return '';
-}
 function reach(from, to) {
   // returns {k:'land'|'sea', d, turns} or null
   if (from === to) return null; let best = null;
@@ -531,32 +518,6 @@ function march(army, target, order) {
   if (order === 'move' && target.owner !== army.f && !allied(army.f, target.owner)) return 'Can only station troops in your own or allied cities';
   army.mv = { from: from.id, to: target.id, k: r.k, turns: r.turns, done: 0, order, ts: performance.now() }; army.at = null; return '';
 }
-function battle(army, c) {
-  const defF = c.owner; const defArmies = G.armies.filter((a) => a.at === c.id && (a.f === defF || allied(a.f, defF)));
-  const defStr = (c.gar + defArmies.reduce((s, a) => s + a.str, 0)) * (1 + 0.25 * (c.b.walls || 0));
-  const att = army.str * (0.8 + Math.random() * 0.45), def = defStr * (0.8 + Math.random() * 0.45);
-  const mine = army.f === G.player || defF === G.player;
-  if (army.mv.order === 'raid') {
-    if (att > def * 0.6) {
-      const loot = Math.max(0, Math.round(Math.min(G.fac[defF].gold * 0.1 + c.pop * 5, 160))); G.fac[defF].gold -= loot; G.fac[army.f].gold += loot; c.order = Math.max(0, c.order - 15); c.pop = R1(c.pop * 0.96);
-      army.str = Math.max(3, Math.round(army.str - def * 0.15)); if (mine) logMsg(army.name + ' of ' + FAC[army.f].short + ' raids ' + c.name + ' and carries off ' + loot + ' ' + FAC[army.f].cur + '.', army.f === G.player ? 'good' : 'bad');
-    } else { army.str = Math.round(army.str * 0.55); if (mine) logMsg('The raid on ' + c.name + ' is beaten off.', army.f === G.player ? 'bad' : 'good'); }
-    return 'back';
-  }
-  if (att > def) {
-    const old = c.owner; c.owner = army.f; c.capital = false; if (c.ppl) mixIn(c.ppl, { [facPeople(army.f)]: 1 }, 0.08); c.order = 22; c.pop = R1(c.pop * 0.9); c.gar = 2; c.q = [];
-    for (const a of defArmies) a.str = 0; army.str = Math.max(3, Math.round(army.str - def * 0.45));
-    G.armies = G.armies.filter((a) => a.str > 0);
-    G._terrDirty = true; addRel(army.f, old, -20);
-    if (mine || c.pop > 10) logMsg(FAC[army.f].short + ' storms ' + c.name + ' (' + FAC[old].short + ').', army.f === G.player ? 'good' : old === G.player ? 'bad' : '');
-    checkAlive(old);
-    return 'stay';
-  }
-  army.str = Math.round(army.str - def * 0.5); c.gar = Math.max(1, c.gar - att * 0.3);
-  for (const a of defArmies) a.str = Math.max(2, Math.round(a.str - att * 0.15));
-  if (mine) logMsg(army.name + ' (' + FAC[army.f].short + ') is thrown back from the walls of ' + c.name + '.', army.f === G.player ? 'bad' : 'good');
-  return army.str < 3 ? 'die' : 'back';
-}
 function checkAlive(f) {
   if (citiesOf(f).length) return; G.fac[f].alive = false; G.armies = G.armies.filter((a) => a.f !== f);
   for (const k of Object.keys(G.war)) if (k.split('|').includes(f)) delete G.war[k];
@@ -578,7 +539,6 @@ function moveArmies() {
   for (const a of G.armies) mergeAt(a);
 }
 function nearestOwn(f, c) { let best = null, bd = 1e9; for (const o of citiesOf(f)) { const d = Math.hypot(o.x - c.x, o.y - c.y); if (d < bd) { bd = d; best = o.id; } } return best; }
-function mergeAt(a) { if (a.at == null || a.mv) return; const o = G.armies.find((x) => x !== a && x.f === a.f && x.at === a.at && !x.mv); if (o) { o.str += a.str; a.str = 0; G.armies = G.armies.filter((x) => x.str > 0); } }
 
 // ---- colonies -----------------------------------------------------------------
 function colonyCost(c) { return isBarb(c.culture) ? 100 : 150; }
@@ -697,6 +657,7 @@ function aiTurn(f) {
     const front = cs.slice().sort((a, b) => b.pop - a.pop)[0]; raiseArmy(front);
   } else if (!wars.length && total < 4 + cs.length * 2 && F.gold > 300 && inc > 5) raiseArmy(cs[0]);
   const capC = cs.find((c) => c.capital) || cs[0], reachR = 40 + 30 * A.aggr;
+  for (const a of G.armies.filter((x) => x.f === f && !x.mv && x.at != null && C(x.at).owner === f)) if (F.gold > 220 && replenishCost(a) > 0 && replenishCost(a) < F.gold * 0.4) replenish(a);
   for (const a of G.armies.filter((x) => x.f === f && !x.mv && x.at != null)) {
     if (!wars.length) continue; const home = C(a.at); let best = null, bs = -1e9;
     const cand = [...home.landN.filter((n) => n.raw < 30).map((n) => n.id), ...(home.port && home.b.harbor && (!isBarb(FAC[f].cul) || A.merc >= 0.5) ? home.seaN.filter((n) => n.d < 110).map((n) => n.id) : [])];
@@ -706,7 +667,7 @@ function aiTurn(f) {
       const s = a.str / Math.max(1, def) * 10 - r.turns * 2 + t.pop * 0.3;
       if (s > bs) { bs = s; best = [t, def]; }
     }
-    if (best) { const [t, def] = best; if (a.str > def * 1.35 && !(t.owner === G.player && G.turn < 3)) march(a, t, 'attack'); else if (isBarb(FAC[f].cul) && a.str > def * 0.7 && Math.random() < 0.5) march(a, t, 'raid'); }
+    if (best) { const [t, def] = best; if (a.str > def * 1.3 && !(t.owner === G.player && G.turn < 3)) march(a, t, 'attack'); else if (isBarb(FAC[f].cul) && a.str > def * 0.7 && Math.random() < 0.5) march(a, t, 'raid'); }
   }
   // diplomacy
   if (wars.length < 2 && Math.random() < A.aggr * 0.025 && F.gold > 100) {
@@ -782,7 +743,7 @@ function endTurn() {
   const p = G.player;
   for (const f of FIDS) if (f !== p && G.fac[f].alive) aiTurn(f);
   econ(false); construction(); growth(); peopleTurn(); moveArmies(); moveFleets();
-  for (const f of FIDS) { const wars = FIDS.filter((o) => atWar(f, o)).length; G.fac[f].weary = wars ? Math.min(8, G.fac[f].weary + 0.25) : Math.max(0, G.fac[f].weary - 0.5); if (G.fac[f].gold < -50) for (const a of G.armies) if (a.f === f) a.str = Math.max(1, Math.round(a.str * 0.9)); }
+  for (const f of FIDS) { const wars = FIDS.filter((o) => atWar(f, o)).length; G.fac[f].weary = wars ? Math.min(8, G.fac[f].weary + 0.25) : Math.max(0, G.fac[f].weary - 0.5); if (G.fac[f].gold < -50) for (const a of G.armies) if (a.f === f) { for (const u of a.units) u.men = Math.round(u.men * 0.93); recalc(a); } }
   for (const k in G.rel) { const b = G.relBase[k] ?? 0, r = G.rel[k]; if (!G.war[k]) G.rel[k] = r + Math.sign(b - r) * Math.min(1, Math.abs(b - r)); }
   const lost = G.routes.filter((r) => r._lost); for (const r of lost) delete r._lost;
   G.turn++; G.season++; if (G.season > 3) { G.season = 0; G.year++; if (G.year === 0) G.year = 1; }
