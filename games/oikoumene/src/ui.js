@@ -7,7 +7,7 @@ const esc = (s) => String(s).replace(/[&<>"]/g, (m) => ({ '&': '&amp;', '<': '&l
 const fmt = (v) => (Math.abs(v) >= 100 ? Math.round(v) : Math.abs(v) > 0 && Math.abs(v) < 0.1 ? Math.round(v * 100) / 100 : Math.round(v * 10) / 10).toLocaleString('en');
 const UI = { sel: null, mode: null, mapMode: 'political', tab: 'econ', hover: null, dipSel: null, startPick: 'rome' };
 let MAPCTX, SCENE, SCENECTX;
-const SAVE_KEY = 'oikoumene-save-v1';
+const SAVE_KEY = 'oikoumene-save-v2';
 
 const chip = (f) => '<span class="fchip" style="--c:' + FAC[f].col + '">' + esc(FAC[f].short) + '</span>';
 const gchip = (g, extra) => '<span class="gchip" style="--c:' + GD[g].c + '">' + esc(GD[g].n) + (extra != null ? ' <b>' + extra + '</b>' : '') + '</span>';
@@ -339,10 +339,10 @@ function doEndTurn() {
 }
 
 // ---- start screen, save/load ------------------------------------------------------
-const GROUPS = [['Great powers', ['rome', 'carthage', 'macedon', 'seleucid', 'ptolemaic']], ['Greek states', ['epirus', 'athens', 'aetolia', 'achaea', 'sparta', 'rhodes', 'crete', 'pergamon', 'massilia', 'byzantium', 'euxine', 'bosporus', 'bithynia']],
-  ['Anatolia, Syria and Africa', ['pontus', 'cappadocia', 'galatia', 'nabataea', 'numidia', 'mauretania']], ['Gauls and Italians', ['arverni', 'aedui', 'sequani', 'carnutes', 'belgae', 'armorici', 'volcae', 'allobroges', 'helvetii', 'boii', 'insubres', 'ligures', 'veneti', 'norici']],
-  ['Iberia', ['celtiberi', 'lusitani', 'turdetani', 'ilergetes', 'oretani', 'gallaeci', 'aquitani']], ['Britain and Ireland', ['britons', 'dumnonii', 'brigantes', 'caledonii', 'hiberni']],
-  ['Germania and the north', ['cimbri', 'suebi', 'chatti', 'frisii', 'gutones', 'scandians', 'bastarnae']], ['Balkans and the steppe', ['illyria', 'dardani', 'odrysae', 'getae', 'scythia', 'sarmatia']]];
+const GROUPS = [['Great powers', ['rome', 'carthage', 'macedon', 'seleucid', 'ptolemaic']], ['Greek states', ['epirus', 'athens', 'aetolia', 'achaea', 'sparta', 'rhodes', 'crete', 'pergamon', 'massilia', 'byzantium', 'euxine', 'bosporus', 'bithynia', 'boeotia', 'ionians']],
+  ['Anatolia', ['pontus', 'cappadocia', 'galatia', 'paphlagonia', 'pisidians', 'cilicia']], ['Mesopotamia, Iran and Arabia', ['persis', 'parthia', 'atropatene', 'chorasmia', 'dahae', 'gerrha', 'arabs', 'nabataea']], ['Caucasus', ['armenia', 'kartli', 'albania', 'colchis']], ['Africa', ['numidia', 'mauretania', 'thebaid', 'kush', 'garamantes']], ['Gauls and Italians', ['arverni', 'aedui', 'sequani', 'carnutes', 'belgae', 'armorici', 'volcae', 'allobroges', 'helvetii', 'boii', 'insubres', 'ligures', 'veneti', 'norici', 'bituriges']],
+  ['Iberia', ['celtiberi', 'lusitani', 'turdetani', 'ilergetes', 'oretani', 'gallaeci', 'aquitani', 'vettones', 'vascones', 'baleares']], ['Britain and Ireland', ['britons', 'dumnonii', 'brigantes', 'caledonii', 'hiberni', 'silures']],
+  ['Germania and the north', ['cimbri', 'suebi', 'chatti', 'frisii', 'gutones', 'scandians', 'bastarnae', 'cherusci', 'lugii', 'venedi', 'fenni']], ['Balkans and the steppe', ['illyria', 'dardani', 'odrysae', 'getae', 'scythia', 'sarmatia', 'scordisci', 'budini']]];
 function difficulty(f) { const n = CITY_DATA.filter((d) => d[3] === f); const pop = n.reduce((s, d) => s + d[4], 0); return pop > 60 ? 'Easy' : pop > 18 ? 'Normal' : pop > 8 ? 'Hard' : 'Very hard'; }
 function showStart() {
   const el = $('#start'); el.hidden = false; let hasSave = false; try { hasSave = !!localStorage.getItem(SAVE_KEY); } catch (e) { hasSave = false; }

@@ -14,7 +14,7 @@ function vnoise(x, y) {
 const fbm = (x, y) => vnoise(x / 9, y / 9) * 0.6 + vnoise(x / 4, y / 4) * 0.3 + vnoise(x / 2, y / 2) * 0.1;
 
 // ---- projection -------------------------------------------------------------
-const LON0 = -12, LON1 = 43, LAT0 = 27, LAT1 = 58.5, CL = 0.125, KX = Math.cos((42 * Math.PI) / 180), CLON = CL / KX;
+const LON0 = MAP_BOUNDS.lon0, LON1 = MAP_BOUNDS.lon1, LAT0 = MAP_BOUNDS.lat0, LAT1 = MAP_BOUNDS.lat1, CL = 0.125, KX = Math.cos((42 * Math.PI) / 180), CLON = CL / KX;
 const W = Math.ceil((LON1 - LON0) / CLON), H = Math.ceil((LAT1 - LAT0) / CL), N = W * H;
 const toCell = (lon, lat) => [(lon - LON0) / CLON, (LAT1 - lat) / CL];
 const cellLL = (x, y) => [LON0 + (x + 0.5) * CLON, LAT1 - (y + 0.5) * CL];
@@ -30,7 +30,7 @@ const compSize = {};
 const NB4 = [[-1, 0], [1, 0], [0, -1], [0, 1]];
 const NB8 = [[-1, 0], [1, 0], [0, -1], [0, 1], [-1, -1], [1, -1], [-1, 1], [1, 1]];
 
-function fillPoly(flat, rid) {
+function fillPoly(flat, rid, carve) {
   const n = flat.length / 2, xs = [], ys = [];
   for (let i = 0; i < n; i++) { const c = toCell(flat[2 * i], flat[2 * i + 1]); xs.push(c[0]); ys.push(c[1]); }
   for (let y = 0; y < H; y++) {
@@ -39,7 +39,7 @@ function fillPoly(flat, rid) {
     xsec.sort((a, b) => a - b);
     for (let k = 0; k + 1 < xsec.length; k += 2) {
       const x0 = Math.max(0, Math.ceil(xsec[k] - 0.5)), x1 = Math.min(W - 1, Math.floor(xsec[k + 1] - 0.5));
-      for (let x = x0; x <= x1; x++) { land[y * W + x] = 1; if (region[y * W + x] < 0) region[y * W + x] = rid; }
+      for (let x = x0; x <= x1; x++) { if (carve) { land[y * W + x] = 0; region[y * W + x] = -1; } else { land[y * W + x] = 1; if (region[y * W + x] < 0) region[y * W + x] = rid; } }
     }
   }
 }
@@ -81,6 +81,7 @@ let NILE_PTS;
 function buildMap() {
   let rid = 0; const RIDS = {};
   for (const k in POLYS) { RIDS[k] = rid; fillPoly(POLYS[k], rid++); }
+  for (const k in SEAS) fillPoly(SEAS[k], -1, true);
   for (const s of STRAITS) eachLineCell(polyCells(s[0]), 0.3, (x, y) => { land[y * W + x] = 0; region[y * W + x] = -1; });
   // coastal distance for land and water
   const dl = new Uint8Array(N), dw = new Uint8Array(N);
@@ -89,24 +90,31 @@ function buildMap() {
   labelComps(isWater, waterComp, NB4); labelComps(isLand, landComp, NB4);
   { const [mx, my] = toCell(18, 35); SEA_MAIN = waterComp[(my | 0) * W + (mx | 0)]; }
   const ranges = RANGES.map(([p, w]) => [polyCells(p), w]);
-  NILE_PTS = polyCells(RIVERS[0]);
+  NILE_PTS = polyCells(RIVERS[0]); const MESO = [polyCells(RIVERS.find((r) => r[0] === 38)), polyCells(RIVERS.find((r) => r[0] === 42.5))];
   const AF = RIDS.afroasia, SC = RIDS.scandza;
   for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) {
     const i = y * W + x; if (!land[i]) { terr[i] = T.SEA; continue; }
-    const [lon, lat] = cellLL(x, y), n = fbm(x, y), cd = coastD[i];
+    const [lon0, lat0] = cellLL(x, y), n = fbm(x, y), cd = coastD[i];
+    const lat = lat0 + (vnoise(x / 7 + 31, y / 7) - 0.5) * 2.6, lon = lon0 + (vnoise(x / 7, y / 7 + 57) - 0.5) * 3.2;
     let t = T.PLAIN, md = 1e9;
     for (const [pts, w] of ranges) md = Math.min(md, polyDist(x + 0.5, y + 0.5, pts) - w * (0.7 + 0.6 * n));
     if (md < 0) t = T.MTN; else if (md < 2.4) t = T.HILLS;
-    const africa = region[i] === AF && (lon < 32.4 || (lon < 34.4 && lat < 31.3));
+    const africa = region[i] === AF && (lon0 < 32.4 || (lon0 < 34.4 && lat0 < 31.3));
     const nileD = polyDist(x + 0.5, y + 0.5, NILE_PTS);
-    const delta = lat > 30.1 && lat < 31.6 && lon > 29.9 && lon < 32.4 && Math.abs(lon - 31.1) < (lat - 30.0) * 0.95;
+    const delta = lat0 > 30.1 && lat0 < 31.6 && lon0 > 29.9 && lon0 < 32.4 && Math.abs(lon0 - 31.1) < (lat0 - 30.0) * 0.95;
     if (africa) {
-      const lim = 5 + Math.max(0, lat - 31) * 11;
+      const lim = 5 + Math.max(0, lat0 - 31) * 11;
       if (nileD < 1.6 || delta) t = T.MARSH;
       else if (cd > lim) t = t === T.MTN ? T.MTN : T.DESERT;
       else if (lat < 33.4 && t === T.PLAIN) t = T.DRY;
     } else if (region[i] === AF) {
-      if (lon > 36.7 && lat < 35.8 && cd > 5) t = t === T.MTN ? T.MTN : T.DESERT;
+      const mesoD = lon0 > 37.5 && lon0 < 49 && lat0 < 38.5 ? Math.min(polyDist(x + 0.5, y + 0.5, MESO[0]), polyDist(x + 0.5, y + 0.5, MESO[1])) : 99;
+      if (mesoD < 2.2 && t !== T.MTN) t = T.MARSH;
+      else if (lon > 50 && lat > 29 && lat < 35.3 && cd > 9 && t !== T.MTN) t = T.DESERT;
+      else if (lon > 53.5 && lat > 38.3 && lat < 43.3 && t !== T.MTN) t = T.DESERT;
+      else if (lon > 34.3 && lat < 30.5 && cd > 2 && t !== T.MTN) t = T.DESERT;
+      else if (lon > 45 && lat < 38 && lat > 26 && t === T.PLAIN) t = T.DRY;
+      else if (lon > 36.7 && lat < 35.8 && cd > 5) t = t === T.MTN ? T.MTN : T.DESERT;
       else if (lat < 31.4 && lon > 34.3) t = T.DESERT;
       else if (lat > 37.8 && lat < 40.6 && lon > 30 && lon < 38 && t === T.PLAIN) t = T.DRY;
       else if (lat > 42.5 && t === T.PLAIN && n > 0.45) t = T.STEPPE;
@@ -122,6 +130,8 @@ function buildMap() {
       else if (lat < 39.5 && n < 0.36) t = T.DRY;
     }
     if (lat > 51.5 && lon > 25 && t === T.STEPPE) t = T.FOREST;
+    if (region[i] !== AF && lat > 44 && lon > 43.5 && lat < 51.5 && t !== T.MTN) t = T.STEPPE;
+    if (lat > 57 && lon > 20 && t === T.PLAIN) t = T.FOREST;
     terr[i] = t;
   }
   for (let k = 1; k < RIVERS.length; k++) eachLineCell(polyCells(RIVERS[k]), 0.4, (x, y) => { if (land[y * W + x]) river[y * W + x] = 1; });
@@ -210,7 +220,7 @@ function snapLand(x, y) {
 }
 function findPortWater(x, y) {
   let best = -1, bd = 1e9;
-  for (let dy = -2; dy <= 2; dy++) for (let dx = -2; dx <= 2; dx++) { const X = x + dx, Y = y + dy; if (X < 0 || Y < 0 || X >= W || Y >= H) continue; const j = Y * W + X; if (land[j]) continue; const sz = compSize['S' + waterComp[j]] || 0; if (sz < 300) continue; const d = dx * dx + dy * dy; if (d < bd) { bd = d; best = j; } }
+  for (let dy = -3; dy <= 3; dy++) for (let dx = -3; dx <= 3; dx++) { const X = x + dx, Y = y + dy; if (X < 0 || Y < 0 || X >= W || Y >= H) continue; const j = Y * W + X; if (land[j]) continue; const sz = compSize['S' + waterComp[j]] || 0; if (sz < 150) continue; const d = dx * dx + dy * dy; if (d < bd) { bd = d; best = j; } }
   return best;
 }
 function canWine(c) { return c.lat < 47 && terr[c.y * W + c.x] !== T.DESERT; }
@@ -270,7 +280,7 @@ function tradeCands(c) {
 }
 
 // ---- territory ----------------------------------------------------------------
-const MOVE_COST = [99, 1, 1.2, 1.5, 1.7, 3.2, 2.4, 1.1, 1.3];
+const MOVE_COST = [99, 1, 1.2, 1.5, 1.7, 3.2, 1.7, 1.1, 1.3];
 function computeTerritory() {
   const cost = new Float32Array(N).fill(1e9); cellCity.fill(-1);
   const hk = [], hv = [];
