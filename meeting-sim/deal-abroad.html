@@ -419,6 +419,7 @@
         <p id="empire-life"></p>
         <p class="muted small">Everything you own pays you back. Customize your cars, boats and homes: every option is labeled in the language you're playing, and upgrades stack their own perks. Sell anything for 70% of what you put in.</p>
       </div>
+      <div class="box stack" id="look"></div>
       <div class="box stack" id="wardrobe"></div>
       <div class="box stack" id="marina"></div>
       <div class="stack" id="shop"></div>
@@ -1185,7 +1186,10 @@ const SHOP_BASE = [
   { id: "ride3", cat: "ride", price: 28000, perk: { pay: 0.04 } }, { id: "ride4", cat: "ride", price: 140000, perk: { pay: 0.06 } },
   { id: "ride5", cat: "ride", price: 290000, perk: { pay: 0.08 } }, { id: "ride6", cat: "ride", price: 3200000, perk: { pay: 0.15 } },
   { id: "water1", cat: "water", price: 40 }, { id: "water2", cat: "water", price: 45000, perk: { pay: 0.03 } },
-  { id: "water3", cat: "water", price: 900000, perk: { pay: 0.06 } }, { id: "water4", cat: "water", price: 38000000, perk: { pay: 0.2, secret: true } },
+  { id: "water5", cat: "water", price: 380000, perk: { pay: 0.04 } }, { id: "water3", cat: "water", price: 900000, perk: { pay: 0.06 } },
+  { id: "water6", cat: "water", price: 1600000, perk: { pay: 0.05, fee: 0.1 } }, { id: "water7", cat: "water", price: 6500000, perk: { pay: 0.1 } },
+  { id: "water9", cat: "water", price: 12000000, perk: { pay: 0.05 } }, { id: "water8", cat: "water", price: 22000000, perk: { pay: 0.14, secret: true } },
+  { id: "water4", cat: "water", price: 38000000, perk: { pay: 0.2, secret: true } },
   { id: "crib1", cat: "crib", price: 1200, perk: { xp: 0.05 } }, { id: "crib2", cat: "crib", price: 350000, perk: { xp: 0.1 } },
   { id: "crib3", cat: "crib", price: 4800000, perk: { xp: 0.15, fee: 0.2 } }, { id: "crib4", cat: "crib", price: 22000000, perk: { xp: 0.25, fee: 0.3 } },
   { id: "wrist1", cat: "wrist", price: 25 }, { id: "wrist2", cat: "wrist", price: 4000, perk: { pay: 0.02 } },
@@ -1193,14 +1197,24 @@ const SHOP_BASE = [
   { id: "sky1", cat: "sky", price: 65000000, perk: { pay: 0.25, fee: 0.5, secret: true } },
   { id: "flex1", cat: "flex", price: 2500000, perk: { deal: 1 } }, { id: "flex2", cat: "flex", price: 180000000, perk: { pay: 0.5 } },
 ];
-const lvlOf = (id) => Number(id.slice(-1));
+const LVL_OVR = { water5: 2, water6: 3, water7: 3, water8: 4, water9: 4 };
+const lvlOf = (id) => LVL_OVR[id] ?? Number(id.slice(-1));
+const BOATS = {
+  water1: { type: "flamingo", len: 3, daily: 0 }, water2: { type: "console", len: 11, daily: 300 }, water5: { type: "flybridge", len: 14, daily: 1200 },
+  water3: { type: "runabout", len: 10, daily: 900, hull: "#8a4a24" }, water6: { type: "trawler", len: 18, daily: 700, range: true }, water7: { type: "motoryacht", len: 24, daily: 6000 },
+  water9: { type: "support", len: 48, daily: 20000, support: true }, water8: { type: "explorer", len: 42, daily: 15000, range: true, garage: true, hull: "#2b3140" }, water4: { type: "superyacht", len: 55, daily: 60000, garage: true },
+};
+const BOAT_LANG = { zh: { water1: { type: "bumboat", len: 8, daily: 0, hull: "#7a3a1a" }, water3: { type: "junk", len: 16, daily: 900, hull: "#5a2e1c" } } };
+function boatOf(id, lang = G.lang) { return (BOAT_LANG[lang] || {})[id] || BOATS[id]; }
+const CAR_TYPES = { es: { ride1: "scooter", ride2: "hatch", ride3: "jeep", ride4: "sports", ride5: "supercar", ride6: "hypercar" }, zh: { ride1: "bike", ride2: "scooter", ride3: "crossover", ride4: "ev", ride5: "suv", ride6: "hypercar" } };
+const carType = (id, lang = G.lang) => (CAR_TYPES[lang] || CAR_TYPES.es)[id];
 const CATS = { water: "On the water", ride: "Rides", crib: "Where you sleep", wrist: "On your wrist", sky: "In the sky", flex: "Pure flex" };
 const SHOP_NAMES = {
   es: {
     ride1: ["Rented scooter", "Top speed 45 km/h, downhill."], ride2: ["'09 Corolla, no AC", "Windows down is the AC."],
     ride3: ["Jeep Wrangler, doors off", "Sand in every seam."], ride4: ["Porsche 911 Carrera", "Guards red, unless you repaint it."],
     ride5: ["Lambo Huracán", "Parks itself across three spaces."], ride6: ["Bugatti Chiron", "An oil change costs more than your first car."],
-    water1: ["Inflatable flamingo", "Technically a vessel."], water2: ["Center-console fishing boat", "Wahoo season starts now."],
+    water1: ["Inflatable flamingo", "Technically a vessel."], water2: ["Center-console sportfisher", "Twin outboards, a T-top, wahoo season."], water5: ["45' flybridge cruiser", "Upper helm, bimini, cold drinks up top."], water6: ["60' long-range trawler", "Eight knots, three thousand miles, zero hurry."], water7: ["24m flybridge motor yacht", "Three decks, a radar arch, a crew of five."], water8: ["42m explorer yacht", "Steel hull, tender garage, goes anywhere."], water9: ["Shadow vessel", "Carries the helicopter, the sub and the toys so your yacht doesn't have to."],
     water3: ["Mahogany runabout", "Varnished like a Steinway."], water4: ["55m superyacht", "Five decks, a beach club, and a crew that never judges. Gets you invitations."],
     crib1: ["Studio in Oranjestad", "Your own bathroom. Luxury."], crib2: ["Colonial flat, Cartagena", "Bougainvillea on the balcony."],
     crib3: ["Salamanca penthouse, Madrid", "The doorman knows your coffee order."], crib4: ["Cliffside villa, Ibiza", "Es Vedrà from the pool."],
@@ -1212,7 +1226,7 @@ const SHOP_NAMES = {
     ride1: ["Shared bike", "The parking fines are the real cost."], ride2: ["Used e-scooter", "Legal on paths only. Mostly."],
     ride3: ["Honda Vezel + COE", "In Singapore the paperwork costs more than the car."], ride4: ["Tesla Model S + COE", "Silent. Like your competitors, soon."],
     ride5: ["Rolls-Royce Cullinan", "Hire a chauffeur. You've earned it."], ride6: ["Koenigsegg", "Sounds like money."],
-    water1: ["Bumboat pass, Singapore River", "Clarke Quay and back."], water2: ["Sportfisher, Sentosa Cove", "Weekend grouper runs."],
+    water1: ["Bumboat pass, Singapore River", "Clarke Quay and back."], water2: ["Sportfisher, Sentosa Cove", "Weekend grouper runs."], water5: ["45' flybridge cruiser 飞桥游艇", "Upper helm and cold drinks up top."], water6: ["60' long-range trawler 长航程游艇", "Eight knots, three thousand miles, zero hurry."], water7: ["24m flybridge motor yacht", "Three decks and a radar arch."], water8: ["42m explorer yacht 探险游艇", "Steel hull and a tender garage."], water9: ["Shadow vessel 影子船", "Carries the helicopter, the sub and the toys."],
     water3: ["Teak junk, red sails", "Victoria Harbour's best party venue."], water4: ["60m superyacht", "Eight cabins, lucky number. Gets you invitations."],
     crib1: ["Shoebox condo lease, Tanjong Pagar", "Twenty-two square meters of ambition."], crib2: ["Penthouse on the Bund", "The Pearl Tower lights up your bedroom."],
     crib3: ["Good Class Bungalow", "One of about 2,800. The rarest address in Singapore."], crib4: ["Mansion on The Peak", "Above the fog, above everyone."],
@@ -1223,7 +1237,7 @@ const SHOP_NAMES = {
 };
 const GENERIC_NAMES = {
   ride1: ["Rented scooter", ""], ride2: ["Used hatchback", ""], ride3: ["Off-roader", ""], ride4: ["German sports car", ""], ride5: ["Italian supercar", ""], ride6: ["Hypercar", ""],
-  water1: ["Pool float", ""], water2: ["Fishing boat", ""], water3: ["Classic runabout", ""], water4: ["Superyacht", "Gets you invitations."],
+  water1: ["Pool float", ""], water2: ["Sportfisher", ""], water5: ["Flybridge cruiser", ""], water6: ["Long-range trawler", ""], water7: ["Motor yacht", ""], water8: ["Explorer yacht", ""], water9: ["Shadow vessel", ""], water3: ["Classic runabout", ""], water4: ["Superyacht", "Gets you invitations."],
   crib1: ["Studio flat", ""], crib2: ["City apartment", ""], crib3: ["Penthouse", ""], crib4: ["Villa", ""],
   wrist1: ["Digital watch", ""], wrist2: ["Diver watch", ""], wrist3: ["Rolex Daytona", ""], wrist4: ["Patek Nautilus", ""],
   sky1: ["Private jet", ""], flex1: ["Gold-plated toy", ""], flex2: ["Private island", ""],
@@ -1240,6 +1254,10 @@ const CUSTOM = {
       { id: "crew", es: "la tripulación", zh: "船员 chuányuán", en: "Full-time crew", f: 0.06, min: 2, perk: { xp: 0.03 } },
       { id: "fishing", es: "el equipo de pesca", zh: "钓鱼装备 diàoyú zhuāngbèi", en: "Big-game fishing rig", f: 0.03, min: 2, perk: { chem: 0.04 } },
       { id: "sound", es: "el equipo de sonido", zh: "音响 yīnxiǎng", en: "Deck sound system", f: 0.02, min: 2, perk: { chem: 0.05 } },
+      { id: "paddle", es: "las tablas de paddle surf", zh: "桨板 jiǎngbǎn", en: "Paddleboards and kayaks", f: 0.01, min: 2, perk: { xp: 0.02 } },
+      { id: "seabob", es: "los seabobs", zh: "水下推进器 shuǐxià tuījìnqì", en: "Seabobs", f: 0.02, min: 3, perk: { chem: 0.04 } },
+      { id: "slide", es: "el tobogán inflable", zh: "充气滑梯 chōngqì huátī", en: "Inflatable slide off the top deck", f: 0.02, min: 3, perk: { chem: 0.05 } },
+      { id: "garage", es: "el garaje de tenders", zh: "尾舱车库 wěicāng chēkù", en: "Tender garage", f: 0.05, min: 3, perk: { fee: 0.05 } },
       { id: "tender", es: "la lancha auxiliar", zh: "小艇 xiǎotǐng", en: "Tender boat", f: 0.04, min: 3, perk: { fee: 0.05 } },
       { id: "jetskis", es: "las motos de agua", zh: "水上摩托 shuǐshàng mótuō", en: "Pair of jet skis", f: 0.03, min: 3, perk: { chem: 0.08 } },
       { id: "chef", es: "el chef a bordo", zh: "船上厨师 chuánshàng chúshī", en: "Onboard chef", f: 0.04, min: 3, perk: { chem: 0.1 } },
@@ -1383,6 +1401,7 @@ const today = () => new Date(Date.now() + ((typeof G !== "undefined" && G.dayOff
 function newLife() { return { cash: START_CASH, xp: 0, owned: {}, paid: {}, mods: {}, cleared: {}, secrets: {}, chem: {}, chats: {}, deck: [], quiz: {}, meetings: 0, peak: 0, rivalBonus: {}, pos: 0 }; }
 function freshGame() { return { v: 2, lang: "es", pref: "women", mute: false, showEn: false, level: "intermediate", tier: {}, ach: {}, streak: { n: 0, last: "" }, langs: {}, careers: {}, packs: {}, updated: 0 }; }
 let G = (() => { try { const s = JSON.parse(localStorage.getItem(SAVE_KEY)); if (s && s.v === 2) return Object.assign(freshGame(), s); } catch {} return freshGame(); })();
+if (!G.look) G.look = { skin: "#6b4226", hair: "#101014", style: "fade", beard: "stubble" };
 if (!G.prefWomen) { G.pref = "women"; G.prefWomen = true; }
 if (!G.layout18) { Object.keys(G.tier).forEach((k) => { G.tier[k] = Math.min(17, (G.tier[k] || 0) * 3); }); G.layout18 = true; }
 const life = (lang = G.lang) => { const L = (G.langs[lang] ||= newLife()); L.mods ||= {}; L.rivalBonus ||= {}; L.peak ||= 0; return L; };
@@ -1527,15 +1546,17 @@ function boatSpec(worth, seed) {
   const lvl = worth < 900000 ? 2 : worth < 38000000 ? 3 : 4;
   const len = lvl === 2 ? 7 + (seed % 4) : lvl === 3 ? 11 + (seed % 9) + Math.round(Math.log10(worth / 900000) * 8) : Math.min(140, 48 + Math.round(Math.log10(worth / 38000000) * 45) + (seed % 12));
   const extras = lvl === 4 ? 4 + (seed % 7) : lvl === 3 ? 1 + (seed % 3) : seed % 2;
-  return { lvl, len, extras };
+  const type = len < 12 ? "console" : len < 20 ? (seed % 2 ? "flybridge" : "trawler") : len < 36 ? "motoryacht" : len < 60 && seed % 3 === 0 ? "explorer" : "superyacht";
+  return { lvl, len, extras, type, garage: len > 36, helipad: len > 60 };
 }
 function myBoat(lang = G.lang) {
-  const L = life(lang), it = SHOP_BASE.filter((x) => x.cat === "water" && L.owned[x.id] && lvlOf(x.id) >= 2).pop();
+  const L = life(lang); let it = null;
+  SHOP_BASE.filter((x) => x.cat === "water" && L.owned[x.id] && lvlOf(x.id) >= 2).forEach((x) => { const b = boatOf(x.id, lang); if (!b || b.support) return; if (!it || b.len > boatOf(it.id, lang).len) it = x; });
   if (!it) return null;
-  const m = L.mods[it.id] || {}, ups = m.ups || {}, lvl = lvlOf(it.id);
-  const len = (lvl === 2 ? 9 : lvl === 3 ? 12 : 55) + (ups.beachclub ? 4 : 0) + (ups.helipad ? 3 : 0);
-  const col = m.paint != null ? CUSTOM.water.paint.opts[m.paint][1] : "#f4f4f4";
-  return { lvl, len, extras: Object.keys(ups).length, name: m.name || shopName(it.id, lang)[0], col, it };
+  const spec = boatOf(it.id, lang), m = L.mods[it.id] || {}, ups = m.ups || {}, lvl = lvlOf(it.id);
+  const len = spec.len + (ups.beachclub ? 4 : 0) + (ups.helipad ? 3 : 0);
+  const col = m.paint != null ? CUSTOM.water.paint.opts[m.paint][1] : spec.hull || "#f4f4f4";
+  return { lvl, len, type: spec.type, spec, ups, extras: Object.keys(ups).length, name: m.name || shopName(it.id, lang)[0], col, it, garage: !!(spec.garage || ups.garage || ups.beachclub), helipad: !!ups.helipad, support: !!L.owned.water9, range: !!spec.range || spec.len >= 40 };
 }
 function fleet(lang = G.lang) {
   const list = rivalsFor(lang).map((r, k) => {
@@ -1687,11 +1708,11 @@ function rng(seed) { return () => { seed |= 0; seed = (seed + 0x6d2b79f5) | 0; l
 function hash(s) { let h = 2166136261; for (const ch of String(s)) h = Math.imul(h ^ ch.charCodeAt(0), 16777619); return h >>> 0; }
 function shade(hex, f = 0.72) { const n = parseInt(hex.slice(1), 16); const g = (v) => Math.max(0, Math.min(255, Math.round(v * f))); return "rgb(" + g(n >> 16) + "," + g((n >> 8) & 255) + "," + g(n & 255) + ")"; }
 const SPRITE = [
-  "..hhhhhh..", ".hhhhhhhh.", ".hssssssh.", ".sesssses.", ".ssssssss.", "..ssmmss..", "...ssss...",
+  ".hhhhhhhh.", ".hhhhhhhh.", ".hssssssh.", ".sesssses.", ".ssssssss.", "..ssmmss..", "...ssss...",
   "..JJSSJJ..", ".JJJSSJJJ.", "JJJJSSJJJJ", "JJJJSSJJJJ", "sJJJSSJJJs", ".JJJJJJJJ.", ".JJJJJJJJ.",
 ];
 function youPal(r) {
-  const base = { hair: "#3b2a20", skin: "#e0ac80" };
+  const lk = G.look || {}, base = { hair: lk.hair || "#101014", skin: lk.skin || "#6b4226", style: lk.style || "fade", beard: lk.beard || "stubble", build: lk.build || "athletic", jaw: lk.jaw || "square" };
   return [
     { ...base, jacket: "#4b7bd1", shirt: "#4b7bd1" },
     { ...base, jacket: "#2f8f6b", shirt: "#e8e8e8" },
@@ -1700,6 +1721,17 @@ function youPal(r) {
     { ...base, jacket: "#3a2a5a", shirt: "#101014", glasses: true, chain: true },
     { ...base, jacket: "#f4f1ea", shirt: "#101014", glasses: true, chain: true },
   ][clamp(r, 0, 5)];
+}
+const JAWS = { square: [".sssmmsss.", "..ssssss.."], narrow: ["..ssmmss..", "...ssss..."], sharp: [".sssmmsss.", "...ssss..."] };
+const HAIR_W = ["long", "bun", "pony", "curls", "bob"];
+function looksOf(pal) {
+  const v = hash((pal.skin || "") + (pal.jacket || "") + (pal.hair || "") + (pal.shirt || ""));
+  return {
+    build: pal.build || (pal.long ? (v >> 9) % 3 ? "lean" : "athletic" : ["athletic", "broad", "lean", "athletic"][v % 4]),
+    jaw: pal.jaw || (pal.long ? ["narrow", "sharp"][(v >> 3) % 2] : ["square", "narrow", "sharp", "square"][(v >> 3) % 4]),
+    hw: pal.long ? pal.hw || HAIR_W[(v >> 5) % HAIR_W.length] : null,
+    dress: pal.long && !pal.swim && ((v >> 7) % 3 === 0),
+  };
 }
 const LEGS = {
   stand: ["..pppppp..", "..pppppp..", "..pp..pp..", "..pp..pp..", "..pp..pp..", ".fff..fff."],
@@ -1710,19 +1742,49 @@ function drawPerson(c, x, y, pal, t, talking, seed, walking) {
   const legs = walking ? (Math.floor(t / 160) % 2 ? LEGS.a : LEGS.b) : LEGS.stand;
   const pants = pal.pants || shade(pal.jacket === pal.shirt ? "#3a4a6a" : pal.jacket, 0.62), shoes = (pal.goldShoes ?? pal.chain) ? "#f5c542" : "#1b1b22";
   legs.forEach((row, r) => { for (let k = 0; k < 10; k++) { const ch = row[k]; if (ch === ".") continue; R(c, x + k, y + 14 + r, 1, 1, pal.swim ? (ch === "p" && r < 2 ? pal.swim : pal.skin) : ch === "p" ? pants : shoes); } });
+  const lk = looksOf(pal), J = JAWS[lk.jaw] || JAWS.square, torso = pal.swim ? pal.skin : pal.jacket;
+  if (lk.dress) { R(c, x + 2, y + 14, 6, 2, pal.jacket); R(c, x + 1, y + 15, 8, 1, pal.jacket); }
   const blink = ((t + seed * 997) % 3400) < 140;
   const mouthOpen = talking && Math.floor(t / 130) % 2 === 0;
   for (let r = 0; r < SPRITE.length; r++) for (let k = 0; k < 10; k++) {
-    let ch = SPRITE[r][k];
-    if (pal.long && (k === 0 || k === 9) && r >= 2 && r <= 7) ch = "h";
+    let ch = r === 5 ? J[0][k] : r === 6 ? J[1][k] : SPRITE[r][k];
+    if ((lk.build === "athletic" || lk.build === "lean") && r >= 12 && (k === 1 || k === 8)) continue;
+    if (lk.build === "lean" && (r === 9 || r === 10) && (k === 0 || k === 9)) continue;
+    const hwEnd = lk.hw === "bun" || lk.hw === "pony" ? 3 : lk.hw === "bob" ? 5 : 7;
+    if (pal.long && (k === 0 || k === 9) && r >= 2 && r <= hwEnd) ch = "h";
+    const hs = pal.style;
+    if (hs && ch === "h") {
+      if (hs === "bald") { if (r === 0) continue; ch = r === 1 && (k < 2 || k > 7) ? "." : "s"; if (ch === ".") continue; }
+      else if (hs === "buzz") { if (r === 0) continue; if (r === 2) ch = "s"; }
+      else if ((hs === "fade" || hs === "waves" || hs === "twists") && r === 2) ch = "f";
+      else if (hs === "locs" && r === 2) ch = "h";
+    }
     if (ch === ".") continue;
     let col = { h: pal.hair, s: pal.skin, e: "#1b1b22", S: pal.shirt, J: pal.jacket }[ch];
     if (pal.swim && (ch === "J" || ch === "S")) col = r >= 12 || (pal.long && (r === 8 || r === 9) && k >= 2 && k <= 7) ? pal.swim : pal.skin;
     if (pal.party && (ch === "J" || ch === "S") && (Math.floor(t / 180) + k * 3 + r * 5) % 17 === 0) col = "#fff4c0";
+    if (ch === "f") col = shade(pal.skin, 0.72);
+    if (ch === "h" && pal.style === "waves" && r === 1 && k % 2) col = shade(pal.hair, 1.8);
     if (ch === "e" && blink) col = pal.skin;
     if (ch === "m") col = mouthOpen ? "#5a1f24" : shade(pal.skin);
     R(c, x + k, y + r, 1, 1, col);
   }
+  const hs2 = pal.style, H = pal.hair;
+  if (lk.build === "broad") for (let rr = 8; rr <= 13; rr++) { R(c, x - 1, y + rr, 1, 1, rr === 11 ? pal.skin : torso); R(c, x + 10, y + rr, 1, 1, rr === 11 ? pal.skin : torso); }
+  if (lk.build === "athletic" && !pal.long) { R(c, x - 1, y + 8, 1, 2, torso); R(c, x + 10, y + 8, 1, 2, torso); }
+  if (lk.dress) { R(c, x + 1, y + 12, 8, 2, pal.jacket); R(c, x, y + 13, 10, 1, pal.jacket); }
+  if (lk.hw === "bun") { R(c, x + 3, y - 2, 4, 2, H); R(c, x + 4, y - 3, 2, 1, H); }
+  if (lk.hw === "pony") { R(c, x + 9, y + 1, 2, 2, H); R(c, x + 10, y + 3, 1, 6, H); }
+  if (lk.hw === "curls") for (let rr = 1; rr <= 8; rr += 2) { R(c, x - 1, y + rr, 1, 1, H); R(c, x + 10, y + rr + 1, 1, 1, H); }
+  if (lk.hw === "bob") { R(c, x - 1, y + 3, 1, 3, H); R(c, x + 10, y + 3, 1, 3, H); }
+  if (hs2 === "afro") { R(c, x + 2, y - 3, 6, 1, H); R(c, x + 1, y - 2, 8, 1, H); R(c, x, y - 1, 10, 1, H); for (let rr = 0; rr < 4; rr++) { R(c, x - (rr < 3 ? 1 : 0), y + rr, 1, 1, H); R(c, x + 10 - (rr < 3 ? 0 : 1), y + rr, 1, 1, H); } }
+  if (hs2 === "curly") { for (let k2 = 1; k2 < 9; k2 += 2) R(c, x + k2, y - 1, 2, 1, H); R(c, x + 2, y - 2, 2, 1, H); R(c, x + 6, y - 2, 2, 1, H); }
+  if (hs2 === "twists") for (let k2 = 1; k2 < 9; k2 += 2) { R(c, x + k2, y - 2, 1, 2, H); }
+  if (hs2 === "locs") { for (let rr = 2; rr <= 10; rr++) { R(c, x, y + rr, 1, 1, H); R(c, x + 9, y + rr, 1, 1, H); } for (let rr = 8; rr <= 11; rr++) { R(c, x + 1, y + rr, 1, 1, H); R(c, x + 8, y + rr, 1, 1, H); } R(c, x + 2, y - 1, 6, 1, H); }
+  const bd = pal.beard, bc = bd === "stubble" ? shade(pal.skin, 0.7) : H;
+  if (bd === "stubble" || bd === "beard") { R(c, x + 1, y + 4, 1, 1, bc); R(c, x + 8, y + 4, 1, 1, bc); R(c, x + 2, y + 5, 2, 1, bc); R(c, x + 6, y + 5, 2, 1, bc); R(c, x + 3, y + 6, 4, 1, bc); if (bd === "beard") { R(c, x + 1, y + 5, 1, 1, bc); R(c, x + 8, y + 5, 1, 1, bc); R(c, x + 3, y + 4, 4, 1, bc); } }
+  if (bd === "goatee") { R(c, x + 4, y + 6, 2, 1, H); R(c, x + 3, y + 4, 4, 1, H); }
+  if (bd === "mustache") R(c, x + 3, y + 4, 4, 1, H);
   if (pal.glasses) { R(c, x + 1, y + 3, 3, 1, "#101014"); R(c, x + 6, y + 3, 3, 1, "#101014"); R(c, x + 4, y + 3, 2, 1, "#101014"); }
   if (pal.chain) { R(c, x + 3, y + 7, 1, 1, "#f5c542"); R(c, x + 6, y + 7, 1, 1, "#f5c542"); R(c, x + 4, y + 8, 2, 1, "#f5c542"); }
 }
@@ -2138,6 +2200,117 @@ function frame(now) {
 function talk(who, text) { M.speaking = who; M.speakUntil = performance.now() + Math.min(4200, 400 + (text || "").length * 55); }
 
 /* item icons, reflecting customization */
+
+/* ---- side-profile boats and cars ---- */
+function drawBoat(c, x, wl, L, type, hull, t = 0, o = {}) {
+  L = Math.max(8, Math.round(L)); x = Math.round(x); wl = Math.round(wl);
+  const sup = "#f4f4f4", glass = "#1c2234", light = hull === "#f4f4f4" ? "#ffffff" : shade(hull, 1.3), wave = Math.floor(t / 250) % 2;
+  const X = (f) => x + Math.round(L * f);
+  if (type === "flamingo") { const col = hull === "#f4f4f4" ? "#ff6fae" : hull; for (let i = 0; i < 12; i++) R(c, x + 8 + i, wl - 3 + Math.abs(6 - i) * 0.3, 1, 3, col); R(c, x + 16, wl - 12, 2, 10, col); R(c, x + 14, wl - 13, 4, 2, col); R(c, x + 13, wl - 12, 1, 1, "#f5c542"); return; }
+  const P = { console: [0.1, 0.03, 0.06], flybridge: [0.12, 0.04, 0.07], runabout: [0.08, 0.02, 0.05], trawler: [0.13, 0.08, 0.1], motoryacht: [0.09, 0.03, 0.06], explorer: [0.12, 0.05, 0.09], superyacht: [0.07, 0.02, 0.05], support: [0.12, 0.07, 0.09], bumboat: [0.12, 0.02, 0.06], junk: [0.12, 0.09, 0.08] }[type] || [0.1, 0.03, 0.06];
+  const hh = Math.max(2, Math.round(L * P[0])), rise = Math.round(L * P[1]), draft = Math.max(1, Math.round(L * P[2]));
+  const plumb = type === "explorer" || type === "support" || type === "superyacht";
+  const topAt = (i) => wl - hh - (i > L * 0.62 ? Math.round(((i - L * 0.62) / (L * 0.38)) * rise) : 0) - (type === "junk" && i < L * 0.15 ? Math.round((1 - i / (L * 0.15)) * rise) : 0);
+  for (let i = 0; i < L; i++) {
+    const top = topAt(i), f = i / L;
+    let bot = wl + draft;
+    if (f > 0.78) bot = Math.round(wl + draft - ((f - 0.78) / 0.22) * (plumb ? draft * 0.5 : draft + hh * 0.8));
+    if (f < 0.04) bot = wl + Math.round(draft * 0.5);
+    R(c, x + i, top, 1, Math.max(1, bot - top), hull); R(c, x + i, top, 1, 1, light);
+    if (type === "runabout" && i % 3 === 0) R(c, x + i, top + 1, 1, hh - 1, shade(hull, 0.82));
+    if (bot > wl) R(c, x + i, wl, 1, 1, "#0e1220");
+  }
+  if (type === "trawler" || type === "explorer") for (let i = Math.round(L * 0.2); i < L * 0.8; i += 4) R(c, x + i, wl - hh + Math.max(1, Math.round(hh / 3)), 1, 1, glass);
+  let y0 = wl - hh;
+  const deck = (f0, f1, yTop, h, col, win) => { h = Math.max(1, Math.round(h)); const a = X(f0), w = Math.max(2, X(f1) - a); R(c, a, yTop - h, w, h, col); R(c, a, yTop - h, w, 1, "#ffffff"); if (win && h >= 2) R(c, a + 1, yTop - h + Math.max(1, Math.floor(h / 2) - (h > 3 ? 1 : 0)), Math.max(1, w - 2), Math.max(1, Math.round(h / 3)), win); return yTop - h; };
+  if (type === "console") {
+    const dh = Math.max(2, L * 0.1), y1 = deck(0.45, 0.6, y0, dh, sup, glass);
+    R(c, X(0.36), y1 - 3, Math.round(L * 0.3), 1, sup); R(c, X(0.38), y1 - 3, 1, 3, "#c9c9c9"); R(c, X(0.64), y1 - 3, 1, 3, "#c9c9c9");
+    R(c, x - 3, y0, 3, hh + draft, "#1b1b22"); R(c, x - 3, y0 - 1, 3, 1, "#3a3f4a"); R(c, x - 6, y0 + 1, 3, hh + draft - 1, "#1b1b22");
+    R(c, X(0.3), y1 - 8, 1, 5, "#8a8f97"); R(c, X(0.34), y1 - 8, 1, 5, "#8a8f97");
+  } else if (type === "flybridge") {
+    const y1 = deck(0.2, 0.78, y0, L * 0.12, sup, glass), y2 = deck(0.32, 0.66, y1, Math.max(1, L * 0.04), sup, null);
+    R(c, X(0.34), y2 - Math.max(2, Math.round(L * 0.05)), Math.round(L * 0.28), 1, "#1c2656"); R(c, X(0.35), y2 - Math.max(2, Math.round(L * 0.05)), 1, Math.max(2, Math.round(L * 0.05)), "#c9c9c9"); R(c, X(0.61), y2 - Math.max(2, Math.round(L * 0.05)), 1, Math.max(2, Math.round(L * 0.05)), "#c9c9c9");
+    R(c, X(0.5), y2 - Math.max(2, Math.round(L * 0.05)) - 2, 2, 2, sup); R(c, x - 3, wl - 1, 3, 1, "#c9b8a0");
+  } else if (type === "runabout") {
+    R(c, X(0.55), y0 - 3, 1, 3, "#9fe1ff"); R(c, X(0.56), y0 - 3, 3, 1, "#9fe1ff"); R(c, X(0.28), y0 - 2, Math.round(L * 0.22), 2, "#f4efe6"); R(c, X(0.12), y0 - 3, 1, 3, "#c9c9c9"); R(c, X(0.1), y0 - 4, 3, 2, "#e24b3b");
+  } else if (type === "trawler") {
+    const y1 = deck(0.16, 0.7, y0, Math.max(3, L * 0.13), sup, glass), y2 = deck(0.5, 0.7, y1, Math.max(2, L * 0.08), sup, glass);
+    R(c, X(0.42), y1 - Math.round(L * 0.34), 1, Math.round(L * 0.34), "#c9c9c9"); R(c, X(0.36), y1 - Math.round(L * 0.26), Math.round(L * 0.12), 1, "#c9c9c9");
+    R(c, X(0.3), y1 - 3, 2, 3, "#1b1b22"); R(c, X(0.18), y1 - 2, Math.round(L * 0.12), 2, "#e8e2d6");
+    R(c, X(0.02), y0 - 5, 1, 5, "#c9c9c9"); R(c, X(0.02) + 1, y0 - 5, 3, 2, o.flag || "#e24b3b"); R(c, X(0.52), y2 - 2, 1, 2, "#c9c9c9");
+  } else if (type === "motoryacht") {
+    const y1 = deck(0.1, 0.86, y0, Math.max(2, L * 0.1), sup, glass), y2 = deck(0.2, 0.74, y1, Math.max(2, L * 0.08), sup, glass), y3 = deck(0.3, 0.6, y2, Math.max(1, L * 0.05), sup, null);
+    R(c, X(0.42), y3 - 3, 1, 3, sup); R(c, X(0.42), y3 - 3, Math.round(L * 0.1), 1, sup); R(c, X(0.5), y3 - 5, 1, 2, "#c9c9c9"); R(c, x - 3, wl - 1, 3, 1, "#c9b8a0");
+    if (o.garage) R(c, X(0.03), y0 + 1, Math.round(L * 0.08), hh - 1, "#0e1220");
+  } else if (type === "explorer") {
+    const y1 = deck(0.12, 0.82, y0, Math.max(3, L * 0.11), sup, glass), y2 = deck(0.3, 0.8, y1, Math.max(2, L * 0.09), sup, glass), y3 = deck(0.46, 0.76, y2, Math.max(2, L * 0.07), sup, glass);
+    R(c, X(0.6), y3 - Math.round(L * 0.18), 1, Math.round(L * 0.18), "#c9c9c9"); R(c, X(0.55), y3 - Math.round(L * 0.12), Math.round(L * 0.1), 1, "#c9c9c9");
+    R(c, X(0.08), y0 - Math.round(L * 0.16), 1, Math.round(L * 0.16), "#f5c542"); R(c, X(0.08), y0 - Math.round(L * 0.16), Math.round(L * 0.1), 1, "#f5c542");
+    R(c, X(0.01), y0 - 2, Math.round(L * 0.1), 2, "#e24b3b"); R(c, X(0.02), y0 + 1, Math.round(L * 0.08), hh - 1, "#0e1220");
+  } else if (type === "superyacht") {
+    let y = y0; [[0.08, 0.9, 0.07], [0.16, 0.8, 0.06], [0.26, 0.7, 0.055], [0.36, 0.6, 0.045]].forEach(([a, b, h]) => (y = deck(a, b, y, Math.max(2, L * h), sup, glass)));
+    R(c, X(0.48), y - Math.round(L * 0.1), 1, Math.round(L * 0.1), "#c9c9c9");
+    if (o.helipad) { R(c, X(0.8), y0 - 1, Math.round(L * 0.12), 1, "#3a3a3a"); R(c, X(0.85), y0 - 2, 1, 1, "#f5c542"); }
+    R(c, X(0.02), y0 + 1, Math.round(L * 0.08), hh - 1, "#0e1220"); R(c, x - 3, wl - 1, 3, 1, "#c9b8a0");
+  } else if (type === "support") {
+    const y1 = deck(0.58, 0.86, y0, Math.max(3, L * 0.14), sup, glass); deck(0.66, 0.84, y1, Math.max(2, L * 0.07), sup, glass);
+    const rot = Math.floor(t / 80) % 2;
+    R(c, X(0.2), y0 - 3, Math.round(L * 0.1), 3, "#1c2656"); R(c, X(0.12), y0 - 2, Math.round(L * 0.08), 1, "#1c2656"); R(c, X(0.12) + (rot ? 1 : 0), y0 - 5, Math.round(L * 0.26), 1, "#c9c9c9"); R(c, X(0.25), y0 - 5, 1, 2, "#c9c9c9");
+    R(c, X(0.4), y0 - 2, Math.round(L * 0.1), 2, "#f4f4f4"); R(c, X(0.5), y0 - Math.round(L * 0.14), 1, Math.round(L * 0.14), "#f5c542"); R(c, X(0.5), y0 - Math.round(L * 0.14), Math.round(L * 0.08), 1, "#f5c542");
+  } else if (type === "bumboat") {
+    R(c, X(0.18), y0 - 5, Math.round(L * 0.62), 1, "#e24b3b"); R(c, X(0.2), y0 - 5, 1, 5, "#6b4a2a"); R(c, X(0.78), y0 - 5, 1, 5, "#6b4a2a");
+  } else if (type === "junk") {
+    [0.28, 0.52, 0.76].forEach((f, k) => { const h = Math.round(L * (0.55 - k * 0.08)), m = X(f); R(c, m, y0 - h, 1, h, "#3a2414"); for (let yy = 0; yy < h - 2; yy++) { const w = Math.round(L * 0.14 + Math.sin((yy / h) * Math.PI) * L * 0.04); R(c, m - w + 2, y0 - h + yy + 1, w, 1, yy % 4 === 3 ? "#7a1a12" : "#c0392b"); } });
+  }
+  const u = o.ups || {};
+  if (u.jetskis) { R(c, x - 14, wl - 1 - wave, 5, 2, "#ff9a5c"); R(c, x - 22, wl - 1 - (1 - wave), 5, 2, "#52c7b8"); }
+  if (u.tender) { R(c, x + L + 3, wl - 1, 7, 2, "#f4f4f4"); R(c, x + L + 5, wl - 3, 2, 2, "#2a3a5a"); }
+  if (u.sub) { R(c, X(0.4), wl + draft + 3, 6, 3, "#f5c542"); R(c, X(0.4) + 2, wl + draft + 2, 2, 1, "#f5c542"); }
+  if (u.slide && type !== "console") { for (let k = 0; k < 8; k++) R(c, X(0.12) - k, wl - hh - Math.round(L * 0.1) + k, 1, 1, "#52c7b8"); }
+  if (u.dj) for (let k = 0; k < 3; k++) R(c, X(0.4) + k * 3, y0 - Math.round(L * 0.22) - (wave + k) % 2, 1, 1, ["#ff5fa2", "#52c7b8", "#f5c542"][k]);
+}
+function drawCar(c, x, gy, W, type, col, t = 0, o = {}) {
+  const win = o.tint ? "#101014" : "#9fd8f0", rim = o.wheels ? "#f5c542" : "#c9c9c9", dark = shade(col, 0.62), wave = Math.floor(t / 200) % 2;
+  const wheel = (cx, r) => { for (let yy = -r; yy <= r; yy++) { const w = Math.floor(Math.sqrt(r * r - yy * yy)); R(c, cx - w, gy - r + yy, w * 2 + 1, 1, "#15151a"); } R(c, cx - 1, gy - r - 1, 2, 2, rim); };
+  if (type === "bike") { const r = 5; [x + 10, x + W - 10].forEach((cx) => { for (let a = 0; a < 6.3; a += 0.4) R(c, cx + Math.cos(a) * r, gy - r + Math.sin(a) * r, 1, 1, "#1b1b22"); }); R(c, x + 10, gy - r, W - 20, 1, col); R(c, x + 18, gy - r - 6, 1, 6, col); R(c, x + 16, gy - r - 7, 5, 1, "#1b1b22"); R(c, x + W - 12, gy - r - 7, 1, 7, col); R(c, x + W - 14, gy - r - 8, 4, 1, "#1b1b22"); R(c, x + W - 20, gy - r - 5, 6, 3, "#f4f4f4"); return; }
+  if (type === "scooter") { wheel(x + 12, 3); wheel(x + W - 12, 3); R(c, x + 10, gy - 7, W - 20, 3, col); R(c, x + 12, gy - 11, 12, 4, col); R(c, x + 12, gy - 12, 10, 1, "#1b1b22"); R(c, x + W - 14, gy - 18, 2, 12, col); R(c, x + W - 16, gy - 19, 6, 1, "#1b1b22"); R(c, x + W - 12, gy - 16, 2, 1, "#fff4c0"); return; }
+  const S = { hatch: [0.2, 0.16, 0.12, 0.17, 0.6, 0.75, 0.14], crossover: [0.24, 0.15, 0.1, 0.14, 0.6, 0.74, 0.14], jeep: [0.26, 0.2, 0.06, 0.07, 0.66, 0.68, 0.1], ev: [0.17, 0.15, 0.1, 0.28, 0.55, 0.72, 0.16], sports: [0.15, 0.15, 0.05, 0.38, 0.52, 0.66, 0.2], supercar: [0.12, 0.12, 0.24, 0.42, 0.5, 0.66, 0.26], hypercar: [0.14, 0.12, 0.22, 0.38, 0.52, 0.66, 0.2], suv: [0.28, 0.18, 0.06, 0.1, 0.62, 0.72, 0.08] }[type] || [0.18, 0.15, 0.1, 0.2, 0.6, 0.72, 0.15];
+  const [bf, rf, r0, r1, f1, f0, nose] = S, wr = Math.max(3, Math.round(W * 0.1)), bh = Math.max(3, Math.round(W * bf)), rh = Math.max(2, Math.round(W * rf));
+  const bottom = gy - Math.round(wr * 0.5), top0 = gy - wr - bh + 2;
+  for (let i = 0; i < W; i++) {
+    const f = i / W; let top = top0;
+    if (f > 1 - nose) top += Math.round(((f - (1 - nose)) / nose) * bh * 0.5);
+    if (f < 0.04) top += 1;
+    const two = type === "hypercar" && f > 0.45 && f < 0.95 ? dark : col;
+    R(c, x + i, top, 1, bottom - top, two);
+    if (f >= r0 && f <= f0) {
+      let h = f < r1 ? rh * ((f - r0) / Math.max(0.01, r1 - r0)) : f <= f1 ? rh : rh * ((f0 - f) / Math.max(0.01, f0 - f1));
+      h = Math.round(h); if (h > 0) { R(c, x + i, top0 - h, 1, h, col); if (h > 2 && Math.abs(f - (r1 + f1) / 2) > 0.02) R(c, x + i, top0 - h + 1, 1, h - 2, win); }
+    }
+  }
+  R(c, x + 1, top0 + Math.round(bh * 0.45), W - 2, 1, dark);
+  const sig = o.sig || "v", hy = top0 + Math.round(bh * 0.25) + Math.round(bh * 0.5 * (nose > 0.1 ? 0.6 : 0)), fx = x + W - 4, LED = "#e8fbff", TL = "#ff2a3a", ty = top0 + 1;
+  if (o.accent === "stripe") R(c, x + 2, top0 + 2, W - 6, 1, col === "#f4f4f4" || col === "#f5c542" ? "#101014" : "#f4f4f4");
+  if (o.accent === "twotone") R(c, x + 1, top0 + Math.round(bh * 0.45) + 1, W - 2, Math.max(1, bottom - top0 - Math.round(bh * 0.45) - 1), dark);
+  if (o.accent === "carbon") R(c, x + Math.round(W * 0.28), bottom - 1, Math.round(W * 0.42), 1, "#2a2a30");
+  if (sig === "v") { R(c, fx, hy, 1, 1, LED); R(c, fx + 1, hy + 1, 1, 1, LED); R(c, fx + 2, hy, 1, 1, LED); R(c, x, ty, 1, 1, TL); R(c, x + 1, ty + 1, 1, 1, TL); R(c, x + 2, ty, 1, 1, TL); }
+  else if (sig === "batwing") {
+    R(c, fx - 1, hy, 4, 1, LED); R(c, fx - 2, hy - 1, 1, 1, LED); R(c, fx + 3, hy + 1, 1, 1, LED);
+    R(c, x, ty, 4, 1, TL); R(c, x, ty - 1, 1, 1, TL); R(c, x + 3, ty - 1, 1, 1, TL);
+    R(c, x + 1, top0 - 3, 1, 3, dark); R(c, x + 2, top0 - 2, 1, 2, dark); R(c, x, top0 - 4, 1, 4, dark);
+  } else if (sig === "bar") { R(c, fx - 3, hy, 6, 1, LED); R(c, x, ty, 1, Math.max(2, Math.round(bh * 0.4)), TL); R(c, x, ty, 5, 1, TL); }
+  else if (sig === "y") { R(c, fx, hy - 1, 1, 1, LED); R(c, fx + 2, hy - 1, 1, 1, LED); R(c, fx + 1, hy, 1, 2, LED); R(c, x, ty, 1, 1, TL); R(c, x + 2, ty, 1, 1, TL); R(c, x + 1, ty + 1, 1, 2, TL); }
+  else { R(c, fx, hy - 1, 3, 3, LED); R(c, fx + 1, hy, 1, 1, dark); R(c, x, ty, 2, 2, TL); R(c, x + 3, ty, 2, 2, TL); }
+  if (type === "jeep") { for (let yy = -3; yy <= 3; yy++) { const w = Math.floor(Math.sqrt(9 - yy * yy)); R(c, x - 3 - w, top0 + 4 + yy, w * 2 + 1, 1, "#15151a"); } }
+  if (type === "suv") { R(c, x + W - 2, top0 + 1, 2, bh - 3, "#e8e8e8"); R(c, x + W - 3, top0 - 2, 1, 2, "#e8e8e8"); }
+  wheel(x + Math.round(W * 0.19), wr); wheel(x + Math.round(W * 0.8), wr);
+  if (o.wing) { R(c, x + 1, top0 - 5, 8, 1, "#1b1b22"); R(c, x + 4, top0 - 4, 1, 4, "#1b1b22"); }
+  if (o.exhaust) { R(c, x - 2, bottom - 3, 2, 1, "#8a8f97"); if (wave) R(c, x - 5, bottom - 3, 3, 1, "#ff9a5c"); }
+  if (o.chauffeur) R(c, x + Math.round(W * ((f1 + f0) / 2)), top0 - Math.round(rh * 0.7), 2, 2, "#8d5a3b");
+  if (o.plate) { R(c, x + 1, bottom - 4, 5, 2, "#f4f4f4"); }
+}
+
 function drawItem(c, it, lang, mods, t = 0) {
   const r = rng(hash(it.id + lang)); const hue = ["#e24b3b", "#f5c542", "#52c7b8", "#8fd3ff", "#ff6fae", "#f4f4f4", "#9ad36a"];
   const cfg = CUSTOM[it.cat];
@@ -2146,36 +2319,13 @@ function drawItem(c, it, lang, mods, t = 0) {
   R(c, 0, 0, 64, 32, "#10142a"); R(c, 0, 26, 64, 6, "#1c2140");
   const lvl = lvlOf(it.id), wave = Math.floor(t / 250) % 2;
   if (it.cat === "ride") {
-    const win = up("tint") ? "#101014" : "#9fe1ff", rim = up("wheels") ? "#f5c542" : "#c9c9c9";
-    if (lvl <= 2) { R(c, 20, 18, 22, 3, col); R(c, 22, 14, 6, 4, col); R(c, 38, 12, 2, 6, "#8a8f97"); R(c, 18, 21, 6, 6, "#101014"); R(c, 38, 21, 6, 6, "#101014"); R(c, 20, 23, 2, 2, rim); R(c, 40, 23, 2, 2, rim); }
-    else {
-      const low = lvl >= 4;
-      R(c, 10, low ? 18 : 16, 44, low ? 5 : 7, col); R(c, low ? 22 : 18, low ? 14 : 10, low ? 18 : 24, low ? 4 : 6, shade(col, 0.8));
-      R(c, low ? 24 : 20, low ? 15 : 11, low ? 6 : 8, 3, win); R(c, low ? 32 : 30, low ? 15 : 11, low ? 6 : 8, 3, win);
-      R(c, 14, 22, 8, 6, "#101014"); R(c, 42, 22, 8, 6, "#101014"); R(c, 16, 24, 4, 2, rim); R(c, 44, 24, 4, 2, rim);
-      if (up("wing")) { R(c, 8, 12, 10, 2, "#2a2a2a"); R(c, 12, 14, 2, 4, "#2a2a2a"); }
-      if (up("exhaust")) { R(c, 8, 21, 3, 2, "#8a8f97"); if (wave) R(c, 5, 21, 3, 2, "#ff9a5c"); }
-      if (up("chauffeur")) R(c, low ? 34 : 32, low ? 15 : 11, 2, 2, "#e0ac80");
-    }
-    if (mods?.name) { R(c, 28, 24, 10, 3, "#f4f4f4"); R(c, 29, 25, 8, 1, "#2a3a5a"); }
+    R(c, 0, 28, 64, 4, "#2a2f45"); for (let x = (wave * 4); x < 64; x += 8) R(c, x, 30, 4, 1, "#3a4060");
+    drawCar(c, 6, 28, 52, carType(it.id, lang), col === "#f4f4f4" && !mods?.paint ? "#e24b3b" : col, t, { tint: up("tint"), wheels: up("wheels"), wing: up("wing"), exhaust: up("exhaust"), chauffeur: up("chauffeur"), plate: mods?.name, sig: mods?.sig || LIGHT_SIGS[hash(it.id + lang) % LIGHT_SIGS.length][0], accent: mods?.accent || "none" });
   } else if (it.cat === "water") {
     R(c, 0, 24, 64, 8, "#1f6f8a"); for (let x = (wave * 3); x < 64; x += 6) R(c, x, 25, 2, 1, "#5fb0c0");
-    if (lvl === 1) { for (let i = 0; i < 12; i++) R(c, 22 + i, 20 + Math.abs(6 - i) * 0.3, 1, 4, col === "#f4f4f4" ? "#ff6fae" : col); R(c, 30, 10, 2, 10, col === "#f4f4f4" ? "#ff6fae" : col); R(c, 28, 9, 4, 2, col === "#f4f4f4" ? "#ff6fae" : col); }
-    else {
-      const L2 = 16 + lvl * 8, x0 = 32 - L2 / 2;
-      R(c, x0, 18, L2, 6, col); R(c, x0 + 3, 24, L2 - 6, 2, shade(col, 0.75)); R(c, x0, 21, L2, 1, col === "#f4f4f4" ? "#1c2656" : "#f4f4f4");
-      R(c, 28, 12, lvl * 4, 6, "#e9eef2"); R(c, 30, 13, lvl * 3, 2, "#2a3a5a");
-      if (lvl >= 4) { R(c, 24, 8, 24, 4, "#f4f4f4"); R(c, 26, 9, 18, 2, "#2a3a5a"); }
-      if (up("helipad")) { R(c, x0 + L2 - 12, 16, 10, 2, "#3a3a3a"); R(c, x0 + L2 - 9, 16, 1, 2, "#f5c542"); R(c, x0 + L2 - 6, 16, 1, 2, "#f5c542"); }
-      if (up("dj")) for (let i = 0; i < 3; i++) R(c, 34 + i * 3, 6 - (wave + i) % 2, 1, 1, ["#ff5fa2", "#52c7b8", "#f5c542"][i]);
-      if (up("jacuzzi")) R(c, x0 + 4, 16, 6, 2, "#3fd0e0");
-      if (up("beachclub")) R(c, x0 - 4, 22, 5, 1, "#f2dca6");
-      if (up("crew")) for (let i = 0; i < 3; i++) R(c, 32 + i * 4, 11, 1, 1, "#ffffff");
-      if (up("jetskis")) { R(c, 2, 23 - wave, 5, 2, "#ff9a5c"); R(c, 9, 24 - (1 - wave), 5, 2, "#52c7b8"); }
-      if (up("tender")) { R(c, 54, 23, 8, 2, "#f4f4f4"); R(c, 56, 21, 3, 2, "#2a3a5a"); }
-      if (up("sub")) { R(c, 38, 28, 8, 3, "#f5c542"); R(c, 41, 27, 2, 1, "#f5c542"); R(c, 44, 29, 1, 1, "#2a3a5a"); }
-      if (up("fishing")) { R(c, x0 + 2, 10, 1, 8, "#8a8f97"); R(c, x0, 10, 3, 1, "#8a8f97"); }
-    }
+    const spec = boatOf(it.id, lang) || { type: "console" }, hullCol = mods?.paint != null ? col : spec.hull || "#f4f4f4";
+    const L2 = spec.type === "flamingo" ? 20 : spec.len < 12 ? 38 : spec.len < 20 ? 46 : 54;
+    drawBoat(c, spec.type === "flamingo" ? 16 : Math.round((64 - L2) / 2) + 2, 24, L2, spec.type, hullCol, t, { ups: mods?.ups || {}, garage: spec.garage || mods?.ups?.garage, helipad: mods?.ups?.helipad });
   } else if (it.cat === "crib") {
     const w = 14 + lvl * 8, h = 8 + lvl * 3, x = 32 - w / 2;
     R(c, x, 26 - h, w, h, col); R(c, x - 2, 26 - h - 2, w + 4, 2, lvl >= 4 ? "#f5c542" : shade(col, 0.6));
@@ -3294,6 +3444,31 @@ function dressCheck(t) {
   if (want === "smart") return have === "business" || have === "party" ? { d: 1, why: "Sharp enough for the deck." } : have === "beach" && w?.swim ? { d: -1, why: "Swim shorts to a deal on a yacht. Bold, wrong." } : { d: 0 };
   return { d: 0 };
 }
+
+const LIGHT_SIGS = [["v", "V-blade LEDs"], ["batwing", "Batwing"], ["bar", "Light bar"], ["y", "Y-signature"], ["halo", "Halo rings"]];
+const ACCENTS = [["none", "Clean"], ["stripe", "Side stripe"], ["twotone", "Two-tone"], ["carbon", "Carbon skirts"]];
+const LOOK_OPTS = {
+  skin: ["#f0c8a4", "#e0ac80", "#c68a5e", "#a8704a", "#8d5a3b", "#6b4226", "#4a2c1a"],
+  hair: ["#101014", "#2a1a14", "#6b3b1f", "#b8432a", "#e9d7a5", "#c9c9c9", "#f5c542"],
+  style: [["fade", "Fade"], ["waves", "Waves"], ["afro", "Afro"], ["locs", "Locs"], ["twists", "Twists"], ["curly", "Curly top"], ["buzz", "Buzz cut"], ["bald", "Bald"]],
+  beard: [["none", "Clean"], ["stubble", "Stubble"], ["goatee", "Goatee"], ["mustache", "Mustache"], ["beard", "Full beard"]],
+  build: [["athletic", "Athletic"], ["broad", "Broad"], ["lean", "Lean"]],
+  jaw: [["square", "Square jaw"], ["sharp", "Sharp"], ["narrow", "Narrow"]],
+};
+function renderLook(host) {
+  const lk = G.look;
+  host.innerHTML = '<div class="row between"><h3>You</h3><span class="muted small">Free to change, any time. Applies in every passport.</span></div><div class="row" style="gap:18px;align-items:flex-start"><canvas id="look-cv" width="20" height="22" style="width:110px;image-rendering:pixelated;background:#2b2140;border:2px solid var(--line)"></canvas><div class="stack" style="gap:10px;flex:1;min-width:220px">' +
+    '<div><div class="label">Skin</div><div class="swatches">' + LOOK_OPTS.skin.map((v) => '<button class="swatch" data-lk="skin" data-v="' + v + '" aria-pressed="' + (lk.skin === v) + '" aria-label="Skin tone"><i style="background:' + v + '"></i></button>').join("") + "</div></div>" +
+    '<div><div class="label">Hair color</div><div class="swatches">' + LOOK_OPTS.hair.map((v) => '<button class="swatch" data-lk="hair" data-v="' + v + '" aria-pressed="' + (lk.hair === v) + '" aria-label="Hair color"><i style="background:' + v + '"></i></button>').join("") + "</div></div>" +
+    '<div><div class="label">Hair</div><div class="swatches">' + LOOK_OPTS.style.map(([v, n]) => '<button class="swatch" data-lk="style" data-v="' + v + '" aria-pressed="' + (lk.style === v) + '">' + n + "</button>").join("") + "</div></div>" +
+    '<div><div class="label">Facial hair</div><div class="swatches">' + LOOK_OPTS.beard.map(([v, n]) => '<button class="swatch" data-lk="beard" data-v="' + v + '" aria-pressed="' + (lk.beard === v) + '">' + n + "</button>").join("") + "</div></div>" +
+    '<div><div class="label">Build</div><div class="swatches">' + LOOK_OPTS.build.map(([v, n]) => '<button class="swatch" data-lk="build" data-v="' + v + '" aria-pressed="' + ((lk.build || "athletic") === v) + '">' + n + "</button>").join("") + "</div></div>" +
+    '<div><div class="label">Face</div><div class="swatches">' + LOOK_OPTS.jaw.map(([v, n]) => '<button class="swatch" data-lk="jaw" data-v="' + v + '" aria-pressed="' + ((lk.jaw || "square") === v) + '">' + n + "</button>").join("") + "</div></div>" +
+    '<div class="row"><button class="btn sm" id="look-rand">🎲 Randomize</button></div></div></div>';
+  const cv = $("#look-cv").getContext("2d"); R(cv, 0, 0, 20, 22, "#2b2140"); drawPerson(cv, 5, 4, myLook(), 0, false, 1, false);
+  host.querySelectorAll("[data-lk]").forEach((b) => b.addEventListener("click", () => { G.look = { ...G.look, [b.dataset.lk]: b.dataset.v }; save(); renderLook(host); renderWardrobe(); }));
+  $("#look-rand").onclick = () => { const pick = (a) => a[Math.floor(Math.random() * a.length)], id = (a) => pick(a)[0]; G.look = { ...G.look, hair: pick(LOOK_OPTS.hair.slice(0, 5)), style: id(LOOK_OPTS.style), beard: id(LOOK_OPTS.beard), build: id(LOOK_OPTS.build), jaw: id(LOOK_OPTS.jaw) }; save(); sfx("buy"); renderLook(host); renderWardrobe(); };
+}
 function renderWardrobe() {
   const L = closet(), el = $("#wardrobe"), w = wornItem();
   el.innerHTML = '<div class="row between"><h3>' + (G.lang === "es" ? "El armario · " : G.lang === "zh" ? "衣柜 yīguì · " : "") + 'Wardrobe</h3><span class="chip info">Wearing: ' + esc(w ? termOf(w) || w.en : "street clothes") + '</span></div><p class="muted small">Dress for the room. A suit at an office or banquet, linen or swim shorts at the beach, a sharp look on a yacht: +1 on the deal meter. Get it wrong and it costs you one.</p><div class="items">' +
@@ -3304,7 +3479,7 @@ function renderWardrobe() {
         (!own ? '<button class="btn sm gold" data-clbuy="' + x.id + '"' + (L.cash < x.price ? " disabled" : "") + ">Buy</button>" : x.slot === "outfit" ? (wearing ? '<button class="btn sm" data-clwear="">Take off</button>' : '<button class="btn sm primary" data-clwear="' + x.id + '">Wear</button>') : '<button class="btn sm' + (on ? " primary" : "") + '" data-clacc="' + x.id + '">' + (on ? "On" : "Off") + "</button>") + "</div></div>";
     }).join("") + "</div>";
   el.querySelectorAll("canvas[data-cl]").forEach((cv) => {
-    const x = CLOTHES.find((y) => y.id === cv.dataset.cl), c = cv.getContext("2d"), base = { ...youPal(0), goldShoes: false };
+    const x = CLOTHES.find((y) => y.id === cv.dataset.cl), c = cv.getContext("2d"), base = { ...youPal(rank()), glasses: false, chain: false, goldShoes: false };
     let pal = x.swim ? { ...base, swim: x.swim } : x.pal ? { ...base, ...x.pal } : { ...base, [x.acc]: true };
     R(c, 0, 0, 20, 22, "#2b2140"); drawPerson(c, 5, 1, pal, 0, false, 1, false);
   });
@@ -3965,6 +4140,7 @@ function renderWorkshop() {
     '<div class="form2"><div class="field"><label class="label" for="ws-name">' + esc(termOf(cfg.name) ? termOf(cfg.name) + " · " + cfg.name.en : cfg.name.en) + '</label><div class="compose" style="margin-top:0"><input type="text" id="ws-name" maxlength="' + cfg.name.max + '" value="' + esc(m.name) + '" placeholder="' + (it.cat === "ride" ? "e.g. JEFE" : it.cat === "water" ? "e.g. Sin Vergüenza" : "e.g. Casa Sol") + '"><button class="btn sm" id="ws-name-save">' + (it.cat === "water" ? "Christen" : "Save") + "</button></div></div>" +
     (ports ? '<div class="field"><label class="label" for="ws-port">' + esc(termOf(cfg.port) ? termOf(cfg.port) + " · " + cfg.port.en : cfg.port.en) + '</label><select id="ws-port">' + ports.map((p, k) => '<option value="' + k + '"' + (k === m.port ? " selected" : "") + ">" + esc(p) + "</option>").join("") + "</select></div>" : "") + "</div>" +
     '<div class="stack" style="gap:8px"><div class="row between">' + termHtml(cfg.paint) + hearBtn(cfg.paint) + '</div><div class="swatches">' + cfg.paint.opts.map(([n, hex, f], k) => { const pr = f ? Math.max(50, Math.round(it.price * f)) : 0; return '<button class="swatch" data-paint="' + k + '" aria-pressed="' + (m.paint === k) + '"' + (m.paint !== k && L.cash < pr ? " disabled" : "") + '><i style="background:' + hex + '"></i>' + esc(n) + (m.paint === k ? "" : " · " + (pr ? money(pr) : "free")) + "</button>"; }).join("") + "</div></div>" +
+    (it.cat === "ride" ? '<div class="stack" style="gap:8px"><div class="row between"><div class="label">Light signature</div><button class="btn sm" id="ws-rand">🎲 Randomize look · free</button></div><div class="swatches">' + LIGHT_SIGS.map(([v, n]) => '<button class="swatch" data-sig="' + v + '" aria-pressed="' + ((m.sig || LIGHT_SIGS[hash(it.id + G.lang) % LIGHT_SIGS.length][0]) === v) + '">' + n + "</button>").join("") + '</div><div class="label">Body accent</div><div class="swatches">' + ACCENTS.map(([v, n]) => '<button class="swatch" data-acc="' + v + '" aria-pressed="' + ((m.accent || "none") === v) + '">' + n + "</button>").join("") + "</div></div>" : "") +
     '<div class="stack" style="gap:8px"><div class="label">Upgrades</div><div class="ups">' + ups.map((u) => {
       const own = !!m.ups[u.id], pr = upPrice(it, u);
       return '<div class="up' + (own ? " own" : "") + '"><div>' + termHtml(u) + '<div class="perk">' + esc(perkText(u.perk)) + '</div></div><div class="row" style="justify-content:flex-end">' + hearBtn(u) + (own ? '<span class="chip gold">Installed</span>' : '<button class="btn sm gold" data-up="' + u.id + '"' + (L.cash < pr ? " disabled" : "") + ">" + (L.cash < pr ? "Need " + money(pr - L.cash) : "Install · " + money(pr)) + "</button>") + "</div></div>";
@@ -3982,6 +4158,9 @@ function renderWorkshop() {
     renderHud(); renderWorkshop();
   };
   $("#ws-port")?.addEventListener("change", (e) => { m.port = +e.target.value; save(); renderWorkshop(); });
+  $("#modal").querySelectorAll("[data-sig]").forEach((b) => b.addEventListener("click", () => { m.sig = b.dataset.sig; save(); sfx("buy"); renderWorkshop(); }));
+  $("#modal").querySelectorAll("[data-acc]").forEach((b) => b.addEventListener("click", () => { m.accent = b.dataset.acc; save(); renderWorkshop(); }));
+  $("#ws-rand")?.addEventListener("click", () => { const pick = (a) => a[Math.floor(Math.random() * a.length)][0]; m.sig = pick(LIGHT_SIGS); m.accent = pick(ACCENTS); m.paint = m.paint || 0; save(); sfx("buy"); renderWorkshop(); });
   $("#modal").querySelectorAll("[data-say]").forEach((b) => b.addEventListener("click", () => speak(b.dataset.say, G.lang)));
   $("#modal").querySelectorAll("[data-paint]").forEach((b) => b.addEventListener("click", async () => {
     const k = +b.dataset.paint; if (k === m.paint) return;
@@ -4037,7 +4216,7 @@ function renderEmpire() {
   $("#empire-title").textContent = LANGS[G.lang].name + " empire";
   $("#empire-worth").textContent = "NET WORTH " + money(netWorth());
   $("#empire-life").textContent = lifeLine();
-  renderWardrobe(); renderMarina();
+  renderLook($("#look")); renderWardrobe(); renderMarina();
   const pk = perks();
   $("#shop").innerHTML = '<div class="box row" style="gap:10px"><span class="chip good">Payouts +' + Math.round(pk.pay * 100) + '%</span><span class="chip good">XP +' + Math.round(pk.xp * 100) + '%</span><span class="chip good">Travel -' + Math.round(pk.fee * 100) + '%</span><span class="chip good">Deal +' + pk.deal + '</span><span class="chip love">Chemistry +' + Math.round(pk.chem * 100) + "%</span>" + (pk.hint ? '<span class="chip good">Watch hints</span>' : "") + (pk.secret ? '<span class="chip gold">VIP access</span>' : "") + "</div>" +
     Object.entries(CATS).map(([cat, label]) => '<div class="box shop-cat"><h3>' + esc(label) + '</h3><div class="items">' + SHOP_BASE.filter((it) => it.cat === cat).map((it) => {
@@ -4055,6 +4234,7 @@ function renderEmpire() {
   document.querySelectorAll("#shop [data-buy]").forEach((b) => b.addEventListener("click", async () => {
     const it = SHOP_BASE.find((x) => x.id === b.dataset.buy);
     if (L.cash < it.price || L.owned[it.id]) return;
+    if (it.id === "water9" && !(L.owned.water4 || L.owned.water8)) { toast("A shadow vessel needs a mothership. Buy the explorer or the superyacht first."); return; }
     const r = await sayIt("buy", { it, cost: it.price }, shopName(it.id)[0] + " · " + money(it.price));
     if (!r.ok) return;
     const price = r.peeked ? Math.round(it.price * 1.05) : it.price;
@@ -4083,15 +4263,10 @@ function drawMarina(c, boats, t) {
   const total = show.reduce((s, b) => s + b.len, 0) || 1, gap = 6, scale = Math.min(0.7, (186 - gap * show.length) / total);
   let x = 4;
   show.forEach((b, k) => {
-    const w = Math.max(10, Math.round(b.len * scale)), base = 88 - (k % 2) * 3, bob = Math.round(Math.sin(t / 700 + k) * 0.8);
-    const hullH = b.lvl >= 4 ? 5 : b.lvl === 3 ? 4 : 3, y = base - hullH + bob;
-    R(c, x, y, w, hullH, b.col); R(c, x + 2, y + hullH, w - 4, 1, shade(b.col, 0.6)); R(c, x, y + 1, w, 1, b.col === "#f4f4f4" ? "#1c2656" : "#f4f4f4");
-    const decks = b.lvl >= 4 ? 3 : b.lvl === 3 ? 1 : 0;
-    for (let d = 0; d < decks; d++) { const dw = Math.round(w * (0.7 - d * 0.15)); R(c, x + Math.round(w * 0.12) + d * 2, y - 3 * (d + 1), dw, 3, "#eef2f5"); R(c, x + Math.round(w * 0.12) + d * 2 + 1, y - 3 * (d + 1) + 1, dw - 2, 1, "#2a3a5a"); }
-    if (b.lvl === 2) R(c, x + Math.round(w * 0.4), y - 3, 4, 3, "#eef2f5");
-    for (let e = 0; e < Math.min(b.extras || 0, 8); e++) if ((Math.floor(t / 400) + e) % 3) R(c, x + 2 + e * 3, y - 3 * (decks + 1) - 1, 1, 1, ["#ff5fa2", "#52c7b8", "#f5c542"][e % 3]);
-    if (b.me) { const fy = y - 3 * (decks + 1) - 8; R(c, x + Math.round(w / 2), fy, 1, 7, "#f4f4f4"); R(c, x + Math.round(w / 2) + 1, fy, 5, 3, "#f5c542"); }
-    else { R(c, x + w - 2, y - 3 * (decks + 1) - 4, 1, 4, "#f4f4f4"); R(c, x + w - 1, y - 3 * (decks + 1) - 4, 3, 2, b.col); }
+    const w = Math.max(12, Math.round(b.len * scale)), base = 88 - (k % 2) * 3, bob = Math.round(Math.sin(t / 700 + k) * 0.8);
+    drawBoat(c, x, base + bob, w, b.type || "console", b.col, t, { ups: b.ups || {}, garage: b.garage, helipad: b.helipad });
+    const decks = 0, hullH = Math.max(2, Math.round(w * 0.1)), y = base + bob - hullH - Math.round(w * 0.2);
+    if (b.me) { R(c, x + Math.round(w / 2), y - 8, 1, 7, "#f4f4f4"); R(c, x + Math.round(w / 2) + 1, y - 8, 5, 3, "#f5c542"); }
     x += w + gap;
   });
   if (!show.length) { R(c, 70, 84, 50, 2, "#6b4424"); }
