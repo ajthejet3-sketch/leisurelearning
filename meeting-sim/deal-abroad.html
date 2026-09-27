@@ -1639,6 +1639,12 @@ const GENERAL_PACKS = {
 
 const ACHS = [
   { id: "first", name: "First signature", hint: "Close any deal." },
+  { id: "convoy", name: "Convoy", hint: "Drive in a supercar convoy." },
+  { id: "highroller", name: "High roller", hint: "Leave the high-roller salon up." },
+  { id: "voyager", name: "New day, new island", hint: "Finish a voyage on your own boat." },
+  { id: "crossing", name: "Ocean crossing", hint: "Cross the Atlantic on your own boat." },
+  { id: "portfolio", name: "Portfolio", hint: "Hold a million in investments." },
+  { id: "moonshot", name: "Moonshot", hint: "Back a startup that gets acquired." },
   { id: "flawless", name: "Flawless", hint: "A meeting with no slips." },
   { id: "cafe", name: "I am a coffee", hint: "Say something very wrong on a yacht." },
   { id: "caliente", name: "Too hot", hint: "Complain about the heat in Cartagena." },
@@ -1782,7 +1788,7 @@ function perks(lang = G.lang) {
 }
 function netWorth(lang = G.lang) {
   const L = life(lang);
-  return L.cash + SHOP_BASE.reduce((s, it) => s + (L.owned[it.id] ? Math.round(((L.paid[it.id] || it.price) + (L.mods[it.id]?.spent || 0)) * 0.7) : 0), 0);
+  return L.cash + portfolioValue(lang) + SHOP_BASE.reduce((s, it) => s + (L.owned[it.id] ? Math.round(((L.paid[it.id] || it.price) + (L.mods[it.id]?.spent || 0)) * 0.7) : 0), 0);
 }
 function streakMult() { return 1 + Math.min(Math.max(G.streak.n - 1, 0), 10) * 0.05; }
 function fee(i = tierIdx()) { const t = career()?.tiers[i]; return t ? Math.round(t.fee * (1 - perks().fee)) : 0; }
@@ -1896,6 +1902,7 @@ function nounFor(it, lang = G.lang) { const n = NOUN[lang]; if (!n) return null;
 function splitTerm(tm) { const k = tm.indexOf(" "); return k < 0 ? [tm, ""] : [tm.slice(0, k), tm.slice(k + 1)]; }
 function phrase(action, a = {}) {
   const lang = G.lang;
+  if (action === "raw") return { t: a.ph.t || null, r: a.ph.r, en: a.ph.en };
   if (lang === "es") {
     const n = a.it ? nounFor(a.it) : null;
     return {
@@ -1913,6 +1920,8 @@ function phrase(action, a = {}) {
       buyclothes: { t: "Me llevo " + a.es + ".", en: "Tell the shop assistant you'll take the " + a.en + "." },
       vacation: { t: "Quiero reservar " + ({ 3: "tres", 7: "siete", 14: "catorce" })[a.n] + " noches, por favor.", en: "Book " + a.n + " nights." },
       checkin: { t: "¿Cómo va todo con el proyecto?", en: "Call " + a.who + " and ask how the project is going." },
+      invest: { t: "Quiero invertir en " + a.term + ".", en: "Tell your broker to invest in: " + a.en + "." },
+      divest: { t: ("Quiero retirar mi dinero de " + a.term + ".").replace(" de el ", " del "), en: "Tell your broker to pull your money out of: " + a.en + "." },
       hire: { t: "Quiero contratar a " + String(a.term).replace(/^(El|La) /i, (m) => m.toLowerCase()) + ".", en: "Tell the agency you want to hire: " + a.en + "." },
     }[action];
   }
@@ -1926,17 +1935,19 @@ function phrase(action, a = {}) {
       name: { t: "它叫" + a.name + "。", r: "Tā jiào " + a.name + ".", en: "Tell the registrar it's called " + a.name + "." },
       date: { t: "今晚想跟我出去吗？", r: "Jīnwǎn xiǎng gēn wǒ chūqù ma?", en: "Ask " + a.who + " out tonight." },
       night: { t: "今晚留下来吧。", r: "Jīnwǎn liú xiàlái ba.", en: "Ask " + a.who + " to stay the night." },
-      fly: { t: "我要一张去" + a.city[0] + "的机票。", r: "Wǒ yào yì zhāng qù " + a.city[1] + " de jīpiào.", en: "Buy a plane ticket to " + a.city[1] + "." },
+      fly: { t: "我要一张去" + (a.city || [])[0] + "的机票。", r: "Wǒ yào yì zhāng qù " + (a.city || [])[1] + " de jīpiào.", en: "Buy a plane ticket to " + (a.city || [])[1] + "." },
       order: { t: "我要" + a.item + "。", r: "Wǒ yào " + a.itemR + ".", en: "Order " + a.en + "." },
       treat: { t: "我请你喝" + a.item + "。", r: "Wǒ qǐng nǐ hē " + a.itemR + ".", en: "Offer to buy " + a.who + " " + a.en + "." },
-      buyclothes: { t: "我要买" + a.zhm[0] + "。", r: "Wǒ yào mǎi " + a.zhm[1] + ".", en: "Tell the shop assistant you'll take the " + a.en + "." },
+      buyclothes: { t: "我要买" + (a.zhm || [])[0] + "。", r: "Wǒ yào mǎi " + (a.zhm || [])[1] + ".", en: "Tell the shop assistant you'll take the " + a.en + "." },
       vacation: { t: "我想订" + ({ 3: "三", 7: "七", 14: "十四" })[a.n] + "个晚上。", r: "Wǒ xiǎng dìng " + ({ 3: "sān", 7: "qī", 14: "shísì" })[a.n] + " ge wǎnshang.", en: "Book " + a.n + " nights." },
+      invest: { t: "我想投资" + ch + "。", r: "Wǒ xiǎng tóuzī " + py + ".", en: "Tell your broker to invest in: " + a.en + "." },
+      divest: { t: "我想卖掉" + ch + "。", r: "Wǒ xiǎng màidiào " + py + ".", en: "Tell your broker to sell: " + a.en + "." },
       checkin: { t: "项目进展怎么样？", r: "Xiàngmù jìnzhǎn zěnmeyàng?", en: "Call " + a.who + " and ask how the project is going." },
       hire: { t: "我想请一个" + splitTerm(a.term)[0] + "。", r: "Wǒ xiǎng qǐng yí ge " + splitTerm(a.term)[1] + ".", en: "Tell the agency you want to hire: " + a.en + "." },
       exclusive: { t: a.g === "m" ? "你愿意做我的男朋友吗？" : "你愿意做我的女朋友吗？", r: "Nǐ yuànyì zuò wǒ de " + (a.g === "m" ? "nán" : "nǚ") + " péngyou ma?", en: "Ask " + a.who + " to make it official." },
     }[action];
   }
-  const en = { buy: "Tell the seller you want to buy it.", sell: "Tell the broker you want to sell it.", install: "Ask the yard to install: " + a.en + ".", paint: "Ask to change the " + String(a.en).toLowerCase() + ".", name: "Say it's called " + a.name + ".", date: "Ask " + a.who + " out tonight.", night: "Ask " + a.who + " to stay the night.", fly: "Buy a ticket to " + (a.city || "the city") + ".", order: "Order " + a.en + ".", treat: "Offer to buy " + a.who + " " + a.en + ".", exclusive: "Ask " + a.who + " to make it official.", checkin: "Call " + a.who + " and ask how the project is going.", hire: "Hire: " + a.en + ".", buyclothes: "Buy the " + a.en + ".", vacation: "Book " + a.n + " nights." }[action];
+  const en = { buy: "Tell the seller you want to buy it.", sell: "Tell the broker you want to sell it.", install: "Ask the yard to install: " + a.en + ".", paint: "Ask to change the " + String(a.en).toLowerCase() + ".", name: "Say it's called " + a.name + ".", date: "Ask " + a.who + " out tonight.", night: "Ask " + a.who + " to stay the night.", fly: "Buy a ticket to " + (a.city || "the city") + ".", order: "Order " + a.en + ".", treat: "Offer to buy " + a.who + " " + a.en + ".", exclusive: "Ask " + a.who + " to make it official.", checkin: "Call " + a.who + " and ask how the project is going.", hire: "Hire: " + a.en + ".", buyclothes: "Buy the " + a.en + ".", vacation: "Book " + a.n + " nights.", invest: "Invest in " + a.en + ".", divest: "Sell your " + a.en + "." }[action];
   return { t: null, en };
 }
 const bare = (s) => norm(String(s).normalize("NFD").replace(/[\u0300-\u036f]/g, ""));
@@ -3154,6 +3165,8 @@ function renderInteract() {
       '<div class="card"><div class="label">Tonight here</div><div class="t">' + esc(ev.name) + '</div><div class="muted small">' + (ev.type === "party" ? "Music, drinks, people to flirt with, maybe an investor." : "Investors and decision-makers. Bring your best " + esc(LANGS[G.lang].name) + ".") + '</div><div class="row"><button class="btn sm ' + (ev.type === "party" ? "love" : "primary") + '" id="go-ev"' + (!went && L.cash < ev.cover ? " disabled" : "") + ">" + (went ? "Go back in" : "Go · " + money(ev.cover) + " cover") + "</button></div></div>" +
       (hosts.length ? '<div class="card"><div class="label">Or throw your own</div><div class="row">' + hosts.map((v, k) => '<button class="btn sm gold" data-host="' + k + '"' + (L.cash < v.cost ? " disabled" : "") + ">Party on " + esc(v.label) + " · " + money(v.cost) + "</button>").join("") + "</div></div>" : "");
     box.insertAdjacentHTML("beforeend", '<div class="card"><div class="label">Stay longer</div><div class="muted small">Book 3, 7 or 14 nights here. Bring someone if you like.</div><div class="row"><button class="btn sm primary" id="go-vac">Plan a vacation</button></div></div>');
+    box.insertAdjacentHTML("beforeend", '<div class="card"><div class="label">The high life</div><div class="muted small">Supercar convoys, polo, paddocks, heli-skiing, masked balls. Then the afterparty.</div><div class="row"><button class="btn sm gold" id="go-hl">High Life board</button>' + (myBoat() ? '<button class="btn sm primary" id="go-voy2">Set sail on a voyage</button>' : "") + "</div></div>");
+    $("#go-hl").onclick = openHighLife; $("#go-voy2")?.addEventListener("click", openVoyage);
     $("#go-vac").onclick = () => openVacation(W.tier);
     $("#go-ev").onclick = () => attendEvent(ev);
     box.querySelectorAll("[data-host]").forEach((b) => b.addEventListener("click", () => throwParty(hosts[+b.dataset.host])));
@@ -3475,6 +3488,7 @@ function enterEvent(ev) {
   if (ev.venue === "yacht") Object.assign(W.theme, { far: "harbor", ground: "teak" });
   if (ev.venue === "jet") Object.assign(W.theme, { far: "cabin", ground: "carpet", night: false, props: "none" });
   if (ev.venue === "home") Object.assign(W.theme, { far: "city", ground: "pooldeck" });
+  if (ev.theme) Object.assign(W.theme, ev.theme);
   W.width = ev.venue === "jet" ? 300 : 420;
   W.npcs = eventNpcs(ev, W.tier); W.near = null;
   $("#walk-place").textContent = ev.name.toUpperCase() + " · " + (ev.where || W.tier.place.toUpperCase());
@@ -3680,6 +3694,9 @@ function dailyTick() {
   if (L.staff?.fixer) { L.fixerDays = (L.fixerDays || 0) + days; while (L.fixerDays >= 3) { L.fixerDays -= 3; const s3 = grantSecret(); if (s3) news.push("Your fixer slid a file under the door: " + s3.title + "."); } }
   if (pending) { if (L.staff?.assistant) { L.cash += pending; news.push("Your assistant collected " + money(pending) + " in retainers."); } else { L.retainers = (L.retainers || 0) + pending; news.push(money(pending) + " in client retainers waiting to be collected."); } }
   save();
+  const mk = marketTick(days);
+  if (mk.change || mk.income) news.push("Your portfolio " + (mk.change >= 0 ? "gained " : "lost ") + money(Math.abs(mk.change)) + (mk.income ? " and paid " + money(mk.income) + " in dividends and rent" : "") + ".");
+  news.push(...mk.news);
   if (news.length) queueModal(() => { $("#modal").innerHTML = '<div class="label">While you were away · ' + days + " day" + (days > 1 ? "s" : "") + '</div><div class="stack" style="gap:8px;text-align:left">' + news.map((n) => "<p>· " + esc(n) + "</p>").join("") + '</div><button class="btn primary" id="news-ok">Back to work</button>'; $("#news-ok").onclick = closeModal; });
 }
 let circleTab = "romance";
@@ -4507,6 +4524,7 @@ function settle() {
   const xp = c.good * 10 + c.minor * 3 + (flawless ? 25 : 0) + (firstWin ? 30 + 10 * t.ch : 0);
   const payout = Math.round(t.stakes * clamp((M.deal - 4) / 6, 0, 1) * (1 + pk.pay) * streakMult() * (M.replay ? 0.35 : 1) * (1 - Math.min(0.3, (M.hints || 0) * 0.04)));
   L.cleared[t.id] = Math.max(L.cleared[t.id] ?? -1, M.deal); L.meetings++;
+  marketTick(0.5, { noYield: true });
   let newClient = false;
   if (M.deal >= 5) { stat("wins"); newClient = makeClient(t, M.deal); }
   if (you.length >= 4 && c.good === you.length) stat("flawless");
@@ -4713,6 +4731,528 @@ function renderWorkshop() {
 }
 
 /* =========================================================
+   INVESTMENTS: money that works while you sleep (or sail).
+   Prices move a little after every meeting and a lot over real days and trips.
+   ========================================================= */
+const ASSETS = {
+  es: [
+    { id: "letras", term: "las letras del Tesoro", en: "Treasury bills", min: 100, y: 0.04, d: 0, v: 0.0004, risk: "Safe" },
+    { id: "indice", term: "un fondo indexado", en: "Global index fund", min: 500, y: 0.015, d: 0.07, v: 0.011, risk: "Medium" },
+    { id: "oro", term: "el oro", en: "Gold", min: 1000, y: 0, d: 0.05, v: 0.009, risk: "Medium" },
+    { id: "cripto", term: "las criptomonedas", en: "Crypto basket", min: 1000, y: 0, d: 0.06, v: 0.055, risk: "Wild" },
+    { id: "fintech", term: "una startup fintech", en: "Bogotá fintech, Series A", min: 50000, y: 0, d: 0.2, v: 0.05, risk: "Wild", moon: true },
+    { id: "pisos", term: "pisos en Medellín", en: "Rental flats in Medellín", min: 80000, y: 0.07, d: 0.03, v: 0.003, risk: "Low" },
+    { id: "arepas", term: "una franquicia de arepas", en: "Arepa franchise, twelve locations", min: 150000, y: 0.14, d: 0, v: 0.025, risk: "High" },
+    { id: "cafe", term: "una finca de café", en: "Coffee farm, Eje Cafetero", min: 250000, y: 0.08, d: 0.01, v: 0.012, risk: "Medium" },
+    { id: "hotel", term: "un grupo hotelero", en: "Boutique hotel group, Cartagena", min: 2000000, y: 0.06, d: 0.05, v: 0.005, risk: "Low" },
+    { id: "charter", term: "una flota de chárter", en: "Yacht charter fleet, Balearics", min: 5000000, y: 0.1, d: 0.02, v: 0.012, risk: "Medium" },
+    { id: "tiburon", term: "el Fondo Tiburón", en: "Fondo Tiburón hedge fund (invitation only)", min: 10000000, y: 0, d: 0.14, v: 0.016, risk: "Medium", rank: 4 },
+    { id: "club", term: "un club de fútbol", en: "Second-division football club", min: 20000000, y: 0.02, d: 0.08, v: 0.02, risk: "High", rank: 5 },
+  ],
+  zh: [
+    { id: "bonds", term: "国债 guózhài", en: "Singapore government bonds", min: 100, y: 0.035, d: 0, v: 0.0004, risk: "Safe" },
+    { id: "index", term: "指数基金 zhǐshù jījīn", en: "Global index fund", min: 500, y: 0.015, d: 0.07, v: 0.011, risk: "Medium" },
+    { id: "gold", term: "黄金 huángjīn", en: "Gold", min: 1000, y: 0, d: 0.05, v: 0.009, risk: "Medium" },
+    { id: "crypto", term: "加密货币 jiāmì huòbì", en: "Crypto basket", min: 1000, y: 0, d: 0.06, v: 0.055, risk: "Wild" },
+    { id: "evstart", term: "电动车初创公司 diàndòngchē chūchuàng gōngsī", en: "Shenzhen EV startup, Series A", min: 50000, y: 0, d: 0.22, v: 0.055, risk: "Wild", moon: true },
+    { id: "condo", term: "新加坡房产 Xīnjiāpō fángchǎn", en: "Singapore condo units", min: 80000, y: 0.035, d: 0.04, v: 0.003, risk: "Low" },
+    { id: "boba", term: "奶茶连锁店 nǎichá liánsuǒdiàn", en: "Bubble-tea chain, forty stores", min: 150000, y: 0.15, d: 0, v: 0.028, risk: "High" },
+    { id: "tea", term: "普洱茶园 Pǔ'ěr cháyuán", en: "Pu'er tea estate, Yunnan", min: 250000, y: 0.07, d: 0.03, v: 0.012, risk: "Medium" },
+    { id: "hktech", term: "港股 Gǎnggǔ", en: "Hong Kong blue chips", min: 2000000, y: 0.04, d: 0.06, v: 0.013, risk: "Medium" },
+    { id: "yachts", term: "游艇租赁公司 yóutǐng zūlìn gōngsī", en: "Yacht charter company, Sanya", min: 5000000, y: 0.1, d: 0.02, v: 0.012, risk: "Medium" },
+    { id: "family", term: "家族办公室基金 jiāzú bàngōngshì jījīn", en: "Family-office fund (invitation only)", min: 10000000, y: 0, d: 0.14, v: 0.016, risk: "Medium", rank: 4 },
+    { id: "team", term: "篮球队 lánqiúduì", en: "Stake in a pro basketball team", min: 20000000, y: 0.02, d: 0.08, v: 0.02, risk: "High", rank: 5 },
+  ],
+};
+const assetsFor = (lang = G.lang) => ASSETS[lang] || ASSETS.es.map((a) => ({ ...a, term: a.en }));
+function portfolioValue(lang = G.lang) { const L = life(lang); return Object.values(L.inv || {}).reduce((s, h) => s + (h.v || 0), 0); }
+function gauss() { let u = 0, v = 0; while (!u) u = Math.random(); while (!v) v = Math.random(); return Math.sqrt(-2 * Math.log(u)) * Math.cos(2 * Math.PI * v); }
+/* Move the markets by `days` (fractions allowed). Returns { change, income, news } */
+function marketTick(days, opts = {}) {
+  const L = life(); if (!L.inv || !Object.keys(L.inv).length) return { change: 0, income: 0, news: [] };
+  let change = 0, income = 0; const news = [];
+  assetsFor().forEach((a) => {
+    const h = L.inv[a.id]; if (!h || !h.v) return;
+    const before = h.v, steps = Math.max(1, Math.ceil(days)), dt = days / steps;
+    for (let k = 0; k < steps; k++) {
+      h.v *= Math.exp((a.d / 365 - (a.v * a.v) / 2) * dt + a.v * Math.sqrt(dt) * gauss());
+      if (!opts.noYield) income += (h.v * a.y * dt) / 365;
+      if (a.moon && Math.random() < 0.012 * dt) { h.v *= 5; news.push("Your " + a.en + " just got acquired. Your stake is worth five times more."); award("moonshot"); }
+      else if (a.moon && Math.random() < 0.008 * dt) { h.v *= 0.08; news.push("Your " + a.en + " ran out of runway. Most of it is gone."); }
+    }
+    h.v = Math.max(0, Math.round(h.v)); change += h.v - before;
+  });
+  income = Math.round(income);
+  if (income) L.cash += income;
+  L.invHist = [...(L.invHist || []), portfolioValue()].slice(-40);
+  save();
+  return { change, income, news };
+}
+function renderInvest() {
+  let el = $("#invest");
+  if (!el) { el = document.createElement("div"); el.id = "invest"; el.className = "box stack"; $("#shop").before(el); }
+  const L = life(), inv = (L.inv ||= {}), total = portfolioValue(), basis = Object.values(inv).reduce((s, h) => s + (h.basis || 0), 0), pl = total - basis;
+  const word = G.lang === "es" ? "Inversiones · " : G.lang === "zh" ? "投资 tóuzī · " : "";
+  el.innerHTML = '<div class="row between"><h3>' + word + 'Investments</h3><span class="chip ' + (pl >= 0 ? "good" : "major") + '">Portfolio ' + money(total) + (basis ? " · " + (pl >= 0 ? "+" : "") + money(pl).replace("$-", "-$") : "") + "</span></div>" +
+    '<p class="muted small">Prices move after every meeting and every day that passes, including days at sea. Dividends and rent land in your cash. Every buy and sale is spoken in ' + esc(LANGS[G.lang].name) + ".</p>" +
+    '<canvas id="inv-cv" width="192" height="30" style="width:100%;max-width:520px;image-rendering:pixelated;background:#141a30;border:2px solid var(--line)"></canvas>' +
+    '<div class="tablewrap"><table class="marina-table"><thead><tr><th>Asset</th><th>Risk</th><th style="text-align:right">Yield</th><th style="text-align:right">Yours</th><th></th></tr></thead><tbody>' +
+    assetsFor().map((a) => {
+      const h = inv[a.id], locked = a.rank && rank() < a.rank, tm = termOf({ es: a.term, zh: a.term }) || a.term;
+      const amt = [a.min, Math.max(a.min, Math.round(L.cash * 0.25)), Math.max(a.min, L.cash)].filter((v, k, arr) => arr.indexOf(v) === k && v <= L.cash);
+      return "<tr><td><strong>" + esc(G.lang === "zh" ? splitTerm(tm)[0] : tm) + '</strong><div class="small muted">' + esc(a.en) + " · from " + money(a.min) + '</div></td><td><span class="chip ' + ({ Safe: "good", Low: "good", Medium: "info", High: "minor", Wild: "major" })[a.risk] + '">' + a.risk + '</span></td><td class="num">' + (a.y ? Math.round(a.y * 1000) / 10 + "%" : "—") + '</td><td class="num">' + (h?.v ? money(h.v) + '<div class="small ' + (h.v >= h.basis ? "" : "muted") + '">' + (h.v >= h.basis ? "+" : "") + Math.round(((h.v - h.basis) / Math.max(1, h.basis)) * 100) + "%</div>" : "—") + "</td><td>" +
+        (locked ? '<span class="chip info">Rank ' + a.rank + "+</span>" : '<div class="row" style="gap:4px;justify-content:flex-end">' + amt.map((v) => '<button class="btn sm gold" data-inv="' + a.id + ":" + v + '">+' + money(v) + "</button>").join("") + (h?.v ? '<button class="btn sm" data-div="' + a.id + '">Sell</button>' : "") + (!amt.length && !h?.v ? '<span class="muted small">Need ' + money(a.min) + "</span>" : "") + "</div>") + "</td></tr>";
+    }).join("") + "</tbody></table></div>";
+  const cv = $("#inv-cv").getContext("2d"), hist = L.invHist || []; R(cv, 0, 0, 192, 30, "#141a30");
+  if (hist.length > 1) { const mx = Math.max(...hist), mn = Math.min(...hist), span = Math.max(1, mx - mn); hist.forEach((v, k) => { const x = Math.round((k / (hist.length - 1)) * 188) + 2, y = 26 - Math.round(((v - mn) / span) * 22); R(cv, x, y, 2, 2, v >= hist[0] ? "#52c7b8" : "#ff6f6f"); }); }
+  else { R(cv, 4, 14, 184, 1, "#2a3050"); }
+  el.querySelectorAll("[data-inv]").forEach((b) => b.addEventListener("click", async () => {
+    const [id, v0] = b.dataset.inv.split(":"), a = assetsFor().find((x) => x.id === id); let v = +v0;
+    if (L.cash < v) return;
+    const r = await sayIt("invest", { term: a.term, en: a.en, cost: v }, a.en + " · " + money(v)); if (!r.ok) return;
+    if (r.peeked) v = Math.round(v * 0.95);
+    const h = (inv[id] ||= { v: 0, basis: 0 }); h.v += v; h.basis += v; L.cash -= +v0; save();
+    pop("-" + money(+v0), b); sfx("buy"); stat("investments"); if (portfolioValue() >= 1e6) award("portfolio");
+    toast(r.peeked ? "Invested " + money(v) + " (your broker took 5% for spelling it out)" : "Invested " + money(v));
+    renderHud(); renderEmpire();
+  }));
+  el.querySelectorAll("[data-div]").forEach((b) => b.addEventListener("click", async () => {
+    const a = assetsFor().find((x) => x.id === b.dataset.div), h = inv[a.id]; if (!h?.v) return;
+    const r = await sayIt("divest", { term: a.term, en: a.en }, a.en + " · " + money(h.v)); if (!r.ok) return;
+    const got = h.v; delete inv[a.id]; save(); addCash(got, b); toast("Sold for " + money(got) + (got >= h.basis ? " (+" + money(got - h.basis) + ")" : " (" + money(got - h.basis) + ")"));
+    renderEmpire();
+  }));
+}
+
+/* =========================================================
+   HIGH LIFE: invitation-grade experiences, then the afterparty where the deals happen.
+   ========================================================= */
+const HL_CHOICES = {
+  convoy: [[["Hold formation", "safe"], ["Pull alongside the Ferrari for photos", "bold"], ["Launch control at the toll booth", "wild"]], [["Take the hairpins smooth", "safe"], ["Lead the pack through the pass", "bold"], ["Flat out, overtake everyone", "wild"]], [["Park up and shake hands", "safe"], ["Offer rides in your car", "bold"], ["Donuts in the town square", "wild"]]],
+  polo: [[["Watch from the pavilion", "safe"], ["Ride a practice chukker", "bold"], ["Play the match", "wild"]], [["Tread in the divots at half-time", "safe"], ["Talk horses with the patron", "bold"], ["Bet on the underdog team", "wild"]], [["Pose for the society pages", "safe"], ["Present the trophy", "bold"], ["Challenge the captain to a rematch", "wild"]]],
+  paddock: [[["Walk the pit lane", "safe"], ["Talk strategy with an engineer", "bold"], ["Slip onto the grid walk", "wild"]], [["Watch from the hospitality suite", "safe"], ["Pit-wall headset for ten laps", "bold"], ["Hot lap in the safety car", "wild"]], [["Champagne on the terrace", "safe"], ["Pitch a sponsorship", "bold"], ["Crash the podium party", "wild"]]],
+  ski: [[["Wait for a safer window", "safe"], ["First run with the guide", "bold"], ["Drop into the couloir", "wild"]], [["Lunch on the glacier", "safe"], ["Film the group run", "bold"], ["Off-piste, no guide", "wild"]], [["Hot tub at the lodge", "safe"], ["Charter a sunset flight", "bold"], ["One more run in fading light", "wild"]]],
+  gala: [[["Admire quietly", "safe"], ["Ask the curator about provenance", "bold"], ["Bid on the headline piece", "wild"]], [["Mingle by the bar", "safe"], ["Sit with the collectors", "bold"], ["Outbid your rival in public", "wild"]], [["Leave before the speeches", "safe"], ["Give a toast", "bold"], ["Donate the piece back, on stage", "wild"]]],
+  casino: [[["Watch the table", "safe"], ["Small bets on baccarat", "bold"], ["Push it all on the banker", "wild"]], [["Tip the dealer", "safe"], ["Double down", "bold"], ["Let it ride", "wild"]], [["Cash out", "safe"], ["One last hand", "bold"], ["Challenge the whale heads-up", "wild"]]],
+  regatta: [[["Hang back at the start", "safe"], ["Fight for the line", "bold"], ["Cut inside the committee boat", "wild"]], [["Steady pace", "safe"], ["Push for the lead", "bold"], ["Full throttle past the reef", "wild"]], [["Raft up and relax", "safe"], ["Host the prize-giving", "bold"], ["Jump off the top deck", "wild"]]],
+  rave: [[["Find a spot by the bar", "safe"], ["Dance near the DJ booth", "bold"], ["Climb onto the stage", "wild"]], [["Water and a breather", "safe"], ["Start a dance circle", "bold"], ["Swim in the cenote at 3am", "wild"]], [["Watch the sunrise", "safe"], ["Breakfast with the DJ", "bold"], ["Invite everyone to your boat", "wild"]]],
+  derby: [[["Watch from the stands", "safe"], ["Visit the parade ring", "bold"], ["Bet big on the favourite", "wild"]], [["Small place bet", "safe"], ["Talk to the jockey", "bold"], ["Long-shot accumulator", "wild"]], [["Toast the winner", "safe"], ["Buy the trainer a drink", "bold"], ["Make an offer on the winning horse", "wild"]]],
+  dinner: [[["Let the chef decide", "safe"], ["Ask for the kitchen tour", "bold"], ["Order the off-menu dish", "wild"]], [["Small talk with your neighbour", "safe"], ["Talk shop with the investor", "bold"], ["Pitch the whole table", "wild"]], [["Split the bill graciously", "safe"], ["Pay for the whole table", "bold"], ["Buy the restaurant a wine cellar", "wild"]]],
+  mask: [[["Keep your mask on", "safe"], ["Dance with a stranger", "bold"], ["Unmask at midnight", "wild"]], [["Listen more than you talk", "safe"], ["Trade a secret", "bold"], ["Follow the host to the vault", "wild"]], [["Slip away quietly", "safe"], ["Leave a calling card", "bold"], ["Leave with the host's invitation", "wild"]]],
+};
+const HIGHLIFE = {
+  es: [
+    { id: "convoy", name: "Supercar convoy: Marbella to Ronda", where: "Costa del Sol, Spain", scene: "convoy", land: "coast", cost: 25000, need: "car", after: { name: "Afterparty at a finca above Ronda", type: "network", theme: { far: "hills", ground: "terracotta", props: "lights" } },
+      beats: ["Twenty exotics idle outside Puerto Banús. Engines crackle, phones come out.", "The road climbs into the Serranía de Ronda. Forty hairpins, cliffs on one side.", "Sunset at the Puente Nuevo. The cars line up on the cobbles for photos."],
+      lines: [{ t: "¡Arrancamos!", en: "Call the start." }, { t: "Vamos a parar a repostar.", en: "Tell the convoy you're stopping to refuel." }, { t: "¡Brindemos por la carretera!", en: "Propose a toast to the road." }] },
+    { id: "polo", name: "Polo at Sotogrande", where: "Santa María Polo Club, Sotogrande", scene: "polo", cost: 15000, need: "polo", after: { name: "Clubhouse asado", type: "network", theme: { far: "hills", ground: "grass", props: "lights" } },
+      beats: ["White trousers, brown boots, a field greener than money.", "Half-time. Everyone walks onto the field to tread the divots back in.", "The final chukker. The trophy is on a table dressed in white linen."],
+      lines: [{ t: "¿Qué caballo me recomiendas?", en: "Ask which horse they recommend." }, { t: "¡Qué jugada!", en: "Shout: what a play!" }, { t: "¿Te apetece una copa de cava?", en: "Offer someone a glass of cava." }] },
+    { id: "paddock", name: "Grand Prix paddock, Barcelona", where: "Circuit de Barcelona-Catalunya", scene: "paddock", cost: 120000, need: "f1", after: { name: "Team party in the hospitality unit", type: "party", theme: { far: "stands", ground: "concourse", props: "lamps" } },
+      beats: ["The paddock smells of hot tyres and expensive cologne.", "Lights out. Twenty cars scream past close enough to feel.", "Champagne spray from the podium lands on your shoes."],
+      lines: [{ t: "¿Puedo ver el garaje?", en: "Ask if you can see the garage." }, { t: "¿Qué neumáticos van a usar?", en: "Ask which tyres they'll run." }, { t: "¡Enhorabuena por el podio!", en: "Congratulate them on the podium." }] },
+    { id: "ski", name: "Heli-skiing in Portillo", where: "Portillo, Chilean Andes", scene: "ski", cost: 60000, need: "ski", after: { name: "Fondue night at the lodge", type: "party", theme: { far: "mountain", ground: "stone", props: "lanterns" } },
+      beats: ["The helicopter drops you on a ridge above the clouds.", "Fresh powder, no tracks, a guide who says 'tranquilo' too often.", "The sun drops behind Aconcagua. Your legs are done."],
+      lines: [{ t: "¿Es segura esta pendiente?", en: "Ask if this slope is safe." }, { t: "¡Tú primero!", en: "Tell them: you first!" }, { t: "Esta vista es increíble.", en: "Say the view is incredible." }] },
+    { id: "gala", name: "Art gala, Mexico City", where: "Museo Soumaya, Polanco", scene: "gala", cost: 50000, need: "art", after: { name: "Collectors' after-dinner", type: "network", theme: { far: "city", ground: "plaza", props: "lamps" } },
+      beats: ["Mirrored walls, a Rodin in the lobby, a string quartet you can't hear over the gossip.", "The auctioneer opens the headline lot. Your rival raises a paddle.", "Dessert, speeches, and someone famous cries."],
+      lines: [{ t: "Me interesa esta obra.", en: "Say you're interested in this piece." }, { t: "Subo la puja a un millón.", en: "Raise the bid to a million." }, { t: "Es para una buena causa.", en: "Say it's for a good cause." }] },
+    { id: "regatta", name: "Rivals' regatta, Ibiza", where: "Marina Ibiza to Formentera", scene: "regatta", cost: 10000, need: "boat", after: { name: "Beach club, Cala Jondal", type: "party", theme: { far: "sea", ground: "sand", props: "palms" } },
+      beats: ["Horns at the start line. Every rival you have brought their boat.", "The course runs past Es Vedrà and into open water.", "Finish line at Formentera. The water is the colour of a swimming pool."],
+      lines: [{ t: "¡Todos a bordo!", en: "Call everyone aboard." }, { t: "¡Cuidado con la boya!", en: "Warn: watch the buoy!" }, { t: "¡La próxima ronda la pago yo!", en: "Say the next round is on you." }] },
+    { id: "rave", name: "Full-moon party in the Tulum jungle", where: "Tulum, Quintana Roo", scene: "rave", cost: 3000, need: "rank1", after: { name: "Sunrise beach session", type: "party", theme: { far: "sea", ground: "sand", props: "palms" } },
+      beats: ["Lanterns in the ceiba trees, a DJ in a nest of branches.", "The bass is inside your ribs. Someone hands you a coconut.", "The sky goes pink over the Caribbean."],
+      lines: [{ t: "¿Dónde es la fiesta?", en: "Ask where the party is." }, { t: "¡Me encanta esta canción!", en: "Say you love this song." }, { t: "¿Vemos el amanecer juntos?", en: "Ask to watch the sunrise together." }] },
+    { id: "dinner", name: "Three-star chef's table, San Sebastián", where: "Donostia, Basque Country", scene: "dinner", cost: 8000, need: "rank2", after: { name: "Pintxos crawl in the Parte Vieja", type: "network", theme: { far: "facades", ground: "tiles", props: "lights" } },
+      beats: ["Twenty-two courses. The first one is a single anchovy on ice.", "Your neighbour runs a shipping company. Their spouse runs the other one.", "The chef comes out and asks what you thought. In Spanish."],
+      lines: [{ t: "¿Qué nos recomienda el chef?", en: "Ask what the chef recommends." }, { t: "Este maridaje es perfecto.", en: "Say the wine pairing is perfect." }, { t: "Brindo por nuevos negocios.", en: "Toast to new business." }] },
+    { id: "mask", name: "El Baile Negro: masked ball in a Seville palace", where: "A palacio in Santa Cruz, Seville", scene: "mask", cost: 100000, need: "secret", after: { name: "The courtyard after midnight", type: "party", theme: { far: "walls", ground: "stone", props: "lanterns" } },
+      beats: ["Black envelopes, black masks, orange trees lit with candles.", "Nobody uses real names. Everyone knows everything.", "At dawn the host opens a door you didn't know was there."],
+      lines: [{ t: "¿Quién eres detrás de la máscara?", en: "Ask who they are behind the mask." }, { t: "Bailemos.", en: "Say: let's dance." }, { t: "Nos vemos al amanecer.", en: "Say: see you at dawn." }] },
+  ],
+  zh: [
+    { id: "convoy", name: "欧洲超跑巡游 Supercar rally: Stelvio to Lake Como", where: "Stelvio Pass, Italian Alps", scene: "convoy", land: "alps", cost: 25000, need: "car", after: { name: "Villa gala on Lake Como", type: "network", theme: { far: "lake", ground: "stone", props: "lights" } },
+      beats: ["Thirty supercars from the Chinese owners' club line up in Bormio.", "Forty-eight hairpins up the Stelvio, snow walls on both sides.", "Down to Lake Como at dusk. A villa has opened its gates for you."],
+      lines: [{ t: "出发！", r: "Chūfā!", en: "Call the start." }, { t: "我们去加油。", r: "Wǒmen qù jiāyóu.", en: "Tell the convoy you're stopping to refuel." }, { t: "为这条路干杯！", r: "Wèi zhè tiáo lù gānbēi!", en: "Propose a toast to the road." }] },
+    { id: "casino", name: "澳门贵宾厅 Macau high-roller salon", where: "Cotai Strip, Macau", scene: "casino", cost: 50000, need: "rank2", after: { name: "Suite party upstairs", type: "party", theme: { far: "city", ground: "carpet", props: "lights" } },
+      beats: ["A private lift, a private room, a dealer who never blinks.", "The shoe is running hot. The whale across the table is watching you.", "Four a.m. The chips are still on the table."],
+      lines: [{ t: "我要加注。", r: "Wǒ yào jiāzhù.", en: "Raise the bet." }, { t: "今天手气不错。", r: "Jīntiān shǒuqì búcuò.", en: "Say you're feeling lucky today." }, { t: "见好就收。", r: "Jiàn hǎo jiù shōu.", en: "Say: quit while you're ahead." }] },
+    { id: "paddock", name: "新加坡F1夜赛 Singapore night-race paddock", where: "Marina Bay Street Circuit", scene: "paddock", cost: 120000, need: "f1", after: { name: "Paddock Club party", type: "party", theme: { far: "city", ground: "plaza", props: "lights" } },
+      beats: ["Floodlights turn the city into a stage. The paddock hums.", "Lights out. The cars scream under the Esplanade bridge.", "Fireworks over Marina Bay as the winner crosses the line."],
+      lines: [{ t: "我可以参观车库吗？", r: "Wǒ kěyǐ cānguān chēkù ma?", en: "Ask if you can see the garage." }, { t: "你们用什么轮胎？", r: "Nǐmen yòng shénme lúntāi?", en: "Ask which tyres they'll run." }, { t: "恭喜登上领奖台！", r: "Gōngxǐ dēngshàng lǐngjiǎngtái!", en: "Congratulate them on the podium." }] },
+    { id: "derby", name: "跑马地 Happy Valley owners' enclosure", where: "Happy Valley Racecourse, Hong Kong", scene: "derby", cost: 20000, need: "racehorse", after: { name: "Members' bar after the last race", type: "network", theme: { far: "city", ground: "grass", props: "lamps" } },
+      beats: ["Wednesday night. Towers all around the track, lit like a stadium.", "The horses break. The noise from the stands is physical.", "Photo finish. Everyone is shouting numbers."],
+      lines: [{ t: "我押三号。", r: "Wǒ yā sān hào.", en: "Bet on number three." }, { t: "冲啊！", r: "Chōng a!", en: "Shout: go go go!" }, { t: "今晚我请客。", r: "Jīnwǎn wǒ qǐngkè.", en: "Say tonight is on you." }] },
+    { id: "regatta", name: "三亚游艇周 Sanya yacht week", where: "Yalong Bay, Hainan", scene: "regatta", cost: 10000, need: "boat", after: { name: "Beach party at Yalong Bay", type: "party", theme: { far: "sea", ground: "sand", props: "palms" } },
+      beats: ["Every rival's yacht is anchored in the bay, flags up.", "The race runs around Wuzhizhou island and back.", "Finish line at sunset. Someone has brought fireworks."],
+      lines: [{ t: "大家上船！", r: "Dàjiā shàng chuán!", en: "Call everyone aboard." }, { t: "小心浮标！", r: "Xiǎoxīn fúbiāo!", en: "Warn: watch the buoy!" }, { t: "下一轮我请。", r: "Xià yì lún wǒ qǐng.", en: "Say the next round is on you." }] },
+    { id: "ski", name: "二世谷直升机滑雪 Niseko heli-skiing", where: "Niseko, Hokkaido", scene: "ski", cost: 60000, need: "ski", after: { name: "Onsen party at the chalet", type: "party", theme: { far: "mountain", ground: "wood", props: "lanterns" } },
+      beats: ["The heli lifts off from a snowfield, powder swirling everywhere.", "The deepest powder on earth. You sink to your waist.", "Evening. Steam rises from the outdoor onsen."],
+      lines: [{ t: "这个坡安全吗？", r: "Zhège pō ānquán ma?", en: "Ask if this slope is safe." }, { t: "你先走！", r: "Nǐ xiān zǒu!", en: "Tell them: you first!" }, { t: "风景太美了。", r: "Fēngjǐng tài měi le.", en: "Say the view is beautiful." }] },
+    { id: "gala", name: "外滩艺术晚宴 Bund art gala", where: "A 1920s bank hall on the Bund, Shanghai", scene: "gala", cost: 50000, need: "art", after: { name: "Rooftop after-party over the Huangpu", type: "network", theme: { far: "city", ground: "plaza", props: "lights" } },
+      beats: ["Marble columns, ink paintings, a view of Pudong through the windows.", "The auctioneer opens the headline lot. A rival raises a paddle.", "Speeches, then the whole room moves to the roof."],
+      lines: [{ t: "我对这件作品很感兴趣。", r: "Wǒ duì zhè jiàn zuòpǐn hěn gǎn xìngqù.", en: "Say you're interested in this piece." }, { t: "我出一百万。", r: "Wǒ chū yìbǎi wàn.", en: "Bid one million." }, { t: "这是为了慈善。", r: "Zhè shì wèile císhàn.", en: "Say it's for charity." }] },
+    { id: "dinner", name: "茅台品鉴 Moutai cellar dinner", where: "A private cellar in Guizhou", scene: "dinner", cost: 8000, need: "rank2", after: { name: "Karaoke in the private room", type: "network", theme: { far: "walls", ground: "wood", props: "lanterns" } },
+      beats: ["A cellar carved into a hill, jars older than your parents.", "Toast after toast. Everyone watches who drinks and who pretends.", "The host's niece runs a fund. She's heard of you."],
+      lines: [{ t: "主厨推荐什么？", r: "Zhǔchú tuījiàn shénme?", en: "Ask what the chef recommends." }, { t: "这酒很配。", r: "Zhè jiǔ hěn pèi.", en: "Say the pairing is perfect." }, { t: "为合作干杯！", r: "Wèi hézuò gānbēi!", en: "Toast to working together." }] },
+    { id: "mask", name: "翡翠假面舞会 The Jade Masquerade", where: "A private island off Hainan", scene: "mask", cost: 100000, need: "secret", after: { name: "The jade garden after midnight", type: "party", theme: { far: "sea", ground: "stone", props: "lanterns" } },
+      beats: ["A launch picks you up at midnight. The masks are real jade.", "No names. Just whispers, and deals that will never be written down.", "At dawn the host hands you a key."],
+      lines: [{ t: "面具后面的你是谁？", r: "Miànjù hòumiàn de nǐ shì shéi?", en: "Ask who they are behind the mask." }, { t: "我们跳舞吧。", r: "Wǒmen tiàowǔ ba.", en: "Say: let's dance." }, { t: "日出见。", r: "Rìchū jiàn.", en: "Say: see you at sunrise." }] },
+  ],
+};
+function bestCar(lang = G.lang) { const L = life(lang); return SHOP_BASE.filter((x) => x.cat === "ride" && L.owned[x.id]).map((x) => ({ it: x, s: carSpec(x.id, lang) })).sort((a, b) => b.s.hp - a.s.hp)[0] || null; }
+function hlNeed(x) {
+  const L = life(), bc = bestCar(), n = x.need;
+  if (n === "car") return bc && ["exotic", "hyper"].includes(bc.s.cls) ? "" : "Bring an exotic or hyper car";
+  if (n === "boat") return myBoat() ? "" : "Bring a boat";
+  if (n === "polo") return ownsUnlock("polo") || repOf() >= 50 ? "" : "Own polo ponies, or reach reputation 50";
+  if (n === "f1") return ownsUnlock("f1") || rank() >= 4 ? "" : "Own an F1 stake, or reach rank 5";
+  if (n === "racehorse") return ownsUnlock("racehorse") || rank() >= 3 ? "" : "Own a racehorse, or reach rank 4";
+  if (n === "art") return ownsUnlock("art") || rank() >= 3 ? "" : "Own serious art, or reach rank 4";
+  if (n === "ski") return rank() >= 3 ? "" : "Reach rank 4";
+  if (n === "secret") return secretUnlocked() || repOf() >= 80 ? "" : "Invitation only. Get the VIP file or reputation 80";
+  if (n.startsWith("rank")) return rank() >= +n.slice(4) ? "" : "Reach rank " + (+n.slice(4) + 1);
+  return "";
+}
+function hlPower(x) {
+  const bc = bestCar(), b = myBoat();
+  switch (x.scene) {
+    case "convoy": return clamp((bc?.s.hp || 100) / 1500, 0.15, 1);
+    case "regatta": return clamp((b?.spec?.kn || 10) / 40, 0.15, 1);
+    case "polo": return ownsUnlock("polo") ? 0.85 : 0.4;
+    case "paddock": return ownsUnlock("f1") ? 0.9 : 0.45;
+    case "derby": return ownsUnlock("racehorse") ? 0.85 : 0.4;
+    case "ski": return hasHeli() ? 0.9 : 0.5;
+    case "gala": return ownsUnlock("art") ? 0.85 : clamp(repOf() / 100, 0.2, 0.8);
+    case "casino": return 0.48;
+    default: return clamp(repOf() / 100, 0.2, 0.9);
+  }
+}
+function hlCost(x) { return x.need === "ski" && hasHeli() ? Math.round(x.cost * 0.3) : x.cost; }
+function openHighLife() {
+  const m = $("#modal"), L = life(), list = HIGHLIFE[G.lang] || [];
+  m.className = "modal wide"; $("#overlay").hidden = false;
+  if (!list.length) { m.innerHTML = '<h2>High life</h2><p class="muted">The high life board is written for Spanish and Mandarin careers.</p><button class="btn" id="hl-x">Close</button>'; $("#hl-x").onclick = () => { m.className = "modal"; $("#overlay").hidden = true; }; return; }
+  m.innerHTML = '<div class="row between"><div><span class="label">' + (G.lang === "es" ? "La buena vida" : "上流生活 shàngliú shēnghuó") + '</span><h2>The High Life board</h2></div><button class="btn sm" id="hl-x">Close</button></div><p class="muted small">Three moments, each spoken in ' + esc(LANGS[G.lang].name) + ", then the afterparty where the deals happen. What you own changes the odds.</p>" +
+    '<div class="stack" style="gap:10px">' + list.map((x, k) => { const need = hlNeed(x), cost = hlCost(x); return '<div class="card"><div class="row between"><div><div class="t">' + esc(x.name) + '</div><div class="small muted">' + esc(x.where) + '</div></div><div class="row">' + (need ? '<span class="chip info">' + esc(need) + "</span>" : '<button class="btn sm gold" data-hl="' + k + '"' + (L.cash < cost ? " disabled" : "") + ">Go · " + money(cost) + "</button>") + "</div></div></div>"; }).join("") + "</div>";
+  $("#hl-x").onclick = () => { m.className = "modal"; $("#overlay").hidden = true; };
+  m.querySelectorAll("[data-hl]").forEach((b) => b.addEventListener("click", async () => {
+    const x = list[+b.dataset.hl], cost = hlCost(x); if (L.cash < cost || hlNeed(x)) return;
+    L.cash -= cost; save(); renderHud(); playHighLife(x);
+  }));
+}
+function drawHighLife(c, x, t, st) {
+  const sc = x.scene, pal = (k) => genNpcPal(hash(x.id + k)), crowd = (n, y, seed, party) => { for (let k = 0; k < n; k++) { const p = pal(seed + k); if (party) p.party = true; drawPerson(c, 8 + ((k * 37 + seed * 11) % 176), y + ((k * 7) % 5), p, t, false, k + 3, false); } };
+  if (sc === "convoy") {
+    const alps = x.land === "alps";
+    bands(c, 0, 0, 192, 60, st.beat === 2 ? SKIES.dusk : SKIES.day);
+    for (let i = 0; i < 192; i++) { const X = i + t / 30, h = alps ? 18 + Math.round(14 * Math.abs(Math.sin(X / 40)) + 6 * Math.sin(X / 13)) : 10 + Math.round(6 * Math.sin(X / 25)); R(c, i, 60 - h, 1, h, alps ? "#8a8f97" : "#6f9a6a"); if (alps && h > 26) R(c, i, 60 - h, 1, 4, "#f4f4f4"); }
+    if (!alps) { R(c, 0, 58, 192, 8, "#2ec0c6"); }
+    R(c, 0, 66, 192, 30, "#3a3f4a"); for (let i = -((t / 6) % 24); i < 192; i += 24) R(c, i, 80, 12, 1, "#f5c542"); R(c, 0, 96, 192, 12, alps ? "#e8e8e8" : "#c9b27a");
+    const mine = bestCar(), rv = rivalsFor(), order = [0, 1, 2, 3], me = st.pos ?? 2;
+    order.forEach((slot) => { const px = 150 - slot * 44 + Math.round(Math.sin(t / 400 + slot) * 2); if (slot === me) drawCar(c, px, 92, 40, mine?.s.type || "supercar", mine?.s.col || "#e24b3b", t, { sig: mine?.s.batwing ? "batwing" : "v", conv: mine?.s.conv }); else { const r0 = rv[(slot + 1) % rv.length]; drawCar(c, px, 88 + (slot % 2) * 4, 38, ["supercar", "hypercar", "gt", "sports"][slot], r0?.col || "#f4f4f4", t, { sig: ["y", "bar", "halo", "v"][slot] }); } });
+    if (me !== undefined) { const px = 150 - me * 44 + 18; R(c, px, 68, 1, 5, "#f5c542"); R(c, px + 1, 68, 4, 2, "#f5c542"); }
+    return;
+  }
+  if (sc === "regatta") {
+    bands(c, 0, 0, 192, 50, st.beat === 2 ? SKIES.dusk : SKIES.day); R(c, 120, 30, 30, 20, "#6f8a7a");
+    bands(c, 0, 50, 192, 58, ["#2ec0c6", "#22a9b8", "#1f96ad", "#1a86a0"]); for (let y = 54; y < 108; y += 4) for (let i = -((t / 20 + y * 7) % 16); i < 192; i += 16) R(c, i, y, 3, 1, "#b6f3f0");
+    const fl = fleet().filter((b) => !b.none).slice(0, 4), me = st.pos ?? 1;
+    fl.forEach((b, k) => { const lane = b.me ? me : k === me ? 3 : k, px = 140 - lane * 40 + Math.round(Math.sin(t / 500 + k) * 2), wl = 66 + lane * 10; drawBoat(c, px, wl, Math.min(48, Math.max(20, b.len)), b.type || "motoryacht", b.col, t, { ups: b.ups || {} }); if (Math.floor(t / 150 + k) % 2) R(c, px - 6, wl, 5, 1, "#ffffff"); if (b.me) { R(c, px + 10, wl - 26, 1, 6, "#f5c542"); R(c, px + 11, wl - 26, 4, 2, "#f5c542"); } });
+    return;
+  }
+  if (sc === "polo" || sc === "derby") {
+    bands(c, 0, 0, 192, 40, sc === "derby" ? SKIES.night : SKIES.day);
+    if (sc === "derby") for (let k = 0; k < 10; k++) { R(c, k * 20, 8, 12, 32, "#141b44"); for (let y = 10; y < 40; y += 3) R(c, k * 20 + 2 + (y % 6), y, 1, 1, "#ffe39a"); }
+    else for (let i = 0; i < 192; i++) R(c, i, 30 + Math.round(4 * Math.sin(i / 20)), 1, 12, "#6f9a6a");
+    R(c, 0, 40, 192, 8, "#e8e2d6"); crowd(9, 26, 1, sc === "derby");
+    R(c, 0, 48, 192, 60, sc === "derby" ? "#3f8a3a" : "#5aa847"); for (let i = 0; i < 192; i += 12) R(c, i, 48, 6, 60, sc === "derby" ? "#4f9a3f" : "#62b04f");
+    for (let k = 0; k < 4; k++) { const hx = ((t / (sc === "derby" ? 8 : 16) + k * 50) % 240) - 30, hy = 66 + k * 9, leg = Math.floor(t / 90 + k) % 2, col = ["#6b3b1f", "#2a1a14", "#8a5a33", "#f4f1ea"][k]; R(c, hx, hy, 14, 5, col); R(c, hx + 12, hy - 4, 3, 5, col); R(c, hx + 14, hy - 5, 4, 3, col); [1, 4, 9, 12].forEach((lx, q) => R(c, hx + lx + ((q + leg) % 2), hy + 5, 1, 5, col)); R(c, hx + 5, hy - 6, 4, 5, ["#e24b3b", "#f5c542", "#52c7b8", "#1c2656"][k]); R(c, hx + 6, hy - 8, 3, 2, "#e2b48c"); if (sc === "polo") R(c, hx + 10, hy - 4 + leg, 1, 9, "#8a5a33"); }
+    if (sc === "polo") R(c, ((t / 10) % 200) - 4, 100, 2, 2, "#ffffff");
+    return;
+  }
+  if (sc === "paddock") {
+    bands(c, 0, 0, 192, 40, G.lang === "zh" ? SKIES.night : SKIES.day); R(c, 0, 20, 192, 48, "#e8e8e8"); for (let k = 0; k < 4; k++) { R(c, 8 + k * 46, 28, 40, 40, "#23252e"); R(c, 8 + k * 46, 24, 40, 4, ["#e24b3b", "#1c2656", "#f5c542", "#52c7b8"][k]); }
+    R(c, 0, 68, 192, 40, "#3a3f4a"); for (let i = 0; i < 192; i += 8) R(c, i, 72, 4, 2, i % 16 ? "#e24b3b" : "#f4f4f4");
+    const run = st.beat === 1, fx = run ? 192 - ((t / 2) % 300) : 60; drawCar(c, fx, 96, 64, "track", "#e24b3b", t, {}); if (run) drawCar(c, fx + 90, 100, 60, "track", "#1c2656", t, {});
+    crowd(5, 44, 7, false); return;
+  }
+  if (sc === "ski") {
+    bands(c, 0, 0, 192, 108, st.beat === 2 ? SKIES.dusk : ["#8fc4ec", "#a8d4f0", "#c4e2f4", "#e2f0f8"]);
+    for (let i = 0; i < 192; i++) { const pk = 20 + Math.abs(((i + 40) % 120) - 60) * 0.8; R(c, i, pk, 1, 108 - pk, "#f4f4f4"); R(c, i, pk, 1, 2, "#c9d3e0"); }
+    for (let i = 0; i < 192; i++) R(c, i, 70 + Math.round(i * 0.12), 1, 40, "#ffffff");
+    drawPlane(c, 110 + Math.round(Math.sin(t / 700) * 8), 26, 56, "bigheli", "#e24b3b", t, {});
+    for (let k = 0; k < 4; k++) { const sx = ((t / 14 + k * 45) % 220) - 20, sy = 60 + Math.round(sx * 0.2); R(c, sx, sy, 2, 4, ["#1c2656", "#e24b3b", "#f5c542", "#52c7b8"][k]); R(c, sx - 3, sy + 4, 7, 1, "#3a3f4a"); for (let q = 1; q < 6; q++) R(c, sx - q * 3, sy + 4 - q, 1, 1, "#dfe6ee"); }
+    return;
+  }
+  if (sc === "gala" || sc === "mask" || sc === "casino" || sc === "dinner") {
+    const bg = sc === "casino" ? "#3a0d14" : sc === "mask" ? "#140a1c" : sc === "dinner" ? "#1a120c" : "#2a2438";
+    R(c, 0, 0, 192, 108, bg); for (let i = 0; i < 192; i += 24) R(c, i, 0, 2, 70, shade(bg, 1.5));
+    for (let k = 0; k < 3; k++) { const cx = 32 + k * 64; R(c, cx, 0, 1, 8, g0()); for (let q = -8; q <= 8; q += 2) R(c, cx + q, 8 + Math.abs(q) / 3, 1, 3, (Math.floor(t / 250) + q) % 5 ? "#ffe39a" : "#ffffff"); }
+    if (sc === "gala" || sc === "mask") for (let k = 0; k < 4; k++) { const px = 12 + k * 46; R(c, px, 22, 26, 20, "#f5c542"); R(c, px + 2, 24, 22, 16, ["#1c2656", "#7a1f2b", "#2f5a34", "#e8a33a"][k]); R(c, px + 6, 28, 8, 6, ["#f4f1ea", "#f5c542", "#e24b3b", "#52c7b8"][k]); }
+    R(c, 0, 78, 192, 30, sc === "casino" ? "#5a1a24" : "#3a2a2a");
+    if (sc === "casino") { R(c, 40, 80, 112, 16, "#1f6f3a"); R(c, 38, 78, 116, 2, "#8a5a33"); for (let k = 0; k < 8; k++) R(c, 50 + k * 12, 84 + (k % 2) * 3, 4, 2 + ((k + Math.floor(t / 400)) % 3), ["#e24b3b", "#f4f4f4", "#1c2656", "#f5c542"][k % 4]); }
+    if (sc === "dinner") { R(c, 20, 82, 152, 4, "#f4f1ea"); for (let k = 0; k < 8; k++) { R(c, 26 + k * 19, 80, 6, 2, "#ffffff"); R(c, 30 + k * 19, 76, 1, 4, "#9fd8f0"); } }
+    for (let k = 0; k < 6; k++) { const p = pal(k); p.party = sc !== "dinner"; const px = 10 + k * 31, py = sc === "casino" || sc === "dinner" ? 62 : 58; drawPerson(c, px, py, p, t, (Math.floor(t / 900) + k) % 4 === 0, k + 2, false); if (sc === "mask") { R(c, px + 1, py + 3, 8, 2, k % 2 ? "#f5c542" : "#2f8f6b"); R(c, px + 2, py + 3, 1, 1, "#101014"); R(c, px + 7, py + 3, 1, 1, "#101014"); } }
+    drawPerson(c, 90, sc === "casino" || sc === "dinner" ? 62 : 58, { ...myLook(), party: true }, t, true, 1, false);
+    if (sc === "mask") { R(c, 91, 61, 8, 2, "#101014"); }
+    return;
+  }
+  if (sc === "rave") {
+    bands(c, 0, 0, 192, 108, SKIES.night); for (let dy = -6; dy <= 6; dy++) { const w = Math.floor(Math.sqrt(36 - dy * dy)); R(c, 150 - w, 16 + dy, w * 2 + 1, 1, "#f4f0dc"); }
+    for (let k = 0; k < 8; k++) { const tx = k * 26 + 4; R(c, tx + 6, 30, 3, 50, "#1a2a1a"); for (let q = 0; q < 5; q++) R(c, tx + q * 3, 24 + (q % 2) * 4, 8, 6, "#0f2a14"); }
+    for (let k = 0; k < 5; k++) { const a = t / 600 + k * 1.2, col = ["#ff5fa2", "#52c7b8", "#f5c542", "#9a6bff", "#6fd0ff"][k]; for (let q = 0; q < 60; q += 2) R(c, 96 + Math.cos(a) * q, 40 - Math.abs(Math.sin(a)) * q * 0.5, 1, 1, col); }
+    R(c, 86, 36, 20, 6, "#6b4a2a"); R(c, 0, 84, 192, 24, "#1a1410");
+    crowd(10, 66, 21, true); drawPerson(c, 92, 64, { ...myLook(), party: true }, t, false, 1, true); return;
+  }
+  function g0() { return "#8a6a2a"; }
+}
+function playHighLife(x) {
+  const m = $("#modal"), L = life(), power = hlPower(x), stake = Math.max(5000, Math.round(x.cost * (x.scene === "casino" ? 1.2 : 0.8)));
+  const st = { beat: 0, pos: 2 }, log = []; let raf = 0, done = false, repT = 0, xpT = 0, cashT = 0;
+  m.innerHTML = '<div class="row between"><span class="label" id="hl-step">' + esc(x.name) + '</span><button class="btn sm" id="hl-quit">Leave</button></div><canvas class="ws-cv" id="hl-cv" width="192" height="108" style="aspect-ratio:16/9"></canvas><p id="hl-cap" style="min-height:2.5em"></p><div id="hl-area" class="stack" style="gap:8px"></div>';
+  const cv = $("#hl-cv").getContext("2d");
+  const loop = (now) => { drawHighLife(cv, x, now, st); if (!done) raf = requestAnimationFrame(loop); };
+  raf = requestAnimationFrame(loop);
+  const finish = () => {
+    done = true; cancelAnimationFrame(raf);
+    if (xpT) addXp(xpT); if (repT) addRep(repT, x.name); if (cashT > 0) addCash(cashT); else if (cashT < 0) { L.cash = Math.max(0, L.cash + cashT); save(); }
+    stat("highlife"); if (x.scene === "convoy") award("convoy"); if (x.scene === "casino" && cashT > 0) award("highroller");
+    m.innerHTML = '<div class="label">' + esc(x.name) + '</div><div class="big">' + (repT >= 0 ? "+" : "") + repT + " rep</div><p>" + log.map((l) => esc(l)).join("<br>") + '</p><p class="muted small">' + (xpT ? "+" + xpT + " XP. " : "") + (cashT ? (cashT > 0 ? "Up " : "Down ") + money(Math.abs(cashT)) + "." : "") + '</p><div class="row"><button class="btn primary" id="hl-after">' + esc(x.after.name) + ' →</button><button class="btn" id="hl-home">Head home</button></div>';
+    $("#hl-home").onclick = () => { m.className = "modal"; $("#overlay").hidden = true; renderHud(); };
+    $("#hl-after").onclick = () => {
+      m.className = "modal"; $("#overlay").hidden = true;
+      const c0 = career(); if (!L.here || !tierById(L.here)) { L.here = c0.tiers[0].id; save(); }
+      showTab("explore"); exploreMapOpen = false; openWalk(L.here);
+      enterEvent({ name: x.after.name, type: x.after.type, where: x.where.toUpperCase(), key: "hl:" + x.id + ":" + Date.now(), theme: x.after.theme });
+      toast("Everyone here saw you at " + x.name.replace(/^[^A-Za-z]+/, "") + ". Doors are open.");
+    };
+  };
+  $("#hl-quit").onclick = () => { if (!done) finish(); };
+  const beat = async (k) => {
+    st.beat = k; $("#hl-step").textContent = x.name + " · " + (k + 1) + "/3"; $("#hl-cap").textContent = x.beats[k];
+    const area = $("#hl-area"), line = x.lines[k];
+    area.innerHTML = '<div class="row"><button class="btn primary" id="hl-say">Say it · ' + esc(line.en) + "</button></div>";
+    $("#hl-say").onclick = async () => {
+      const r = await sayIt("raw", { ph: line }, x.name);
+      if (!r.ok) return;
+      xpT += r.peeked ? 2 : 6;
+      const opts = HL_CHOICES[x.scene][k];
+      area.innerHTML = '<div class="label">Your move</div>' + opts.map(([lab, kind], q) => '<button class="answer" data-hc="' + q + '"><span class="t" style="font-size:15px">' + esc(lab) + '</span><span class="rom">' + ({ safe: "Safe", bold: "Bold · odds " + Math.round((0.35 + power * 0.55) * 100) + "%", wild: "Wild · odds " + Math.round((0.12 + power * 0.5) * 100) + "%" })[kind] + "</span></button>").join("");
+      area.querySelectorAll("[data-hc]").forEach((b) => b.addEventListener("click", () => {
+        const [lab, kind] = opts[+b.dataset.hc]; area.querySelectorAll("button").forEach((z) => (z.disabled = true));
+        let msg;
+        if (kind === "safe") { repT += 1; xpT += 6; msg = lab + ": smooth, no drama."; st.pos = 2; }
+        else if (kind === "bold") { if (Math.random() < 0.35 + power * 0.55) { repT += 4; xpT += 12; const c = Math.round(stake * 0.3); cashT += c; msg = lab + ": it lands. +" + money(c) + " in new business."; st.pos = 1; sfx("good"); } else { repT -= 1; msg = lab + ": awkward. People noticed."; st.pos = 3; sfx("bad"); } }
+        else { if (Math.random() < 0.12 + power * 0.5) { repT += 9; xpT += 20; const c = Math.round(stake * 1.2); cashT += c; msg = lab + ": legendary. Everyone's filming. +" + money(c) + "."; st.pos = 0; sfx("level"); if (Math.random() < 0.25) { const s2 = grantSecret(); if (s2) msg += " Someone slips you a file: " + s2.title + "."; } } else { repT -= 4; const c = Math.round(stake * 0.5); cashT -= c; msg = lab + ": it goes wrong. It costs you " + money(c) + " and some dignity."; st.pos = 3; sfx("bad"); } }
+        log.push(msg); area.insertAdjacentHTML("beforeend", '<div class="fb ' + (msg.includes("goes wrong") || msg.includes("awkward") ? "major" : "good") + '"><p>' + esc(msg) + '</p></div><div class="row"><button class="btn primary" id="hl-next">' + (k < 2 ? "Next" : "Finish") + "</button></div>");
+        $("#hl-next").onclick = () => (k < 2 ? beat(k + 1) : finish());
+      }));
+    };
+  };
+  beat(0);
+}
+
+/* =========================================================
+   VOYAGES: new day, new island, new connections.
+   Built from how real charters run: swim at anchor, move at midday, toys and tender runs
+   in the afternoon, sundowners at a new anchorage. Range, draft, garages and helipads decide
+   where you can go and what you can do.
+   ========================================================= */
+const COUNTRY = {
+  es: { AW: "Aruba", BQ: "Bonaire", CW: "Curazao", CO: "Colombia", PA: "Panamá", VE: "Venezuela", ES: "España", CV: "Cabo Verde", PR: "Puerto Rico", EC: "Ecuador", CL: "Chile" },
+  zh: { SG: ["新加坡", "Xīnjiāpō"], MY: ["马来西亚", "Mǎláixīyà"], TH: ["泰国", "Tàiguó"], HK: ["香港", "Xiānggǎng"], MO: ["澳门", "Àomén"], CN: ["中国", "Zhōngguó"], TW: ["台湾", "Táiwān"], ID: ["印尼", "Yìnní"], PW: ["帕劳", "Pàláo"] },
+};
+const ROUTES = {
+  es: [
+    { id: "abc", name: "The ABC islands", nm: 120, stops: [["Palm Beach, Aruba", "AW", "beach club"], ["Baby Beach, Aruba", "AW", "reef"], ["Kralendijk, Bonaire", "BQ", "town reef"], ["Klein Bonaire", "BQ", "reef wild"], ["Willemstad, Curaçao", "CW", "town club"]] },
+    { id: "roques", name: "Los Roques atolls", nm: 150, shallow: true, stops: [["Gran Roque", "VE", "town"], ["Cayo de Agua", "VE", "beach wild"], ["Francisquí", "VE", "reef club"], ["Crasquí", "VE", "beach reef"]] },
+    { id: "sanblas", name: "Cartagena to San Blas", nm: 250, shallow: true, stops: [["Cartagena", "CO", "town club"], ["Islas del Rosario", "CO", "reef beach"], ["Sapzurro", "CO", "wild"], ["Cayos Holandeses", "PA", "reef wild"], ["Chichime", "PA", "beach"], ["Portobelo", "PA", "town"]] },
+    { id: "baleares", name: "The Balearics loop", nm: 300, stops: [["Palma", "ES", "town club"], ["Cala Deià", "ES", "wild"], ["Cabrera", "ES", "reef wild"], ["Illetes, Formentera", "ES", "beach club"], ["Cala Jondal, Ibiza", "ES", "club"], ["Es Vedrà", "ES", "wild"], ["Cala Macarella, Menorca", "ES", "beach"]] },
+    { id: "galapagos", name: "Galápagos expedition", nm: 1000, rank: 4, stops: [["Puerto Ayora", "EC", "town"], ["Isabela", "EC", "wild"], ["Open Pacific", null, "sea"], ["Fernandina", "EC", "wild reef"], ["Genovesa", "EC", "wild"], ["Bartolomé", "EC", "reef"]] },
+    { id: "atlantic", name: "Transatlantic: Las Palmas to San Juan", nm: 2800, stops: [["Las Palmas", "ES", "town"], ["Open Atlantic", null, "sea"], ["Mindelo", "CV", "town club"], ["Open Atlantic", null, "sea"], ["Open Atlantic", null, "sea"], ["Open Atlantic", null, "sea"], ["Open Atlantic", null, "sea"], ["San Juan", "PR", "town club"]] },
+    { id: "hornos", name: "Chilean fjords to Cape Horn", nm: 1200, ice: true, stops: [["Puerto Montt", "CL", "town"], ["Fiordo Tortel", "CL", "wild"], ["Glaciar Pío XI", "CL", "ice"], ["Puerto Williams", "CL", "town"], ["Cabo de Hornos", "CL", "ice sea"]] },
+  ],
+  zh: [
+    { id: "tioman", name: "Singapore to Tioman", nm: 150, stops: [["Sentosa Cove", "SG", "town club"], ["Pulau Tioman", "MY", "reef beach"], ["Pulau Tulai", "MY", "reef"], ["Pulau Aur", "MY", "wild"]] },
+    { id: "hainan", name: "Hong Kong to Sanya", nm: 400, stops: [["Hong Kong", "HK", "town club"], ["Macau", "MO", "club"], ["Wanning", "CN", "beach"], ["Sanya, Yalong Bay", "CN", "club beach"], ["Wuzhizhou", "CN", "reef"]] },
+    { id: "taiwan", name: "Around Taiwan", nm: 700, stops: [["Keelung", "TW", "town"], ["Guishan Island", "TW", "wild"], ["Hualien", "TW", "wild"], ["Green Island", "TW", "reef"], ["Kenting", "TW", "beach club"], ["Penghu", "TW", "beach"]] },
+    { id: "andaman", name: "Langkawi to the Andaman Sea", nm: 400, shallow: true, stops: [["Langkawi", "MY", "town"], ["Ko Lipe", "TH", "reef club"], ["Ko Phi Phi", "TH", "club"], ["Phang Nga Bay", "TH", "wild"], ["Similan Islands", "TH", "reef"], ["Phuket", "TH", "town club"]] },
+    { id: "palau", name: "Palau: rock islands and jellyfish lake", nm: 1500, rank: 4, stops: [["Koror", "PW", "town"], ["Open Pacific", null, "sea"], ["Rock Islands", "PW", "wild reef"], ["Jellyfish Lake", "PW", "reef"], ["German Channel", "PW", "reef"]] },
+    { id: "komodo", name: "Singapore to Komodo", nm: 1600, stops: [["Singapore", "SG", "town"], ["Open Java Sea", null, "sea"], ["Belitung", "ID", "beach"], ["Open Java Sea", null, "sea"], ["Bali", "ID", "club town"], ["Gili Islands", "ID", "beach club"], ["Komodo", "ID", "wild reef"]] },
+  ],
+};
+const VOY_SAY = {
+  es: { castoff: { t: "¡Soltamos amarras!", en: "Give the order to cast off." }, customs: (from) => ({ t: "Venimos de " + from + ". Aquí están los pasaportes.", en: "Clear customs: say where you came from and hand over the passports." }), market: { t: "¿A cuánto está el kilo de pescado?", en: "Ask the price of fish per kilo." }, anchor: { t: "Echamos el ancla aquí.", en: "Tell the captain to drop anchor here." } },
+  zh: { castoff: { t: "起航！", r: "Qǐháng!", en: "Give the order to cast off." }, customs: (from) => ({ t: "我们从" + from[0] + "来。这是护照。", r: "Wǒmen cóng " + from[1] + " lái. Zhè shì hùzhào.", en: "Clear customs: say where you came from and hand over the passports." }), market: { t: "鱼多少钱一斤？", r: "Yú duōshao qián yì jīn?", en: "Ask the price of fish per jin." }, anchor: { t: "我们在这里抛锚。", r: "Wǒmen zài zhèlǐ pāomáo.", en: "Tell the captain to drop anchor here." } },
+};
+function voyageCheck(route, b) {
+  if (!b) return "You need a boat (level 2 or up)";
+  if (route.rank && rank() < route.rank) return "Opens at rank " + (route.rank + 1);
+  if ((b.spec.nm || 0) < route.nm) return "Range " + (b.spec.nm || 0).toLocaleString("en-US") + " nm, needs " + route.nm.toLocaleString("en-US");
+  if (route.ice && !b.spec.ice) return "Needs an ice-class hull";
+  if (route.shallow && !b.spec.shallow && !(b.spec.tender || b.ups.tender || b.garage)) return "Too deep for these anchorages. Get a tender or a shallow-draft boat";
+  return "";
+}
+function voyageDaily(b) { const L = life(), sup = SHOP_BASE.filter((x) => x.cat === "water" && L.owned[x.id] && BOATS[x.id]?.support && BOATS[x.id]?.type === "support").reduce((s, x) => s + (BOATS[x.id].daily || 0), 0); return Math.max(50, (b.spec.daily || 200) + sup); }
+function openVoyage() {
+  const m = $("#modal"), L = life(), b = myBoat(), routes = ROUTES[G.lang] || [];
+  m.className = "modal wide"; $("#overlay").hidden = false;
+  const comps = circleList().filter((p) => (L.chem[p.id] || 0) >= 35 && p.rank <= rank());
+  const state = { route: null, comp: "" };
+  const draw = () => {
+    m.innerHTML = '<div class="row between"><div><span class="label">' + (G.lang === "es" ? "La travesía" : G.lang === "zh" ? "航行 hángxíng" : "Voyage") + "</span><h2>" + (b ? "Take “" + esc(b.name) + "” out" : "No boat yet") + '</h2></div><button class="btn sm" id="voy-x">Cancel</button></div>' +
+      (b ? '<p class="muted small">' + esc(capsLine(b.it)) + " · " + money(voyageDaily(b)) + "/day with crew, fuel and support.</p>" : '<p class="muted">Buy a boat in the Empire tab first.</p>') +
+      (!routes.length ? '<p class="muted">Voyages are charted for Spanish and Mandarin careers.</p>' : '<div class="stack" style="gap:8px">' + routes.map((r) => { const why = voyageCheck(r, b), days = r.stops.length, cost = b ? voyageDaily(b) * days : 0; return '<div class="card"><div class="row between"><div><div class="t">' + esc(r.name) + '</div><div class="small muted">' + days + " days · " + r.stops.filter((s) => s[1]).map((s) => s[0].split(",")[0]).join(" → ") + '</div></div><div class="row">' + (why ? '<span class="chip info">' + esc(why) + "</span>" : '<button class="btn sm" data-rt="' + r.id + '" aria-pressed="' + (state.route === r.id) + '">' + (state.route === r.id ? "Selected" : "Choose") + " · " + money(cost) + "</button>") + "</div></div></div>"; }).join("") + "</div>") +
+      (b && routes.length ? '<div class="field"><label class="label" for="voy-comp">Bring someone</label><select id="voy-comp"><option value="">Just you and the crew</option>' + comps.map((p) => '<option value="' + esc(p.id) + '"' + (state.comp === p.id ? " selected" : "") + ">" + esc(p.name) + "</option>").join("") + '</select></div><div class="row"><button class="btn primary" id="voy-go"' + (state.route ? "" : " disabled") + ">Cast off</button></div>" : "");
+    $("#voy-x").onclick = () => { m.className = "modal"; $("#overlay").hidden = true; };
+    m.querySelectorAll("[data-rt]").forEach((x) => x.addEventListener("click", () => { state.route = x.dataset.rt; draw(); }));
+    $("#voy-comp")?.addEventListener("change", (e) => { state.comp = e.target.value; });
+    $("#voy-go")?.addEventListener("click", async () => {
+      const r = routes.find((x) => x.id === state.route), cost = voyageDaily(b) * r.stops.length; if (L.cash < cost) { toast("You need " + money(cost) + " for fuel, crew and berths."); return; }
+      const say = (VOY_SAY[G.lang] || {}).castoff; if (say && !(await sayIt("raw", { ph: say }, r.name)).ok) return;
+      L.cash -= cost; save(); renderHud(); playVoyage(r, b, circleList().find((p) => p.id === state.comp));
+    });
+  };
+  draw();
+}
+const VOY_ACTS = [
+  { id: "swim", lab: "Morning swim off the swim platform", ok: () => true, when: "any", res: () => ({ xp: 6, txt: "Cold, clear, awake." }) },
+  { id: "snorkel", lab: "Snorkel the reef", ok: (f) => f.includes("reef"), res: () => ({ xp: 10, txt: "Turtles, a ray, a thousand small blue fish." }) },
+  { id: "toys", lab: "Toys out: seabobs, jet skis and the slide", ok: (f, b) => b.garage || b.ups.jetskis || b.ups.seabob || b.ups.slide, res: () => ({ rep: 3, chem: 6, txt: "The neighbouring boats stop to watch." }) },
+  { id: "club", lab: "Tender run to the beach club", ok: (f, b) => f.includes("club") && (b.spec.tender || b.ups.tender || b.garage || b.spec.shallow), res: () => ({ kind: "flirt" }) },
+  { id: "raft", lab: "Raft up with another yacht for drinks", ok: (f) => f.includes("club") || f.includes("beach"), res: () => ({ kind: "network" }) },
+  { id: "dinner", lab: "Dinner ashore, somewhere with no menu", ok: (f) => f.includes("town"), res: () => ({ kind: "talk" }) },
+  { id: "market", lab: "Provision at the fish market", ok: (f) => f.includes("town"), res: () => ({ kind: "market" }) },
+  { id: "fish", lab: "Troll for dorado and tuna", ok: (f, b) => b.ups.fishing || b.type === "sportfish" || f.includes("sea"), res: () => ({ xp: 8, cash: 1, txt: "A dorado, gold and green. The chef grills it with lime." }) },
+  { id: "hike", lab: "Hike to the lookout", ok: (f) => f.includes("wild"), res: () => ({ xp: 8, txt: "Your whole anchorage from above. Your boat looks tiny. Good." }) },
+  { id: "heli", lab: "Helicopter to a mountaintop lunch", ok: (f, b) => (b.helipad || b.support || hasHeli()) && !f.includes("sea"), res: () => ({ rep: 6, xp: 6, txt: "Lunch at a table nobody else could reach." }) },
+  { id: "sub", lab: "Take the submarine down to a wreck", ok: (f, b) => b.ups.sub || b.spec.sub || SHOP_BASE.some((x) => life().owned[x.id] && BOATS[x.id]?.type === "sub"), res: () => ({ xp: 12, secret: true, txt: "A wreck at forty metres. Something glints inside." }) },
+  { id: "ice", lab: "Zodiac among the icebergs", ok: (f) => f.includes("ice"), res: () => ({ xp: 14, rep: 4, txt: "Blue ice, a calving glacier, total silence." }) },
+  { id: "lesson", lab: "Language lesson on the aft deck", ok: (f) => f.includes("sea") || life().staff?.tutor, res: () => ({ xp: life().staff?.tutor ? 24 : 12, txt: "Two hours of drills with the ocean going by." }) },
+  { id: "whales", lab: "Night watch with the captain", ok: (f) => f.includes("sea"), res: () => ({ xp: 8, txt: "Whales at 2am, blowing silver in the moonlight." }) },
+  { id: "sundown", lab: "Sundowners on the top deck", ok: () => true, res: () => ({ chem: 5, xp: 4, txt: "The sun goes, the stars arrive, someone puts on old records." }) },
+];
+function drawVoyage(c, t, st) {
+  const f = st.feat || "", sea = f.includes("sea"), ice = f.includes("ice");
+  bands(c, 0, 0, 192, 60, st.phase === 2 ? SKIES.dusk : st.phase === 3 ? SKIES.night : SKIES.day);
+  if (st.phase === 3) for (let k = 0; k < 30; k++) R(c, (k * 53) % 192, (k * 17) % 40, 1, 1, "#dfe6ff");
+  const r = rng(hash(st.stop || "x"));
+  if (!sea) {
+    const w0 = 60 + Math.floor(r() * 60), x0 = 20 + Math.floor(r() * 60), ph0 = r() * 6, hgt = f.includes("wild") ? 30 : ice ? 34 : 16;
+    for (let i = 0; i < w0; i++) { const h = Math.round(hgt * Math.sin((i / w0) * Math.PI) * (0.75 + 0.25 * Math.sin(i / 7 + ph0))); R(c, x0 + i, 60 - h, 1, h, ice ? "#e8f0f8" : f.includes("wild") ? "#4f7d4a" : "#6f9a6a"); if (ice && h > 6) R(c, x0 + i, 60 - h, 1, 2, "#ffffff"); }
+    R(c, x0 - 4, 58, w0 + 8, 3, ice ? "#c9d3e0" : "#f2dca6");
+    if (f.includes("town")) for (let k = 0; k < 8; k++) { const hx = x0 + 6 + k * Math.floor(w0 / 9); R(c, hx, 48, 6, 10, ["#f4f1ea", "#f2c14e", "#e86a92", "#3fa7d6"][k % 4]); R(c, hx, 46, 6, 2, "#b5553a"); }
+    if (f.includes("beach") || f.includes("club")) for (let k = 0; k < 3; k++) { const px = x0 + 10 + k * 18; for (let i = 0; i < 12; i++) R(c, px + i * 0.2, 58 - i, 1, 1, "#6b4a2a"); for (let q = -4; q <= 4; q++) R(c, px + 2 + q, 46 + Math.abs(q) / 2, 1, 1, "#3f7a4a"); }
+    if (f.includes("club") && st.phase >= 2) for (let k = 0; k < 10; k++) R(c, x0 + 4 + k * 6, 44 + (k % 2) * 2, 1, 1, (Math.floor(t / 300) + k) % 3 ? "#ffe39a" : "#ff5fa2");
+  }
+  const night = st.phase === 3;
+  bands(c, 0, 60, 192, 48, ice ? ["#2a4c6a", "#22405a", "#1c3650"] : night ? ["#0c1a3c", "#0a1634", "#08122c"] : f.includes("reef") ? ["#39d0cf", "#2ec0c6", "#22a9b8", "#1f96ad"] : ["#2b6f9a", "#23628a", "#1c567a"]);
+  for (let y = 62; y < 108; y += 3) for (let i = -((t / 40 + y * 5) % 14); i < 192; i += 14) R(c, i, y, 3, 1, night ? "#2a4c7a" : "#b6f3f0");
+  if (ice) for (let k = 0; k < 4; k++) { const bx = (k * 57 + Math.floor(t / 200)) % 200 - 10; R(c, bx, 70 + k * 7, 8, 3, "#f4f8ff"); R(c, bx + 2, 68 + k * 7, 4, 2, "#ffffff"); }
+  const b = st.boat, L = clamp(b.len * 1.4, 26, 80), bx = sea ? 60 + Math.round(Math.sin(t / 900) * 4) : 100, wl = 84 + Math.round(Math.sin(t / 600) * 1);
+  drawBoat(c, bx, wl, L, b.type, b.col, t, { ups: st.toys ? { ...b.ups, jetskis: true } : b.ups, garage: b.garage, helipad: b.helipad });
+  if (sea) for (let k = 0; k < 4; k++) R(c, bx - 8 - k * 6, wl + 1 + (k % 2), 4, 1, "#ffffff");
+  if (st.raft) drawBoat(c, bx + L + 4, wl + 2, clamp(st.raft.len * 1.2, 24, 70), st.raft.type || "motoryacht", st.raft.col, t, { ups: {} });
+  if (b.support && !sea) drawBoat(c, 8, wl + 6, 36, "support", "#3a3f4a", t, {});
+}
+function addTravelContact(name, g, role, pal, place) {
+  const L = life(); L.contacts ||= [];
+  const home = L.here && tierById(L.here) ? L.here : career().tiers[0].id;
+  const c = { id: "k" + Date.now().toString(36) + Math.floor(Math.random() * 99), name, g, role, rank: 0, home, met: place, pal, persona: "playful, flirty " + role + " you met on your yacht trip at " + place + "; teases you, likes confidence and good " + LANGS[G.lang].name };
+  L.contacts.push(c); L.chem[c.id] = 25 + Math.round(repOf() / 5); save(); stat("contacts");
+  toast("New contact: " + name, "ach"); return c;
+}
+function playVoyage(route, b, comp) {
+  const m = $("#modal"), L = life(), stops = route.stops, st = { phase: 0, boat: b, stop: stops[0][0], feat: stops[0][2] };
+  let day = 0, raf = 0, done = false, xpT = 0, repT = 0, cashT = 0, chemT = 0; const log = [], met = [];
+  m.innerHTML = '<div class="row between"><span class="label" id="voy-day"></span><button class="btn sm" id="voy-end">Head home early</button></div><canvas class="ws-cv" id="voy-cv" width="192" height="108" style="aspect-ratio:16/9"></canvas><p id="voy-cap" style="min-height:2.5em"></p><div id="voy-area" class="stack" style="gap:8px"></div>';
+  const cv = $("#voy-cv").getContext("2d"); const loop = (now) => { drawVoyage(cv, now, st); if (!done) raf = requestAnimationFrame(loop); }; raf = requestAnimationFrame(loop);
+  const finish = () => {
+    done = true; cancelAnimationFrame(raf);
+    const days = day + 1;
+    if (xpT) addXp(xpT); if (repT) addRep(repT, "Photos from the boat"); if (cashT) addCash(cashT);
+    if (comp && chemT) { bumpChem(comp, Math.round(chemT * (1 + perks().chem))); pushMsg(comp, { sys: true, text: days + " days on “" + b.name + "”: " + route.name + "." }); jealousy(comp, 12, "your trip with " + comp.name.split(" ")[0]); }
+    stat("voyages"); award("voyager"); if (route.id === "atlantic") award("crossing");
+    G.dayOffset = (G.dayOffset || 0) + days; G.streak.last = today(); save();
+    const mk = { change: 0, income: 0 };
+    m.innerHTML = '<div class="label">Back in port · ' + esc(route.name) + '</div><div class="big">' + days + " days</div><p>" + log.map((l) => esc(l)).join("<br>") + '</p><p class="muted small">+' + xpT + " XP" + (repT ? " · +" + repT + " rep" : "") + (met.length ? " · met " + met.join(", ") : "") + (mk.change || mk.income ? " · portfolio " + (mk.change >= 0 ? "+" : "-") + money(Math.abs(mk.change)) + (mk.income ? ", dividends " + money(mk.income) : "") : "") + '</p><button class="btn primary" id="voy-ok">Tie up</button>';
+    $("#voy-ok").onclick = () => { m.className = "modal"; $("#overlay").hidden = true; dailyTick(); renderHud(); if (current === "empire") renderEmpire(); };
+  };
+  $("#voy-end").onclick = () => { if (!done) finish(); };
+  const nextDay = () => { if (day + 1 >= stops.length) return finish(); day++; startDay(); };
+  const startDay = async () => {
+    const [name, cc, feat] = stops[day], prev = stops.slice(0, day).reverse().find((s) => s[1]);
+    st.stop = name; st.feat = feat; st.phase = 0; st.raft = null; st.toys = false;
+    $("#voy-day").textContent = "Day " + (day + 1) + " of " + stops.length + " · " + name;
+    const area = $("#voy-area");
+    $("#voy-cap").textContent = feat.includes("sea") ? "No land in any direction. The crew fishes off the stern, the ocean goes by." : day === 0 ? "Engines warm. The crew casts off lines." : "You drop anchor at " + name + ". New bay, new people.";
+    if (cc && prev && prev[1] && prev[1] !== cc) {
+      const say = VOY_SAY[G.lang], from = G.lang === "zh" ? COUNTRY.zh[prev[1]] : COUNTRY.es[prev[1]];
+      if (say && from) {
+        area.innerHTML = '<div class="card"><div class="label">Customs</div><p class="muted small">New country. An officer in white boards from a launch.</p><button class="btn primary" id="voy-cust">Clear customs</button></div>';
+        await new Promise((res) => { $("#voy-cust").onclick = async () => { const r = await sayIt("raw", { ph: say.customs(from) }, name); if (r.ok) { xpT += 8; res(); } }; });
+      }
+    }
+    const r = rng(hash(route.id + day + today())), pool = VOY_ACTS.filter((a) => a.ok(feat, b)), picks = [];
+    while (picks.length < 3 && pool.length) picks.push(pool.splice(Math.floor(r() * pool.length), 1)[0]);
+    area.innerHTML = '<div class="label">What today is for</div>' + picks.map((a, k) => '<button class="answer" data-va="' + k + '"><span class="t" style="font-size:15px">' + esc(a.lab) + "</span></button>").join("");
+    area.querySelectorAll("[data-va]").forEach((btn) => btn.addEventListener("click", () => runAct(picks[+btn.dataset.va], name)));
+  };
+  const endDay = (txt) => {
+    log.push("Day " + (day + 1) + ", " + stops[day][0] + ": " + txt);
+    st.phase = 2; const area = $("#voy-area");
+    area.insertAdjacentHTML("beforeend", '<div class="row"><button class="btn primary" id="voy-next">' + (day + 1 >= stops.length ? "Final night" : "Sundowners, then sail on") + "</button></div>");
+    $("#voy-next").onclick = () => { st.phase = 3; setTimeout(nextDay, reduceMotion ? 50 : 700); };
+  };
+  const runAct = (a, place) => {
+    const area = $("#voy-area"), out = a.res(); st.phase = 1;
+    area.querySelectorAll("button").forEach((z) => (z.disabled = true));
+    if (a.id === "toys") st.toys = true;
+    const pl = { area, who: "" };
+    if (out.kind === "flirt") {
+      const bank = FLIRT[G.lang]; if (!bank) { xpT += 4; return endDay("Beach club, cold drinks, loud music."); }
+      const rr = rng(hash(place + today())), g = prefGender(rr), names = (CONTACT_NAMES[G.lang] || CONTACT_NAMES.other)[g], taken = new Set((L.contacts || []).map((c) => c.name)), pool = names.filter((n) => !taken.has(n)), nm = (pool.length ? pool : names)[Math.floor(rr() * (pool.length || names.length))];
+      const role = CONTACT_ROLES[Math.floor(rr() * CONTACT_ROLES.length)], pal = genNpcPal(Math.floor(rr() * 1e9)); pal.long = g === "w";
+      const box = document.createElement("div"); area.appendChild(box);
+      quickExchange(box, nm, harden(toNode(bank[Math.floor(rr() * bank.length)]), bank.map(toNode)), (q) => {
+        if (q === "good") { addTravelContact(nm, g, role, pal, place); met.push(nm.split(" ")[0]); repT += 2; endDay("Met " + nm + " at the beach club."); }
+        else { xpT += 3; endDay("The beach club was fun. Your " + LANGS[G.lang].name + " wasn't smooth enough to leave with a number."); }
+      });
+      return;
+    }
+    if (out.kind === "network") {
+      const bank = NETWORK[G.lang], f0 = fleet().filter((x) => !x.none && !x.me), raft = f0[Math.floor(Math.random() * f0.length)]; st.raft = raft || { len: 20, type: "motoryacht", col: "#f4f4f4" };
+      const cmp = raft ? (raft.len > b.len ? raft.owner + "'s boat is bigger. They mention it twice." : "Your boat is bigger. " + raft.owner + " pretends not to notice.") : "";
+      if (!bank) { repT += 2; return endDay("Rafted up with another yacht. " + cmp); }
+      const box = document.createElement("div"); area.appendChild(box);
+      quickExchange(box, raft ? raft.owner : "A neighbour", harden(toNode(bank[Math.floor(Math.random() * bank.length)]), bank.map(toNode)), (q) => {
+        if (q === "good") { L.intros = Math.min(3, (L.intros || 0) + 1); save(); const ref = Math.round(Math.max(2000, b.it.price * 0.01)); cashT += ref; repT += 2; endDay("Rafted up and talked business. A referral worth " + money(ref) + " and an introduction banked. " + cmp); }
+        else { xpT += 3; endDay("Rafted up. Nice drinks, no deal. " + cmp); }
+      });
+      return;
+    }
+    if (out.kind === "talk") {
+      const bank = SMALLTALK[G.lang]; if (!bank) { xpT += 5; return endDay("Dinner ashore. Grilled fish, cold wine."); }
+      const box = document.createElement("div"); area.appendChild(box);
+      quickExchange(box, "The owner", harden(toNode(bank[Math.floor(Math.random() * bank.length)]), bank.map(toNode)), (q) => { xpT += q === "good" ? 10 : 4; if (q === "good" && Math.random() < 0.3) { const s2 = grantSecret(); endDay("Dinner ashore. The owner talks. " + (s2 ? "You hear about: " + s2.title + "." : "Great stories.")); } else endDay("Dinner ashore, grilled fish and local wine."); });
+      return;
+    }
+    if (out.kind === "market") {
+      const say = (VOY_SAY[G.lang] || {}).market;
+      area.insertAdjacentHTML("beforeend", '<div class="row"><button class="btn gold" id="voy-mk">Ask at the stall</button></div>');
+      $("#voy-mk").onclick = async () => { if (say) { const r2 = await sayIt("raw", { ph: say }, place); if (!r2.ok) return; } xpT += 10; endDay("Provisioned at the market. The chef is thrilled."); };
+      return;
+    }
+    if (out.xp) xpT += out.xp; if (out.rep) repT += out.rep; if (out.chem) chemT += out.chem; if (out.cash) cashT += 0;
+    let txt = out.txt; if (out.secret && Math.random() < 0.5) { const s2 = grantSecret(); if (s2) txt += " Inside: " + s2.title + "."; }
+    area.insertAdjacentHTML("beforeend", '<div class="fb good"><p>' + esc(txt) + "</p></div>");
+    endDay(txt);
+  };
+  startDay();
+}
+
+/* =========================================================
    DEBRIEF
    ========================================================= */
 function renderReview() {
@@ -4769,7 +5309,7 @@ function renderEmpire() {
   $("#empire-title").textContent = LANGS[G.lang].name + " empire";
   $("#empire-worth").textContent = "NET WORTH " + money(netWorth());
   $("#empire-life").textContent = lifeLine();
-  renderLook($("#look")); renderWardrobe(); renderMarina();
+  renderLook($("#look")); renderWardrobe(); renderMarina(); renderInvest();
   const pk = perks();
   $("#shop").innerHTML = '<div class="box row" style="gap:10px"><span class="chip good">Payouts +' + Math.round(pk.pay * 100) + '%</span><span class="chip good">XP +' + Math.round(pk.xp * 100) + '%</span><span class="chip good">Travel -' + Math.round(pk.fee * 100) + '%</span><span class="chip good">Deal +' + pk.deal + '</span><span class="chip love">Chemistry +' + Math.round(pk.chem * 100) + "%</span>" + (pk.hint ? '<span class="chip good">Watch hints</span>' : "") + (pk.secret ? '<span class="chip gold">VIP access</span>' : "") + "</div>" +
     Object.entries(CATS).map(([cat, label]) => shopHead(cat, label) + '<div class="items">' + shopList(cat).list.map((it) => {
@@ -4839,6 +5379,8 @@ function renderMarina() {
     }).join("") + "</tbody></table></div>" +
     (mine?.none ? '<p class="muted small">Buy a boat below, then customize it in the workshop. Length comes from the model plus a beach club or helipad; extras are the upgrades you install.</p>' : '<p class="muted small">Rivals buy bigger boats as they get richer. Add upgrades in the workshop to beat them on extras.</p>');
   drawMarina($("#marina-cv").getContext("2d"), fleet(), 1000);
+  $("#marina").insertAdjacentHTML("beforeend", '<div class="row"><button class="btn primary" id="go-voy">Plan a voyage</button><button class="btn gold" id="go-hl2">High Life board</button></div>');
+  $("#go-voy").onclick = openVoyage; $("#go-hl2").onclick = openHighLife;
 }
 
 /* =========================================================
