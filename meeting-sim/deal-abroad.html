@@ -63,6 +63,7 @@
   h3 { font: 700 15px/1.25 var(--pixel); margin: 0; text-wrap: balance; }
   p { margin: 0; }
   .muted { color: var(--muted); }
+  .item .caps { font-size: 11px; line-height: 1.35; color: var(--muted); }
   .small { font-size: 14px; }
   .btn { font: 700 13px/1 var(--pixel); background: var(--panel-2); border: 2px solid var(--line); padding: 11px 14px; cursor: pointer; box-shadow: 3px 3px 0 var(--shadow); text-transform: uppercase; letter-spacing: .03em; }
   .btn:hover:not(:disabled) { border-color: var(--accent); }
@@ -390,7 +391,7 @@
           <div class="en" id="npc-en" hidden></div>
           <div class="row" style="margin-top:4px">
             <button class="btn sm" id="hear">Hear it</button>
-            <button class="btn sm" id="toggle-en">Show English</button>
+            <button class="btn sm" id="toggle-en">💡 Hint</button>
             <button class="btn sm" id="walk">Walk out</button>
           </div>
         </div>
@@ -1207,7 +1208,7 @@ const BOATS = {
 const BOAT_LANG = { zh: { water1: { type: "bumboat", len: 8, daily: 0, hull: "#7a3a1a" }, water3: { type: "junk", len: 16, daily: 900, hull: "#5a2e1c" } } };
 function boatOf(id, lang = G.lang) { return (BOAT_LANG[lang] || {})[id] || BOATS[id]; }
 const CAR_TYPES = { es: { ride1: "scooter", ride2: "hatch", ride3: "jeep", ride4: "sports", ride5: "supercar", ride6: "hypercar" }, zh: { ride1: "bike", ride2: "scooter", ride3: "crossover", ride4: "ev", ride5: "suv", ride6: "hypercar" } };
-const carType = (id, lang = G.lang) => (CAR_TYPES[lang] || CAR_TYPES.es)[id];
+const carType = (id, lang = G.lang) => CAR_SPEC[id]?.type || (CAR_TYPES[lang] || CAR_TYPES.es)[id];
 const CATS = { water: "On the water", ride: "Rides", crib: "Where you sleep", wrist: "On your wrist", sky: "In the sky", flex: "Pure flex" };
 const SHOP_NAMES = {
   es: {
@@ -1242,6 +1243,286 @@ const GENERIC_NAMES = {
   wrist1: ["Digital watch", ""], wrist2: ["Diver watch", ""], wrist3: ["Rolex Daytona", ""], wrist4: ["Patek Nautilus", ""],
   sky1: ["Private jet", ""], flex1: ["Gold-plated toy", ""], flex2: ["Private island", ""],
 };
+
+/* =========================================================
+   THE BIG CATALOG: 40+ boats, cars, aircraft and flex, each with its own capabilities.
+   Capabilities matter: range and ice class decide voyages, garages carry toys,
+   horsepower decides where you sit in the convoy, seats decide who flies with you.
+   ========================================================= */
+const XNAMES = {}, XSPEC = {};
+const lvlByPrice = (p) => (p < 50000 ? 1 : p < 1e6 ? 2 : p < 3e7 ? 3 : 4);
+function catPerk(price, kind) {
+  const lg = Math.max(0, Math.log10(Math.max(price, 10) / 1000));
+  const v = Math.round(Math.pow(lg, 1.6) * 1.1) / 100;
+  if (!v) return undefined;
+  return kind === "xp" ? { xp: v } : kind === "chem" ? { chem: v } : kind === "fee" ? { fee: Math.min(0.5, v * 4) } : { pay: v };
+}
+function addItems(cat, rows, mk) {
+  rows.forEach((r) => {
+    const o = mk(r), id = o.id;
+    SHOP_BASE.push({ id, cat, price: o.price, perk: o.perk });
+    XNAMES[id] = [o.name, o.blurb];
+    if (o.zh) XNAMES_ZH[id] = [o.zh, o.blurb];
+    XSPEC[id] = o.spec;
+    LVL_OVR[id] = o.lvl || lvlByPrice(o.price);
+  });
+}
+const XNAMES_ZH = {};
+
+/* ---- Boats: [id, name, blurb, price, type, length m, knots, range nm, guests, flags, hull]
+   flags: g garage, h helipad, s submarine, i ice class, S sail, c shallow draft, t tender, x support, m needs a mothership */
+const BOAT_ROWS = [
+  ["wb01", "Rental kayak", "Two paddles, one sunburn.", 60, "kayak", 4, 3, 5, 1, "c"],
+  ["wb02", "Jet ski", "Loud, wet, and very fun.", 14000, "jetski", 3, 60, 60, 2, "c"],
+  ["wb36", "Dragon boat", "Twenty paddlers, one drummer, zero privacy.", 25000, "dragon", 12, 8, 10, 20, "c", "#c0392b"],
+  ["wb03", "Panga with a big outboard", "The fishermen's favourite. Now yours.", 9000, "panga", 7, 30, 80, 4, "c", "#3fa7d6"],
+  ["wb06", "Beach catamaran", "Trapeze out and scream.", 18000, "beachcat", 5, 15, 30, 2, "Sc"],
+  ["wb04", "Rigid inflatable (RIB)", "Grey tubes, twin engines, pure speed.", 38000, "rib", 8, 45, 150, 8, "c", "#3a3f4a"],
+  ["wb05", "Pontoon party barge", "A floating living room with speakers.", 65000, "pontoon", 8, 25, 100, 12, "c"],
+  ["wb07", "Wake boat with tower", "Surf the wake. Film everything.", 180000, "wake", 7, 40, 120, 12, "", "#101014"],
+  ["wb37", "Glass-bottom party boat", "Thirty guests watching fish watch them.", 300000, "pontoon", 14, 12, 60, 30, "c", "#52c7b8"],
+  ["wb08", "40ft cruising sloop", "Wind is free. Everything else isn't.", 320000, "sloop", 12, 7, 1500, 6, "S"],
+  ["wb15", "Hydrofoil day boat 'Libélula'", "Electric, silent, flies over the chop.", 450000, "foil", 9, 30, 60, 6, "", "#f4f4f4"],
+  ["wb10", "Hardtop sport cruiser", "Sun pad, wet bar, 35 knots.", 550000, "sportyacht", 13, 35, 300, 8, ""],
+  ["wb09", "Offshore go-fast", "Twin 1,350 hp. Hear it before you see it.", 650000, "gofast", 14, 85, 250, 6, "", "#e24b3b"],
+  ["wb16", "Amphibious tender", "Drives up the beach to lunch.", 750000, "amphib", 8.5, 30, 100, 8, "c", "#f5c542"],
+  ["wb17", "Floating villa houseboat", "A house that happens to float.", 900000, "houseboat", 20, 5, 50, 10, "c"],
+  ["wb32", "Limousine tender", "Enclosed, air-conditioned, dry hair on arrival.", 1100000, "limotender", 10, 35, 80, 10, "t", "#1c2656"],
+  ["wb11", "Sportfish with tuna tower", "Marlin at dawn, sushi by noon.", 1200000, "sportfish", 18, 38, 600, 8, "t"],
+  ["wb12", "50ft sailing catamaran", "Twin hulls, a trampoline, shallow bays.", 1400000, "catamaran", 15, 10, 2000, 10, "Sc"],
+  ["wb14", "Wooden gulet", "Pine decks, cushions everywhere, a crew of four.", 2200000, "gulet", 30, 10, 1500, 12, "St", "#8a4a24"],
+  ["wb13", "Power catamaran", "Wide, stable, never spills the champagne.", 2800000, "powercat", 18, 20, 1500, 12, "ct"],
+  ["wb30", "Restored 1960s motor yacht", "Varnish, brass and a lot of history.", 3200000, "classicmy", 28, 14, 1500, 8, "t", "#1c2656"],
+  ["wb26", "Submersible 'Nautilus'", "Three seats, 300 metres down. Needs a mothership.", 3500000, "sub", 6, 3, 20, 3, "sxm", "#f5c542"],
+  ["wb34", "Converted fishing trawler", "Ugly. Unstoppable. Four thousand miles.", 4000000, "trawler", 25, 9, 4000, 8, "t", "#2f5a34"],
+  ["wb18", "Italian open sport yacht", "Low, fast, impossible to ignore in Portofino.", 4500000, "sportyacht", 24, 40, 400, 10, "g", "#9aa0ad"],
+  ["wb33", "Chase boat 'Sombra'", "Carries the toys, the tenders and the helicopter.", 5000000, "support", 30, 20, 3000, 0, "xgm", "#3a3f4a"],
+  ["wb19", "70ft performance sailing yacht", "Carbon mast, ocean-crossing, fast.", 6000000, "sloop", 21, 12, 3000, 8, "S", "#1c2656"],
+  ["wb35", "Racing trimaran", "Three hulls, thirty knots under sail.", 8000000, "trimaran", 25, 30, 3000, 6, "S", "#e24b3b"],
+  ["wb39", "Teak junk yacht", "Red sails, modern engines, old soul.", 12000000, "junk", 35, 10, 2000, 12, "St", "#5a2e1c"],
+  ["wb20", "30m tri-deck motor yacht", "Three decks, a jacuzzi up top.", 14000000, "motoryacht", 30, 22, 2500, 12, "gt"],
+  ["wb21", "35m ice-class expedition yacht", "Goes where the charts go blank.", 18000000, "explorer", 35, 12, 5000, 10, "gti", "#e8a33a"],
+  ["wb40", "Wolf 118 power yacht", "Sixty knots in a 36m yacht. Absurd.", 22000000, "gofast", 36, 60, 400, 8, "g", "#3a3f4a"],
+  ["wb22", "40m schooner", "Two masts, acres of canvas, pure romance.", 25000000, "schooner", 40, 12, 4000, 12, "St", "#101014"],
+  ["wb23", "50m catamaran superyacht", "The deck space of a small island.", 45000000, "powercat", 50, 16, 4000, 12, "ghct"],
+  ["wb24", "Stealth yacht 'Ghost'", "Black, angular, doesn't show up in photos.", 60000000, "stealth", 45, 30, 3000, 12, "ght", "#15151a"],
+  ["wb31", "60m sailing superyacht", "Three masts, silent, crosses oceans on wind.", 70000000, "schooner", 60, 14, 5000, 12, "Sgt", "#f4f4f4"],
+  ["wb25", "70m superyacht", "Six decks, a spa, a submarine in the garage.", 95000000, "superyacht", 70, 18, 5000, 12, "ghst"],
+  ["wb27", "90m ice-breaking explorer", "Antarctica in the morning, champagne at night.", 180000000, "explorer", 90, 16, 8000, 12, "ghsit", "#2b3140"],
+  ["wb38", "Submarine yacht 'Abismo'", "Cruises on the surface, dives for dinner.", 220000000, "subyacht", 50, 20, 2000, 10, "s", "#101014"],
+  ["wb28", "120m gigayacht", "Thirty-six guests, a cinema, two helipads.", 350000000, "superyacht", 120, 20, 6000, 36, "ghst"],
+  ["wb29", "Floating island 'Isla Flotante'", "A beach, a pool and a villa that sails at six knots.", 500000000, "floatisle", 100, 6, 3000, 50, "ght"],
+];
+addItems("water", BOAT_ROWS, ([id, name, blurb, price, type, len, kn, nm, guests, fl, hull]) => {
+  const f = (c) => fl.includes(c);
+  BOATS[id] = { type, len, kn, nm, guests, daily: Math.round(price * (f("S") ? 0.00025 : 0.0005)), range: nm >= 2500, garage: f("g"), helipad: f("h"), sub: f("s"), ice: f("i"), sail: f("S"), shallow: f("c"), tender: f("t"), support: f("x"), needs: f("m"), hull };
+  const perk = catPerk(price, "pay"); if (perk && price >= 2e7) perk.secret = true;
+  return { id, name, blurb, price, perk, spec: BOATS[id] };
+});
+Object.assign(BOATS.water1, { kn: 2, nm: 1, guests: 1, shallow: true });
+Object.assign(BOATS.water2, { kn: 45, nm: 200, guests: 6, shallow: true });
+Object.assign(BOATS.water5, { kn: 28, nm: 300, guests: 8 });
+Object.assign(BOATS.water3, { kn: 38, nm: 120, guests: 5 });
+Object.assign(BOATS.water6, { kn: 9, nm: 3000, guests: 8, tender: true });
+Object.assign(BOATS.water7, { kn: 24, nm: 1500, guests: 10, tender: true });
+Object.assign(BOATS.water9, { kn: 18, nm: 4000, guests: 0, garage: true, helipad: true, needs: true });
+Object.assign(BOATS.water8, { kn: 14, nm: 5000, guests: 12, tender: true, ice: true });
+Object.assign(BOATS.water4, { kn: 17, nm: 5000, guests: 12, tender: true, helipad: true });
+Object.assign(BOAT_LANG.zh.water1, { kn: 5, nm: 5, guests: 10 });
+Object.assign(BOAT_LANG.zh.water3, { kn: 9, nm: 800, guests: 12, sail: true });
+
+/* ---- Cars: [id, name, blurb, price, body, hp, top km/h, seats, class, flags, colour]
+   flags: c convertible, b batwing lights, w wing, o off-road, 4 four-wheel drive */
+const CAR_ROWS = [
+  ["c02", "Tuk-tuk", "Three wheels, zero doors, all the charm.", 3000, "tuktuk", 9, 55, 3, "eco", "", "#f5c542"],
+  ["c01", "Vespa 125", "Mandatory for anyone in linen.", 4000, "scooter", 12, 95, 2, "eco", "", "#9fd8f0"],
+  ["c03", "Kei van", "A box on wheels. Somehow cool.", 6000, "kei", 64, 130, 4, "daily", "", "#f4f4f4"],
+  ["c11", "Dune buggy", "Sand in your teeth, grin on your face.", 25000, "buggy", 180, 140, 2, "offroad", "o", "#e8a33a"],
+  ["c05", "Harley Road King", "Loud enough to count as networking.", 28000, "moto", 90, 180, 2, "sport", "", "#101014"],
+  ["c04", "Ducati Panigale V4", "215 hp and a very short life expectancy.", 30000, "moto", 215, 300, 2, "sport", "", "#e24b3b"],
+  ["c06", "Mini Cooper convertible", "Roof down, British racing green.", 35000, "hatch", 190, 230, 4, "daily", "c", "#2f5a34"],
+  ["c12", "Land Cruiser 70 pickup", "Built to outlive you.", 70000, "pickup", 200, 160, 5, "offroad", "o4", "#e8e2d6"],
+  ["c14", "Challenger Hellcat", "807 hp of American subtlety.", 85000, "muscle", 807, 327, 5, "sport", "", "#7a3a8a"],
+  ["c10", "Bronco Raptor", "Doors off, 37-inch tyres.", 90000, "jeep", 418, 170, 5, "offroad", "o4", "#3fa7d6"],
+  ["c07", "BMW M3 Touring", "A family wagon that eats sports cars.", 95000, "wagon", 503, 280, 5, "sport", "4", "#1c2656"],
+  ["c39", "Cybertruck", "Looks like a render. Is not.", 100000, "cyber", 845, 210, 5, "ev", "4", "#c9c9c9"],
+  ["c13", "'67 Mustang fastback", "Highland green, like the movie.", 120000, "muscle", 390, 200, 4, "classic", "", "#2f5a34"],
+  ["c09", "Range Rover SV", "The quiet flex of the old-money crowd.", 150000, "suv", 606, 260, 5, "lux", "4", "#2a3a2a"],
+  ["c08", "G-Wagen", "A brick that costs a house.", 180000, "boxy", 577, 220, 5, "lux", "o4", "#101014"],
+  ["c23", "Stretch limousine", "Prom energy, CEO budget.", 200000, "limo", 400, 180, 10, "lux", "", "#101014"],
+  ["c22", "Maybach S680", "Reclining rear seats and a fridge.", 240000, "sedan", 621, 250, 4, "lux", "", "#1c1f2b"],
+  ["c20", "Bentley Continental GT", "Crosses continents in cashmere.", 250000, "gt", 650, 335, 4, "lux", "4", "#2b3a67"],
+  ["c15", "Porsche 911 GT3 RS", "A race car with a number plate.", 250000, "sports", 518, 296, 2, "sport", "w", "#9ad36a"],
+  ["c24", "Ferrari Roma Spider", "La dolce vita, roof optional.", 270000, "gt", 612, 320, 4, "exotic", "c", "#e24b3b"],
+  ["c32", "Group B rally replica", "Fire from the exhaust, gravel on the doors.", 350000, "rally", 530, 220, 2, "sport", "4w", "#f4f4f4"],
+  ["c26", "McLaren 765LT", "Longtail. Loud tail.", 380000, "supercar", 755, 330, 2, "exotic", "w", "#ff9a5c"],
+  ["c16", "Porsche 356 Speedster (1957)", "The original cool.", 400000, "roadster", 70, 160, 2, "classic", "c", "#e8e2d6"],
+  ["c21", "Rolls-Royce Phantom", "The chauffeur is included in spirit.", 480000, "limo", 563, 250, 5, "lux", "", "#f4f1ea"],
+  ["c25", "Ferrari SF90 Stradale", "Hybrid, 986 hp, very red.", 520000, "supercar", 986, 340, 2, "exotic", "4", "#e24b3b"],
+  ["c27", "Lamborghini Revuelto", "V12 plus three electric motors. Y-lights.", 600000, "supercar", 1001, 350, 2, "exotic", "4", "#9ad36a"],
+  ["c38", "Six-wheel pickup", "Six wheels, because four was modest.", 900000, "sixwheel", 900, 180, 5, "offroad", "o4", "#3a3f4a"],
+  ["c19", "Aston Martin DB5", "Silver birch. Ejector seat not included.", 1200000, "gt", 282, 230, 4, "classic", "", "#c9c9c9"],
+  ["c36", "Aurel Mirage EV", "Gull-wing doors, 1,900 hp, silent as a bank.", 1500000, "ev", 1900, 350, 2, "hyper", "", "#f4f4f4"],
+  ["c17", "Mercedes 300SL Gullwing", "The door opening is the whole show.", 1600000, "classic", 215, 260, 2, "classic", "", "#c9c9c9"],
+  ["c29", "Rimac Nevera", "Electric, 1,914 hp, 0-100 in 1.8s.", 2200000, "ev", 1914, 412, 2, "hyper", "4", "#3fa7d6"],
+  ["c33", "Le Mans prototype", "Track only. Earplugs mandatory.", 2500000, "lmp", 680, 340, 1, "hyper", "w", "#101014"],
+  ["c37", "Solenne Nocturne", "A batwing coupé built for night drives.", 2800000, "supercar", 1100, 360, 2, "hyper", "bw", "#101014"],
+  ["c28", "Pagani Utopia", "Hand-built, V12, manual gearbox. Art.", 3200000, "hypercar", 852, 350, 2, "hyper", "", "#c9c9c9"],
+  ["c31", "Koenigsegg Jesko Absolut", "Built to be the fastest thing on roads.", 3400000, "hypercar", 1600, 480, 2, "hyper", "w", "#f4f4f4"],
+  ["c34", "F1 two-seater", "Sit behind a pro at 300 km/h.", 4000000, "track", 1000, 330, 2, "hyper", "w", "#e24b3b"],
+  ["c30", "Bugatti Divo", "Forty made. You have one.", 5800000, "hypercar", 1479, 380, 2, "hyper", "4", "#3fa7d6"],
+  ["c35", "Varano Tempesta V12", "Coachbuilt in Modena. Batwing tail, V lights.", 8000000, "hypercar", 1350, 400, 2, "hyper", "bw", "#7a1f2b"],
+  ["c40", "Bugatti Type 57 Atlantic (1936)", "Four were made. One is missing. This is one of the others.", 40000000, "vintage", 200, 200, 2, "classic", "", "#3a5a8a"],
+  ["c18", "Ferrari 250 GTO (1962)", "The most expensive car ever sold.", 52000000, "classic", 300, 280, 2, "classic", "", "#e24b3b"],
+];
+const CAR_SPEC = {};
+addItems("ride", CAR_ROWS, ([id, name, blurb, price, type, hp, kmh, seats, cls, fl, col]) => {
+  CAR_SPEC[id] = { type, hp, kmh, seats, cls, conv: fl.includes("c"), batwing: fl.includes("b"), wing: fl.includes("w"), offroad: fl.includes("o"), awd: fl.includes("4"), col };
+  return { id, name, blurb, price, perk: catPerk(price, cls === "lux" ? "xp" : cls === "exotic" || cls === "hyper" ? "chem" : "pay"), spec: CAR_SPEC[id] };
+});
+const LEGACY_CARS = {
+  es: { ride1: { hp: 11, kmh: 45, seats: 1, cls: "eco" }, ride2: { hp: 132, kmh: 180, seats: 5, cls: "daily" }, ride3: { hp: 285, kmh: 180, seats: 4, cls: "offroad", offroad: true }, ride4: { hp: 385, kmh: 293, seats: 4, cls: "sport" }, ride5: { hp: 631, kmh: 325, seats: 2, cls: "exotic" }, ride6: { hp: 1500, kmh: 420, seats: 2, cls: "hyper" } },
+  zh: { ride1: { hp: 0, kmh: 25, seats: 1, cls: "eco" }, ride2: { hp: 1, kmh: 25, seats: 1, cls: "eco" }, ride3: { hp: 130, kmh: 180, seats: 5, cls: "daily" }, ride4: { hp: 670, kmh: 250, seats: 5, cls: "ev" }, ride5: { hp: 563, kmh: 250, seats: 5, cls: "lux" }, ride6: { hp: 1600, kmh: 440, seats: 2, cls: "hyper" } },
+};
+function carSpec(id, lang = G.lang) { return CAR_SPEC[id] || { type: carType(id, lang), ...((LEGACY_CARS[lang] || LEGACY_CARS.es)[id] || { hp: 100, kmh: 150, seats: 4, cls: "daily" }) }; }
+
+/* ---- Aircraft: [id, name, blurb, price, type, range km, seats, cruise km/h, flags] flags: a amphibious, v vertical */
+const SKY_ROWS = [
+  ["p01", "Paramotor", "A fan on your back and a wing overhead.", 12000, "para", 50, 1, 50, "v"],
+  ["p02", "Hot-air balloon", "Sunrise over the valley, champagne on landing.", 60000, "balloon", 30, 6, 15, "v"],
+  ["p03", "Autogyro", "Open cockpit, goggles, pure joy.", 120000, "gyro", 500, 2, 160, ""],
+  ["p07", "Stearman biplane", "Leather jacket strongly advised.", 250000, "biplane", 800, 2, 170, ""],
+  ["p05", "Super Cub on floats", "Lands on any lake you like.", 300000, "seaplane", 700, 2, 170, "a"],
+  ["p04", "Cessna 172", "Where every pilot starts.", 450000, "prop", 1200, 4, 220, ""],
+  ["p06", "Robinson R44", "Four seats, doors off for photos.", 550000, "heli", 550, 4, 200, "v"],
+  ["p36", "Extra 330 aerobatic", "Loops over the beach, on request.", 600000, "prop", 900, 2, 330, ""],
+  ["p09", "Cirrus SR22", "Comes with its own parachute.", 900000, "prop", 1900, 5, 340, ""],
+  ["p11", "Caravan amphibian", "Nine seats. Lands on water or runway.", 3000000, "seaplane", 1500, 9, 300, "a"],
+  ["p08", "P-51 Mustang", "A warbird. The sound alone is worth it.", 3500000, "warbird", 2700, 2, 580, ""],
+  ["p12", "Airbus H130", "The quiet helicopter. Big windows.", 3500000, "heli", 600, 7, 240, "v"],
+  ["p17", "Cirrus Vision Jet", "A jet you can fly yourself.", 3500000, "lightjet", 2300, 6, 580, ""],
+  ["p15", "eVTOL air taxi 'Colibrí'", "Electric, eight rotors, skips all traffic.", 4000000, "evtol", 200, 4, 240, "v"],
+  ["p37", "Spitfire", "Elliptical wings, pure history.", 4000000, "warbird", 1100, 1, 480, ""],
+  ["p39", "Learjet 75", "The classic name in private jets.", 5000000, "lightjet", 3700, 8, 860, ""],
+  ["p10", "Pilatus PC-12", "Lands on dirt strips, cabin like a jet.", 6000000, "turboprop", 3400, 9, 530, ""],
+  ["p18", "HondaJet Elite", "Engines on the wings. Very clever.", 7000000, "lightjet", 2600, 7, 780, ""],
+  ["p34", "Dornier Seastar", "An amphibian with jet-set manners.", 8000000, "seaplane", 1800, 12, 330, "a"],
+  ["p19", "Phenom 300E", "The best-selling light jet on earth.", 11000000, "lightjet", 3700, 9, 860, ""],
+  ["p38", "Bell 525", "Fly-by-wire, sixteen seats, VIP cabin.", 15000000, "bigheli", 900, 16, 290, "v"],
+  ["p13", "Airbus H160", "The helicopter superyachts carry.", 17000000, "bigheli", 850, 12, 290, "v"],
+  ["p20", "Citation Latitude", "Stand-up cabin, flat floor.", 19000000, "midjet", 5000, 9, 830, ""],
+  ["p21", "Challenger 3500", "Coast to coast in quiet.", 27000000, "midjet", 6300, 10, 850, ""],
+  ["p14", "Sikorsky S-92 VIP", "The helicopter heads of state use.", 30000000, "bigheli", 900, 19, 280, "v"],
+  ["p16", "AW609 tiltrotor", "Takes off like a helicopter, flies like a plane.", 30000000, "tiltrotor", 1400, 9, 500, "v"],
+  ["p35", "Flying boat conversion", "A firefighting hull turned into a lounge.", 35000000, "seaplane", 2400, 20, 350, "a"],
+  ["p23", "Gulfstream G500", "Long legs, big windows.", 46000000, "heavyjet", 9800, 19, 900, ""],
+  ["p22", "Falcon 6X", "The widest cabin in its class.", 52000000, "heavyjet", 10000, 16, 900, ""],
+  ["p40", "Gulfstream G650ER", "Singapore to Madrid nonstop.", 65000000, "ulr", 13900, 19, 950, ""],
+  ["p25", "Gulfstream G800", "Ultra long range. Ultra quiet.", 72000000, "ulr", 14800, 19, 950, ""],
+  ["p24", "Global 7500", "Four living spaces and a real bed.", 78000000, "ulr", 14000, 19, 950, ""],
+  ["p26", "Global 8000", "Mach 0.94. The fastest business jet.", 80000000, "ulr", 14800, 19, 1000, ""],
+  ["p33", "Luxury airship 'La Nube'", "A floating hotel that drifts over coastlines.", 90000000, "airship", 5000, 20, 110, "v"],
+  ["p27", "Airbus ACJ320neo", "An airliner with a bedroom and a shower.", 110000000, "bizliner", 11000, 25, 830, ""],
+  ["p28", "Boeing BBJ 737 MAX", "A conference room at 41,000 feet.", 120000000, "bizliner", 12000, 30, 840, ""],
+  ["p32", "Aurel Mach supersonic jet", "Madrid to Bogotá in four hours.", 150000000, "supersonic", 8000, 12, 1900, ""],
+  ["p31", "Restored Concorde", "Retired in 2003. Unretired by you.", 250000000, "supersonic", 7200, 100, 2150, ""],
+  ["p29", "Boeing 787 VIP", "A penthouse with wings.", 300000000, "jumbo", 17000, 40, 900, ""],
+  ["p30", "Boeing 747-8 VIP", "Upper deck bedroom. Of course.", 450000000, "jumbo", 15000, 100, 920, ""],
+];
+const SKY_SPEC = { sky1: { type: "ulr", km: 13890, seats: 19, kmh: 956, jet: true } };
+const JETS = ["lightjet", "midjet", "heavyjet", "ulr", "bizliner", "jumbo", "supersonic"];
+addItems("sky", SKY_ROWS, ([id, name, blurb, price, type, km, seats, kmh, fl]) => {
+  SKY_SPEC[id] = { type, km, seats, kmh, amphib: fl.includes("a"), vertical: fl.includes("v"), jet: JETS.includes(type) };
+  return { id, name, blurb, price, perk: catPerk(price, "fee"), spec: SKY_SPEC[id] };
+});
+function ownedSky(pred, lang = G.lang) { const L = life(lang); return SHOP_BASE.filter((x) => x.cat === "sky" && L.owned[x.id] && pred(SKY_SPEC[x.id] || {})).sort((a, b) => b.price - a.price)[0] || null; }
+const hasJet = (lang) => ownedSky((s) => s.jet, lang);
+const hasHeli = (lang) => ownedSky((s) => s.type === "heli" || s.type === "bigheli" || s.type === "tiltrotor" || s.type === "evtol", lang);
+
+/* ---- Pure flex: [id, name, blurb, price, icon, perk, unlock] */
+const FLEX_ROWS = [
+  ["f21", "A star named after you", "Unofficial. Still romantic.", 50, "star", { chem: 0.01 }],
+  ["f01", "Monogrammed cigar humidor", "Cedar-lined, your initials in gold.", 8000, "cigar", { chem: 0.02 }],
+  ["f41", "Truffle-hunting dog", "Finds white truffles and new friends.", 30000, "dog", { chem: 0.02 }],
+  ["f02", "Birkin bag", "A gift you haven't decided who gets.", 45000, "bag", { chem: 0.05 }],
+  ["f15", "Diamond grill", "Smile and the room goes quiet.", 60000, "gem", { chem: 0.03 }],
+  ["f25", "Pair of trained Dobermans", "Very polite. Very large.", 60000, "dog", { pay: 0.01 }],
+  ["f11", "Hunting falcon", "Sits on your glove at garden parties.", 80000, "bird", { chem: 0.03 }],
+  ["f27", "Signed shirt of a football legend", "Framed, lit, insured.", 120000, "shirt", { xp: 0.02 }],
+  ["f37", "Your face on a giant billboard", "Downtown, for a whole month.", 200000, "painting", { pay: 0.02 }],
+  ["f22", "Private fireworks show over the bay", "Your name, written in the sky.", 250000, "fireworks", { chem: 0.06 }],
+  ["f26", "Crocodile luggage set", "Eight pieces. Nobody touches them.", 300000, "bag", { chem: 0.03 }],
+  ["f28", "First-edition trading card", "Graded perfect ten, in a vault.", 400000, "card", { xp: 0.02 }],
+  ["f19", "Seat on a suborbital flight", "Four minutes of weightlessness.", 450000, "rocket", { xp: 0.05 }],
+  ["f03", "Bottle of 1945 Romanée-Conti", "The rarest red. You'll never open it.", 550000, "bottle", { chem: 0.05 }],
+  ["f09", "A string of polo ponies", "Six horses, a groom, and an invitation.", 600000, "horse", { chem: 0.05 }, "polo"],
+  ["f31", "Founding member, private club", "The door opens before you knock.", 750000, "key", { pay: 0.02 }],
+  ["f12", "Gold-leaf concert grand", "Nobody plays it. Everyone photographs it.", 900000, "piano", { chem: 0.03 }],
+  ["f23", "Michelin chef on retainer", "Dinner parties that end in contracts.", 900000, "chef", { chem: 0.08 }],
+  ["f17", "Private box at the stadium", "Where the real deals happen at half-time.", 1200000, "stadium", { pay: 0.03 }],
+  ["f06", "Pop-art screen print", "A soup can, famously.", 1500000, "painting", { xp: 0.03 }, "art"],
+  ["f29", "Diamond fountain pen", "Sign contracts like you mean it.", 1500000, "pen", { deal: 1 }],
+  ["f24", "Security detail", "Four former special forces, one earpiece each.", 1800000, "guard", { pay: 0.02 }],
+  ["f04", "Wine cellar, 3,000 bottles", "A sommelier comes with it.", 2000000, "bottle", { chem: 0.04 }],
+  ["f10", "A racehorse", "Trains at dawn, runs on Saturdays.", 2500000, "horse", { pay: 0.02 }, "racehorse"],
+  ["f08", "Monumental bronze sculpture", "Rounded, bronze and three tonnes.", 2500000, "sculpture", { xp: 0.02 }, "art"],
+  ["f36", "Theme park, bought out for a night", "Every ride, no queues, your friends.", 3000000, "fireworks", { chem: 0.08 }],
+  ["f38", "A Michelin restaurant, bought out for a year", "Your table, every night.", 4000000, "chef", { chem: 0.06 }],
+  ["f33", "Your own spirits brand", "Your name on the label, a bar in every city.", 6000000, "bottle", { pay: 0.05 }],
+  ["f14", "Pink diamond ring", "For someday. Kept in a safe.", 8000000, "gem", { chem: 0.1 }],
+  ["f40", "Your own record label", "Signing artists is also networking.", 10000000, "guitar", { pay: 0.04 }],
+  ["f05", "A vineyard", "Harvest parties, your own label.", 12000000, "vine", { pay: 0.05 }],
+  ["f35", "Watch collection, twenty pieces", "Rotated by a curator.", 12000000, "watch", { deal: 1 }],
+  ["f32", "Your own nightclub", "The best table is always free.", 15000000, "club", { chem: 0.1 }],
+  ["f34", "A castle", "Towers, a moat, terrible heating.", 22000000, "castle", { xp: 0.05 }],
+  ["f13", "Fabergé egg", "Imperial. Priceless. Priced.", 30000000, "egg", { xp: 0.04 }, "art"],
+  ["f16", "Stake in a football club", "Directors' box, transfer gossip.", 40000000, "shirt", { pay: 0.1 }],
+  ["f07", "A Basquiat", "Hangs where the light is best.", 45000000, "painting", { deal: 1 }, "art"],
+  ["f20", "A week in orbit", "Earth out the window, sixteen sunrises a day.", 55000000, "rocket", { xp: 0.1 }],
+  ["f18", "Minority stake in an F1 team", "Paddock pass forever.", 120000000, "trophy", { pay: 0.15 }, "f1"],
+  ["f39", "Your own superyacht marina", "Every captain owes you a favour.", 150000000, "anchor", { fee: 0.3 }],
+];
+const FLEX_SPEC = {};
+addItems("flex", FLEX_ROWS, ([id, name, blurb, price, icon, perk, unlock]) => { FLEX_SPEC[id] = { icon, unlock }; return { id, name, blurb, price, perk, spec: FLEX_SPEC[id] }; });
+const ownsUnlock = (tag, lang = G.lang) => SHOP_BASE.some((x) => x.cat === "flex" && life(lang).owned[x.id] && FLEX_SPEC[x.id]?.unlock === tag);
+{ const co = Object.keys(CATS); SHOP_BASE.sort((a, b) => co.indexOf(a.cat) - co.indexOf(b.cat) || a.price - b.price); }
+
+/* Per-language tweaks for a few catalog names */
+Object.assign(XNAMES_ZH, {
+  wb36: ["龙舟 Dragon boat", "Twenty paddlers, one drummer, zero privacy."], f17: ["Private box at the Rugby Sevens", "Where the real deals happen at half-time."], f05: ["A Ningxia vineyard", "Harvest parties, your own label."],
+  f33: ["Your own baijiu label", "Your name on the bottle, a bar in every city."], f34: ["A château in Bordeaux", "Towers, a moat, terrible heating."], f27: ["Signed Yao Ming jersey", "Framed, lit, insured."], f41: ["Tibetan mastiff", "Very fluffy. Very expensive."],
+});
+const XNAMES_ES = {
+  f05: ["Un viñedo en La Rioja", "Harvest parties, your own label."], f33: ["Tu propia marca de tequila", "Your name on the label, a bar in every city."], f34: ["Un castillo en Castilla", "Towers, a moat, terrible heating."],
+  f17: ["Palco en el Bernabéu", "Where the real deals happen at half-time."], f27: ["Camiseta firmada de un 10 argentino", "Framed, lit, insured."], f08: ["Bronce monumental de estilo Botero", "Rounded, bronze and three tonnes."],
+};
+/* Target-language nouns for the new catalog, so "Quiero comprar…" matches the thing */
+const XNOUN = {
+  es: { boat: ["este barco", "this boat"], sail: ["este velero", "this sailboat"], cat: ["este catamarán", "this catamaran"], sub: ["este submarino", "this submarine"], jetski: ["esta moto de agua", "this jet ski"], kayak: ["este kayak", "this kayak"],
+    car: ["este coche", "this car"], moto: ["esta moto", "this motorbike"], truck: ["esta camioneta", "this pickup"],
+    plane: ["este avión", "this plane"], heli: ["este helicóptero", "this helicopter"], seaplane: ["este hidroavión", "this seaplane"], balloon: ["este globo", "this balloon"], airship: ["este dirigible", "this airship"],
+    flex: ["esto", "this"], horse: ["este caballo", "this horse"], painting: ["este cuadro", "this painting"], bottle: ["esta botella", "this bottle"], dog: ["este perro", "this dog"], gem: ["esta joya", "this jewel"] },
+  zh: { boat: ["这艘船", "zhè sōu chuán", "this boat"], sail: ["这艘帆船", "zhè sōu fānchuán", "this sailboat"], cat: ["这艘双体船", "zhè sōu shuāngtǐchuán", "this catamaran"], sub: ["这艘潜水艇", "zhè sōu qiánshuǐtǐng", "this submarine"], jetski: ["这辆水上摩托", "zhè liàng shuǐshàng mótuō", "this jet ski"], kayak: ["这条皮划艇", "zhè tiáo píhuátǐng", "this kayak"],
+    car: ["这辆车", "zhè liàng chē", "this car"], moto: ["这辆摩托车", "zhè liàng mótuōchē", "this motorbike"], truck: ["这辆皮卡", "zhè liàng píkǎ", "this pickup"],
+    plane: ["这架飞机", "zhè jià fēijī", "this plane"], heli: ["这架直升机", "zhè jià zhíshēngjī", "this helicopter"], seaplane: ["这架水上飞机", "zhè jià shuǐshàng fēijī", "this seaplane"], balloon: ["这个热气球", "zhège rèqìqiú", "this balloon"], airship: ["这艘飞艇", "zhè sōu fēitǐng", "this airship"],
+    flex: ["这个", "zhège", "this"], horse: ["这匹马", "zhè pǐ mǎ", "this horse"], painting: ["这幅画", "zhè fú huà", "this painting"], bottle: ["这瓶酒", "zhè píng jiǔ", "this bottle"], dog: ["这只狗", "zhè zhī gǒu", "this dog"], gem: ["这件珠宝", "zhè jiàn zhūbǎo", "this jewel"] },
+};
+function xnounKey(it) {
+  if (it.cat === "water") { const b = BOATS[it.id] || {}; return b.type === "sub" || b.type === "subyacht" ? "sub" : b.type === "jetski" ? "jetski" : b.type === "kayak" ? "kayak" : /cat|trimaran/.test(b.type || "") ? "cat" : b.sail ? "sail" : "boat"; }
+  if (it.cat === "ride") { const t = CAR_SPEC[it.id]?.type; return t === "moto" || t === "scooter" ? "moto" : t === "pickup" || t === "sixwheel" || t === "cyber" ? "truck" : "car"; }
+  if (it.cat === "sky") { const t = SKY_SPEC[it.id]?.type; return t === "heli" || t === "bigheli" || t === "evtol" ? "heli" : t === "seaplane" ? "seaplane" : t === "balloon" ? "balloon" : t === "airship" ? "airship" : "plane"; }
+  if (it.cat === "flex") { const i = FLEX_SPEC[it.id]?.icon; return ["horse", "painting", "bottle", "dog", "gem"].includes(i) ? i : "flex"; }
+  return null;
+}
+/* Capability line shown on every card */
+function capsLine(it, lang = G.lang) {
+  const n = (v) => Number(v).toLocaleString("en-US");
+  if (it.cat === "water") { const b = boatOf(it.id, lang); if (!b) return ""; return [b.len + "m", b.kn != null && b.kn + " kn", b.nm != null && n(b.nm) + " nm", b.guests ? b.guests + " guests" : null, b.sail && "sail", b.shallow && "shallow draft", b.garage && "garage", b.helipad && "helipad", b.sub && "sub", b.ice && "ice-class", b.tender && "tender", b.support && "support vessel"].filter(Boolean).join(" · "); }
+  if (it.cat === "ride") { const c = carSpec(it.id, lang); return [n(c.hp) + " hp", c.kmh + " km/h", c.seats + " seat" + (c.seats > 1 ? "s" : ""), c.cls, c.conv && "convertible", c.offroad && c.cls !== "offroad" && "off-road", c.awd && "AWD", c.batwing && "batwing"].filter(Boolean).join(" · "); }
+  if (it.cat === "sky") { const s = SKY_SPEC[it.id]; if (!s) return ""; return [n(s.km) + " km range", s.seats + " seats", n(s.kmh) + " km/h", s.jet && "jet", s.vertical && "vertical take-off", s.amphib && "lands on water"].filter(Boolean).join(" · "); }
+  if (it.cat === "flex") { const f = FLEX_SPEC[it.id]; return f?.unlock ? ({ polo: "Unlocks: polo at the High Life board", racehorse: "Unlocks: race day in the owners' enclosure", f1: "Unlocks: the Grand Prix paddock", art: "Unlocks: art gala invitations" })[f.unlock] : ""; }
+  return "";
+}
 
 /* Workshop: customization for rides, boats and homes. Every option is named in the target language. */
 const CUSTOM = {
@@ -1294,6 +1575,18 @@ const CUSTOM = {
       { id: "secret", es: "la habitación secreta", zh: "密室 mìshì", en: "Secret room behind the bookcase", f: 0.07, min: 3, perk: { deal: 1 }, once: "secret" },
     ],
   },
+};
+CUSTOM.sky = {
+  paint: { es: "la librea", zh: "涂装 túzhuāng", en: "Livery", opts: [["Classic white", "#f4f4f4", 0], ["Gunmetal", "#5a5f6a", 0.01], ["Midnight blue", "#1c2656", 0.01], ["Racing red", "#c0392b", 0.01], ["Matte black", "#15151a", 0.015], ["Gold leaf", "#f5c542", 0.03]] },
+  name: { es: "la matrícula", zh: "注册号 zhùcèhào", en: "Tail number", max: 8, min: 2 },
+  ups: [
+    { id: "wifi", es: "el wifi por satélite", zh: "卫星网络 wèixīng wǎngluò", en: "Satellite Wi-Fi (close deals mid-air)", f: 0.01, min: 1, perk: { pay: 0.02 } },
+    { id: "lounge", es: "el salón con bar", zh: "酒吧休息室 jiǔbā xiūxishì", en: "Club lounge with a bar", f: 0.02, min: 2, perk: { chem: 0.03 } },
+    { id: "crew", es: "la tripulación propia", zh: "专属机组 zhuānshǔ jīzǔ", en: "Dedicated crew on standby", f: 0.03, min: 2, perk: { fee: 0.1 } },
+    { id: "chef", es: "el chef a bordo", zh: "机上厨师 jīshàng chúshī", en: "Onboard chef", f: 0.02, min: 3, perk: { chem: 0.04 } },
+    { id: "bed", es: "el dormitorio principal", zh: "主卧 zhǔwò", en: "Master bedroom with a shower", f: 0.04, min: 3, perk: { xp: 0.02 } },
+    { id: "office", es: "la sala de juntas", zh: "会议室 huìyìshì", en: "Boardroom (rehearse meetings in the air)", f: 0.03, min: 3, perk: { xp: 0.03 } },
+  ],
 };
 const PORTS_GENERIC = ["Home marina", "The Riviera", "The Caribbean", "Pacific atolls"];
 
@@ -1468,19 +1761,21 @@ const tierIdx = () => clamp(G.tier[G.lang] ?? 0, 0, (career()?.tiers.length || 1
 const tier = () => career()?.tiers[tierIdx()];
 const rankOf = (xp) => RANK_XP.reduce((r, t, i) => (xp >= t ? i : r), 0);
 const rank = (lang = G.lang) => rankOf(life(lang).xp);
-const shopName = (id, lang = G.lang) => (SHOP_NAMES[lang] || career(lang)?.shop || {})[id] || GENERIC_NAMES[id];
+const shopName = (id, lang = G.lang) => (SHOP_NAMES[lang] || career(lang)?.shop || {})[id] || (lang === "zh" && XNAMES_ZH[id]) || (lang === "es" && XNAMES_ES[id]) || XNAMES[id] || GENERIC_NAMES[id];
 const termOf = (o, lang = G.lang) => (lang === "es" || lang === "zh" ? o[lang] : null);
 function upPrice(it, u) { return Math.max(50, Math.round(it.price * u.f)); }
 function perks(lang = G.lang) {
   const o = { pay: 0, xp: 0, fee: 0, deal: 0, chem: 0, hint: false, secret: false };
   const add = (p) => { o.pay += p.pay || 0; o.xp += p.xp || 0; o.fee = Math.max(o.fee, p.fee || 0); o.deal += p.deal || 0; o.chem += p.chem || 0; o.hint ||= !!p.hint; o.secret ||= !!p.secret; };
   const L = life(lang);
-  SHOP_BASE.forEach((it) => {
-    if (!L.owned[it.id]) return;
-    if (it.perk) add(it.perk);
+  // Only your three most valuable pieces in each category count, so a garage of forty cars isn't forty perks.
+  const byCat = {};
+  SHOP_BASE.forEach((it) => { if (L.owned[it.id]) (byCat[it.cat] ||= []).push(it); });
+  Object.values(byCat).forEach((arr) => arr.sort((a, b) => b.price - a.price).forEach((it, k) => {
+    if (it.perk && k < 3) add(it.perk);
     const cfg = CUSTOM[it.cat], m = L.mods[it.id];
-    if (cfg && m?.ups) cfg.ups.forEach((u) => { if (m.ups[u.id]) add(u.perk); });
-  });
+    if (cfg && m?.ups && k < 3) cfg.ups.forEach((u) => { if (m.ups[u.id]) add(u.perk); });
+  }));
   const cp = clothesPerks(lang); o.pay += cp.pay; o.chem += cp.chem;
   o.deal = Math.min(o.deal, 2);
   return o;
@@ -1551,12 +1846,12 @@ function boatSpec(worth, seed) {
 }
 function myBoat(lang = G.lang) {
   const L = life(lang); let it = null;
-  SHOP_BASE.filter((x) => x.cat === "water" && L.owned[x.id] && lvlOf(x.id) >= 2).forEach((x) => { const b = boatOf(x.id, lang); if (!b || b.support) return; if (!it || b.len > boatOf(it.id, lang).len) it = x; });
+  SHOP_BASE.filter((x) => x.cat === "water" && L.owned[x.id] && lvlOf(x.id) >= 2).forEach((x) => { const b = boatOf(x.id, lang); if (!b || b.support || b.type === "sub") return; if (!it || b.len > boatOf(it.id, lang).len) it = x; });
   if (!it) return null;
   const spec = boatOf(it.id, lang), m = L.mods[it.id] || {}, ups = m.ups || {}, lvl = lvlOf(it.id);
   const len = spec.len + (ups.beachclub ? 4 : 0) + (ups.helipad ? 3 : 0);
   const col = m.paint != null ? CUSTOM.water.paint.opts[m.paint][1] : spec.hull || "#f4f4f4";
-  return { lvl, len, type: spec.type, spec, ups, extras: Object.keys(ups).length, name: m.name || shopName(it.id, lang)[0], col, it, garage: !!(spec.garage || ups.garage || ups.beachclub), helipad: !!ups.helipad, support: !!L.owned.water9, range: !!spec.range || spec.len >= 40 };
+  return { lvl, len, type: spec.type, spec, ups, extras: Object.keys(ups).length, name: m.name || shopName(it.id, lang)[0], col, it, garage: !!(spec.garage || ups.garage || ups.beachclub), helipad: !!ups.helipad, support: SHOP_BASE.some((x) => x.cat === "water" && L.owned[x.id] && BOATS[x.id]?.support && BOATS[x.id]?.type === "support"), range: !!spec.range || spec.len >= 40 };
 }
 function fleet(lang = G.lang) {
   const list = rivalsFor(lang).map((r, k) => {
@@ -1597,7 +1892,7 @@ const NOUN = {
   es: { ride1: ["esta moto", "this scooter"], ride: ["este coche", "this car"], water1: ["este flamenco inflable", "this inflatable flamingo"], water: ["este barco", "this boat"], crib1: ["este estudio", "this studio"], crib: ["esta casa", "this house"], wrist: ["este reloj", "this watch"], sky: ["este avión", "this plane"], flex2: ["esta isla", "this island"], flex: ["esta moto de agua", "this jet ski"] },
   zh: { ride1: ["这辆自行车", "zhè liàng zìxíngchē", "this bike"], ride2: ["这辆滑板车", "zhè liàng huábǎnchē", "this scooter"], ride: ["这辆车", "zhè liàng chē", "this car"], water1: ["这张船票", "zhè zhāng chuánpiào", "this boat pass"], water: ["这艘船", "zhè sōu chuán", "this boat"], crib: ["这套房子", "zhè tào fángzi", "this home"], wrist: ["这块表", "zhè kuài biǎo", "this watch"], sky: ["这架飞机", "zhè jià fēijī", "this plane"], flex1: ["这个车牌", "zhège chēpái", "this plate"], flex2: ["这个岛", "zhège dǎo", "this island"] },
 };
-function nounFor(it, lang = G.lang) { const n = NOUN[lang]; return n ? n[it.id] || n[it.cat] : null; }
+function nounFor(it, lang = G.lang) { const n = NOUN[lang]; if (!n) return null; const xk = XSPEC[it.id] || it.cat === "sky" || it.cat === "water" ? xnounKey(it) : null; return n[it.id] || (xk && XNOUN[lang]?.[xk]) || n[it.cat]; }
 function splitTerm(tm) { const k = tm.indexOf(" "); return k < 0 ? [tm, ""] : [tm.slice(0, k), tm.slice(k + 1)]; }
 function phrase(action, a = {}) {
   const lang = G.lang;
@@ -2207,7 +2502,8 @@ function drawBoat(c, x, wl, L, type, hull, t = 0, o = {}) {
   const sup = "#f4f4f4", glass = "#1c2234", light = hull === "#f4f4f4" ? "#ffffff" : shade(hull, 1.3), wave = Math.floor(t / 250) % 2;
   const X = (f) => x + Math.round(L * f);
   if (type === "flamingo") { const col = hull === "#f4f4f4" ? "#ff6fae" : hull; for (let i = 0; i < 12; i++) R(c, x + 8 + i, wl - 3 + Math.abs(6 - i) * 0.3, 1, 3, col); R(c, x + 16, wl - 12, 2, 10, col); R(c, x + 14, wl - 13, 4, 2, col); R(c, x + 13, wl - 12, 1, 1, "#f5c542"); return; }
-  const P = { console: [0.1, 0.03, 0.06], flybridge: [0.12, 0.04, 0.07], runabout: [0.08, 0.02, 0.05], trawler: [0.13, 0.08, 0.1], motoryacht: [0.09, 0.03, 0.06], explorer: [0.12, 0.05, 0.09], superyacht: [0.07, 0.02, 0.05], support: [0.12, 0.07, 0.09], bumboat: [0.12, 0.02, 0.06], junk: [0.12, 0.09, 0.08] }[type] || [0.1, 0.03, 0.06];
+  if (drawBoatX(c, x, wl, L, type, hull, t, o)) return;
+  const P = { console: [0.1, 0.03, 0.06], flybridge: [0.12, 0.04, 0.07], runabout: [0.08, 0.02, 0.05], trawler: [0.13, 0.08, 0.1], motoryacht: [0.09, 0.03, 0.06], explorer: [0.12, 0.05, 0.09], superyacht: [0.07, 0.02, 0.05], support: [0.12, 0.07, 0.09], bumboat: [0.12, 0.02, 0.06], junk: [0.12, 0.09, 0.08], panga: [0.1, 0.04, 0.05], rib: [0.12, 0.03, 0.05], wake: [0.1, 0.02, 0.05], sloop: [0.08, 0.03, 0.12], gofast: [0.07, 0.02, 0.04], sportyacht: [0.08, 0.02, 0.05], sportfish: [0.11, 0.05, 0.07], gulet: [0.12, 0.1, 0.09], schooner: [0.08, 0.04, 0.1], stealth: [0.09, 0.0, 0.05], classicmy: [0.1, 0.04, 0.07], limotender: [0.1, 0.03, 0.05] }[type] || [0.1, 0.03, 0.06];
   const hh = Math.max(2, Math.round(L * P[0])), rise = Math.round(L * P[1]), draft = Math.max(1, Math.round(L * P[2]));
   const plumb = type === "explorer" || type === "support" || type === "superyacht";
   const topAt = (i) => wl - hh - (i > L * 0.62 ? Math.round(((i - L * 0.62) / (L * 0.38)) * rise) : 0) - (type === "junk" && i < L * 0.15 ? Math.round((1 - i / (L * 0.15)) * rise) : 0);
@@ -2223,7 +2519,8 @@ function drawBoat(c, x, wl, L, type, hull, t = 0, o = {}) {
   if (type === "trawler" || type === "explorer") for (let i = Math.round(L * 0.2); i < L * 0.8; i += 4) R(c, x + i, wl - hh + Math.max(1, Math.round(hh / 3)), 1, 1, glass);
   let y0 = wl - hh;
   const deck = (f0, f1, yTop, h, col, win) => { h = Math.max(1, Math.round(h)); const a = X(f0), w = Math.max(2, X(f1) - a); R(c, a, yTop - h, w, h, col); R(c, a, yTop - h, w, 1, "#ffffff"); if (win && h >= 2) R(c, a + 1, yTop - h + Math.max(1, Math.floor(h / 2) - (h > 3 ? 1 : 0)), Math.max(1, w - 2), Math.max(1, Math.round(h / 3)), win); return yTop - h; };
-  if (type === "console") {
+  if (BOAT_SUPER[type]) BOAT_SUPER[type]({ c, x, wl, L, X, y0, hh, draft, deck, sup, glass, hull, t, o });
+  else if (type === "console") {
     const dh = Math.max(2, L * 0.1), y1 = deck(0.45, 0.6, y0, dh, sup, glass);
     R(c, X(0.36), y1 - 3, Math.round(L * 0.3), 1, sup); R(c, X(0.38), y1 - 3, 1, 3, "#c9c9c9"); R(c, X(0.64), y1 - 3, 1, 3, "#c9c9c9");
     R(c, x - 3, y0, 3, hh + draft, "#1b1b22"); R(c, x - 3, y0 - 1, 3, 1, "#3a3f4a"); R(c, x - 6, y0 + 1, 3, hh + draft - 1, "#1b1b22");
@@ -2275,7 +2572,8 @@ function drawCar(c, x, gy, W, type, col, t = 0, o = {}) {
   const wheel = (cx, r) => { for (let yy = -r; yy <= r; yy++) { const w = Math.floor(Math.sqrt(r * r - yy * yy)); R(c, cx - w, gy - r + yy, w * 2 + 1, 1, "#15151a"); } R(c, cx - 1, gy - r - 1, 2, 2, rim); };
   if (type === "bike") { const r = 5; [x + 10, x + W - 10].forEach((cx) => { for (let a = 0; a < 6.3; a += 0.4) R(c, cx + Math.cos(a) * r, gy - r + Math.sin(a) * r, 1, 1, "#1b1b22"); }); R(c, x + 10, gy - r, W - 20, 1, col); R(c, x + 18, gy - r - 6, 1, 6, col); R(c, x + 16, gy - r - 7, 5, 1, "#1b1b22"); R(c, x + W - 12, gy - r - 7, 1, 7, col); R(c, x + W - 14, gy - r - 8, 4, 1, "#1b1b22"); R(c, x + W - 20, gy - r - 5, 6, 3, "#f4f4f4"); return; }
   if (type === "scooter") { wheel(x + 12, 3); wheel(x + W - 12, 3); R(c, x + 10, gy - 7, W - 20, 3, col); R(c, x + 12, gy - 11, 12, 4, col); R(c, x + 12, gy - 12, 10, 1, "#1b1b22"); R(c, x + W - 14, gy - 18, 2, 12, col); R(c, x + W - 16, gy - 19, 6, 1, "#1b1b22"); R(c, x + W - 12, gy - 16, 2, 1, "#fff4c0"); return; }
-  const S = { hatch: [0.2, 0.16, 0.12, 0.17, 0.6, 0.75, 0.14], crossover: [0.24, 0.15, 0.1, 0.14, 0.6, 0.74, 0.14], jeep: [0.26, 0.2, 0.06, 0.07, 0.66, 0.68, 0.1], ev: [0.17, 0.15, 0.1, 0.28, 0.55, 0.72, 0.16], sports: [0.15, 0.15, 0.05, 0.38, 0.52, 0.66, 0.2], supercar: [0.12, 0.12, 0.24, 0.42, 0.5, 0.66, 0.26], hypercar: [0.14, 0.12, 0.22, 0.38, 0.52, 0.66, 0.2], suv: [0.28, 0.18, 0.06, 0.1, 0.62, 0.72, 0.08] }[type] || [0.18, 0.15, 0.1, 0.2, 0.6, 0.72, 0.15];
+  if (drawCarX(c, x, gy, W, type, col, t, o)) return;
+  const S = { hatch: [0.2, 0.16, 0.12, 0.17, 0.6, 0.75, 0.14], crossover: [0.24, 0.15, 0.1, 0.14, 0.6, 0.74, 0.14], jeep: [0.26, 0.2, 0.06, 0.07, 0.66, 0.68, 0.1], ev: [0.17, 0.15, 0.1, 0.28, 0.55, 0.72, 0.16], sports: [0.15, 0.15, 0.05, 0.38, 0.52, 0.66, 0.2], supercar: [0.12, 0.12, 0.24, 0.42, 0.5, 0.66, 0.26], hypercar: [0.14, 0.12, 0.22, 0.38, 0.52, 0.66, 0.2], suv: [0.28, 0.18, 0.06, 0.1, 0.62, 0.72, 0.08], sedan: [0.18, 0.16, 0.18, 0.3, 0.6, 0.74, 0.14], wagon: [0.18, 0.16, 0.14, 0.26, 0.82, 0.88, 0.14], gt: [0.15, 0.13, 0.26, 0.4, 0.56, 0.68, 0.24], roadster: [0.15, 0.13, 0.3, 0.4, 0.56, 0.66, 0.2], muscle: [0.19, 0.14, 0.24, 0.36, 0.56, 0.68, 0.1], classic: [0.17, 0.15, 0.24, 0.36, 0.55, 0.7, 0.22], pickup: [0.22, 0.18, 0.44, 0.5, 0.66, 0.72, 0.08], sixwheel: [0.22, 0.18, 0.44, 0.5, 0.66, 0.72, 0.08], limo: [0.17, 0.14, 0.1, 0.18, 0.8, 0.86, 0.12], rally: [0.2, 0.16, 0.18, 0.28, 0.58, 0.72, 0.14], kei: [0.26, 0.24, 0.06, 0.1, 0.84, 0.9, 0.04], boxy: [0.26, 0.2, 0.08, 0.12, 0.72, 0.78, 0.03], lmp: [0.12, 0.14, 0.3, 0.42, 0.54, 0.62, 0.4] }[type] || [0.18, 0.15, 0.1, 0.2, 0.6, 0.72, 0.15];
   const [bf, rf, r0, r1, f1, f0, nose] = S, wr = Math.max(3, Math.round(W * 0.1)), bh = Math.max(3, Math.round(W * bf)), rh = Math.max(2, Math.round(W * rf));
   const bottom = gy - Math.round(wr * 0.5), top0 = gy - wr - bh + 2;
   for (let i = 0; i < W; i++) {
@@ -2284,7 +2582,7 @@ function drawCar(c, x, gy, W, type, col, t = 0, o = {}) {
     if (f < 0.04) top += 1;
     const two = type === "hypercar" && f > 0.45 && f < 0.95 ? dark : col;
     R(c, x + i, top, 1, bottom - top, two);
-    if (f >= r0 && f <= f0) {
+    if (f >= r0 && f <= f0 && !o.conv) {
       let h = f < r1 ? rh * ((f - r0) / Math.max(0.01, r1 - r0)) : f <= f1 ? rh : rh * ((f0 - f) / Math.max(0.01, f0 - f1));
       h = Math.round(h); if (h > 0) { R(c, x + i, top0 - h, 1, h, col); if (h > 2 && Math.abs(f - (r1 + f1) / 2) > 0.02) R(c, x + i, top0 - h + 1, 1, h - 2, win); }
     }
@@ -2304,11 +2602,189 @@ function drawCar(c, x, gy, W, type, col, t = 0, o = {}) {
   else { R(c, fx, hy - 1, 3, 3, LED); R(c, fx + 1, hy, 1, 1, dark); R(c, x, ty, 2, 2, TL); R(c, x + 3, ty, 2, 2, TL); }
   if (type === "jeep") { for (let yy = -3; yy <= 3; yy++) { const w = Math.floor(Math.sqrt(9 - yy * yy)); R(c, x - 3 - w, top0 + 4 + yy, w * 2 + 1, 1, "#15151a"); } }
   if (type === "suv") { R(c, x + W - 2, top0 + 1, 2, bh - 3, "#e8e8e8"); R(c, x + W - 3, top0 - 2, 1, 2, "#e8e8e8"); }
-  wheel(x + Math.round(W * 0.19), wr); wheel(x + Math.round(W * 0.8), wr);
+  const wf = type === "limo" ? [0.12, 0.88] : type === "sixwheel" ? [0.16, 0.62, 0.82] : [0.19, 0.8];
+  wf.forEach((f) => wheel(x + Math.round(W * f), wr));
+  if (o.conv) { R(c, x + Math.round(W * f1), top0 - rh + 1, 1, rh - 1, win); R(c, x + Math.round(W * f1) - 1, top0 - rh + 2, 1, rh - 2, win); R(c, x + Math.round(W * (r1 + 0.02)), top0 - 3, 2, 3, "#1b1b22"); R(c, x + Math.round(W * (r1 + 0.18)), top0 - 3, 2, 3, "#1b1b22"); }
+  if (type === "pickup" || type === "sixwheel") { R(c, x + 1, top0 - 2, Math.round(W * 0.4), 1, dark); R(c, x + 1, top0 - 2, 1, 2, dark); }
+  if (type === "limo") for (const f of [0.3, 0.46, 0.62]) R(c, x + Math.round(W * f), top0 - rh + 1, 1, rh - 1, col);
+  if (type === "rally") { R(c, x + Math.round(W * 0.35), top0 + 1, Math.round(W * 0.2), bh - 3, "#1c2656"); R(c, x + Math.round(W * 0.42), top0 + 2, 4, 3, "#f4f4f4"); R(c, x + Math.round(W * 0.2), top0 - rh - 1, 3, 1, "#1b1b22"); }
+  if (type === "lmp") { R(c, x + Math.round(W * 0.08), top0 - rh - 3, Math.round(W * 0.34), 1, dark); for (let k = 0; k < rh + 2; k++) R(c, x + Math.round(W * 0.1) + k, top0 - rh - 2 + k, 1, 1, dark); }
+  if (type === "classic" || type === "gt") [0.19, 0.8].forEach((f) => R(c, x + Math.round(W * f) - wr, top0 + 1, wr * 2, 1, shade(col, 1.15)));
+  if (type === "boxy") { R(c, x - 2, top0 + 1, 2, Math.max(3, bh - 3), "#15151a"); }
   if (o.wing) { R(c, x + 1, top0 - 5, 8, 1, "#1b1b22"); R(c, x + 4, top0 - 4, 1, 4, "#1b1b22"); }
   if (o.exhaust) { R(c, x - 2, bottom - 3, 2, 1, "#8a8f97"); if (wave) R(c, x - 5, bottom - 3, 3, 1, "#ff9a5c"); }
   if (o.chauffeur) R(c, x + Math.round(W * ((f1 + f0) / 2)), top0 - Math.round(rh * 0.7), 2, 2, "#8d5a3b");
   if (o.plate) { R(c, x + 1, bottom - 4, 5, 2, "#f4f4f4"); }
+}
+
+/* ---- art for the new catalog ---- */
+function sailRig(c, mx, base, h, boomL, jibL, col = "#f4f1ea", jib = true) {
+  h = Math.max(4, Math.round(h)); R(c, mx, base - h, 1, h, "#8a8f97");
+  for (let yy = 1; yy < h - 1; yy++) {
+    const w = Math.round((yy / h) * boomL); if (w > 0) R(c, mx - w, base - h + yy, w, 1, col);
+    if (jib) { const wj = Math.round((yy / h) * jibL * 0.9); if (wj > 0) R(c, mx + 1, base - h + yy, wj, 1, shade(col, 0.92)); }
+  }
+  R(c, mx - boomL, base - 1, Math.max(1, boomL), 1, "#8a8f97");
+}
+const BOAT_SUPER = {
+  panga: (q) => { const { c, x, y0, hh, draft } = q; R(c, x - 2, y0 - 1, 2, hh + draft + 1, "#1b1b22"); R(c, x - 3, y0 - 2, 3, 2, "#3a3f4a"); R(c, q.X(0.5), y0 - 2, 2, 2, "#c9c9c9"); },
+  rib: (q) => { const { c, x, L, y0, hh } = q; R(c, x, y0, L - 1, Math.max(2, Math.round(hh * 0.6)), "#5a5f6a"); q.deck(0.45, 0.58, y0, Math.max(2, L * 0.1), "#f4f4f4", q.glass); R(c, x - 3, y0, 3, hh + 1, "#1b1b22"); R(c, x - 6, y0 + 1, 3, hh, "#1b1b22"); },
+  wake: (q) => { const { c, X, y0, L } = q; R(c, X(0.3), y0 - 2, Math.round(L * 0.35), 2, "#f4efe6"); const th = Math.max(4, Math.round(L * 0.5)); R(c, X(0.34), y0 - th, 1, th, "#c9c9c9"); R(c, X(0.62), y0 - th, 1, th, "#c9c9c9"); R(c, X(0.34), y0 - th, Math.round(L * 0.29), 1, "#1b1b22"); R(c, X(0.6), y0 - 3, 1, 3, "#9fe1ff"); },
+  sloop: (q) => { const { c, X, y0, L } = q; q.deck(0.3, 0.62, y0, Math.max(1, L * 0.04), q.sup, q.glass); sailRig(c, X(0.55), y0 - 1, Math.min(Math.round(L * 1.1), y0 - 2), Math.round(L * 0.42), Math.round(L * 0.4)); },
+  gofast: (q) => { const { c, X, y0, L } = q; R(c, X(0.3), y0 - 2, Math.round(L * 0.2), 2, "#1c2234"); R(c, X(0.3), y0 - 3, Math.round(L * 0.14), 1, "#9fe1ff"); R(c, X(0.02), y0, Math.round(L * 0.5), 1, "#f4f4f4"); R(c, q.x - 3, q.wl - 1, 3, 1, "#c9b8a0"); if (Math.floor(q.t / 120) % 2) R(c, q.x - 7, q.wl, 4, 1, "#ffffff"); },
+  sportyacht: (q) => { const { c, X, y0, L } = q; const y1 = q.deck(0.18, 0.72, y0, Math.max(2, L * 0.08), q.sup, q.glass); R(c, X(0.2), y1 - 2, Math.round(L * 0.44), 2, "#1c2234"); R(c, X(0.2), y1 - 3, Math.round(L * 0.3), 1, "#1c2234"); },
+  sportfish: (q) => { const { c, X, y0, L } = q; const y1 = q.deck(0.3, 0.72, y0, Math.max(3, L * 0.12), q.sup, q.glass), y2 = q.deck(0.36, 0.62, y1, Math.max(1, L * 0.04), q.sup, null); const th = Math.min(Math.round(L * 0.35), y2 - 1); R(c, X(0.4), y2 - th, 1, th, "#c9c9c9"); R(c, X(0.56), y2 - th, 1, th, "#c9c9c9"); R(c, X(0.38), y2 - th, Math.round(L * 0.22), 1, "#1c2656"); const oh = Math.min(Math.round(L * 0.25), y1 - 1); R(c, X(0.3), y1 - oh, 1, oh, "#c9c9c9"); R(c, X(0.26), y1 - oh, 1, oh, "#c9c9c9"); },
+  gulet: (q) => { const { c, X, y0, L } = q; q.deck(0.08, 0.4, y0, Math.max(2, L * 0.06), "#8a5a33", null); const h = Math.min(Math.round(L * 0.75), y0 - 2); sailRig(c, X(0.5), y0 - 1, h, Math.round(L * 0.2), Math.round(L * 0.35), "#f1e2c4"); sailRig(c, X(0.28), y0 - 1, Math.round(h * 0.75), Math.round(L * 0.16), 0, "#f1e2c4", false); R(c, X(0.88), y0 - 2, Math.round(L * 0.2), 1, "#6b4a2a"); },
+  schooner: (q) => { const { c, X, y0, L } = q; q.deck(0.2, 0.6, y0, Math.max(2, L * 0.05), q.sup, q.glass); const h = Math.min(Math.round(L * 0.8), y0 - 2); sailRig(c, X(0.62), y0 - 1, h, Math.round(L * 0.22), Math.round(L * 0.34)); sailRig(c, X(0.4), y0 - 1, Math.round(h * 0.9), Math.round(L * 0.2), 0, "#f4f1ea", false); if (L > 50) sailRig(c, X(0.18), y0 - 1, Math.round(h * 0.7), Math.round(L * 0.12), 0, "#f4f1ea", false); R(c, X(0.94), y0 - 2, Math.round(L * 0.12), 1, "#8a8f97"); },
+  stealth: (q) => { const { c, X, y0, L } = q; const ht = Math.max(4, Math.round(L * 0.16)); for (let i = Math.round(L * 0.1); i < L * 0.85; i++) { const f = (i - L * 0.1) / (L * 0.75), h = Math.round(ht * (f < 0.2 ? f / 0.2 : f > 0.6 ? 1 - ((f - 0.6) / 0.4) * 0.9 : 1)); if (h > 0) { R(c, q.x + i, y0 - h, 1, h, "#23252e"); if (h > 3 && i % 2) R(c, q.x + i, y0 - h + 2, 1, 1, "#3fa7d6"); } } if (q.o.helipad) R(c, X(0.12), y0 - 1, Math.round(L * 0.12), 1, "#f5c542"); },
+  classicmy: (q) => { const { c, X, y0, L } = q; const y1 = q.deck(0.16, 0.78, y0, Math.max(2, L * 0.09), "#f4efe6", "#1c2234"), y2 = q.deck(0.3, 0.64, y1, Math.max(2, L * 0.07), "#f4efe6", "#1c2234"); R(c, X(0.46), y2 - 4, 3, 4, "#f5c542"); R(c, X(0.46), y2 - 5, 3, 1, "#101014"); for (let i = X(0.16); i < X(0.78); i += 2) R(c, i, y0 - 1, 1, 1, "#b07a48"); },
+  limotender: (q) => { const { c, X, y0, L } = q; const y1 = q.deck(0.12, 0.7, y0, Math.max(3, L * 0.16), q.hull, "#1c2234"); R(c, X(0.14), y1, Math.round(L * 0.54), 1, "#f5c542"); },
+};
+function drawBoatX(c, x, wl, L, type, hull, t, o) {
+  const wave = Math.floor(t / 250) % 2, X = (f) => x + Math.round(L * f), white = "#f4f4f4";
+  const tube = (x0, len, y, h, col) => { for (let i = 0; i < len; i++) { const f = i / len, cut = f > 0.85 ? Math.round(((f - 0.85) / 0.15) * h * 0.8) : f < 0.05 ? 1 : 0; R(c, x0 + i, y + Math.round(cut * 0.5), 1, Math.max(1, h - cut), col); } };
+  switch (type) {
+    case "kayak": { tube(x, L, wl - 2, 3, hull === white ? "#e8a33a" : hull); R(c, X(0.45), wl - 6, 3, 4, "#6b4226"); for (let k = 0; k < 10; k++) R(c, X(0.35) + k, wl - 8 + Math.round(wave ? k * 0.5 : 5 - k * 0.5), 1, 1, "#c9c9c9"); return true; }
+    case "jetski": { tube(x, L, wl - 4, 4, hull === white ? "#3fa7d6" : hull); R(c, X(0.3), wl - 6, Math.round(L * 0.35), 2, "#1b1b22"); R(c, X(0.7), wl - 8, 2, 4, "#1b1b22"); if (wave) R(c, x - 5, wl - 1, 4, 1, white); return true; }
+    case "dragon": { tube(x, L, wl - 3, 3, hull); R(c, x + L - 2, wl - 8, 3, 6, "#f5c542"); R(c, x + L, wl - 9, 3, 2, "#c0392b"); R(c, x - 2, wl - 6, 2, 3, "#f5c542"); for (let i = X(0.1); i < X(0.9); i += 3) { R(c, i, wl - 6, 1, 3, "#1b1b22"); R(c, i + (wave ? 1 : -1), wl - 2, 1, 3, "#8a5a33"); } R(c, X(0.92), wl - 7, 2, 2, "#e24b3b"); return true; }
+    case "pontoon": { const h = Math.max(2, Math.round(L * 0.08)); tube(x, L, wl - 1, 3, "#c9c9c9"); R(c, x, wl - 1 - h, L, h, hull === white ? "#e8e2d6" : hull); const rh = Math.max(4, Math.round(L * 0.25)); R(c, X(0.15), wl - 1 - h - rh, 1, rh, "#8a8f97"); R(c, X(0.7), wl - 1 - h - rh, 1, rh, "#8a8f97"); R(c, X(0.12), wl - 1 - h - rh, Math.round(L * 0.62), 2, "#1c2656"); for (let k = 0; k < 4; k++) R(c, X(0.2) + k * Math.round(L * 0.12), wl - 3 - h, 2, 2, ["#ff6fae", "#f5c542", "#52c7b8", "#e24b3b"][k]); return true; }
+    case "houseboat": { tube(x, L, wl - 2, 3, "#6b4a2a"); const hh = Math.max(5, Math.round(L * 0.3)); R(c, X(0.08), wl - 2 - hh, Math.round(L * 0.84), hh, hull === white ? "#e8dcc4" : hull); for (let i = X(0.12); i < X(0.86); i += 5) R(c, i, wl - hh + 1, 3, Math.max(2, Math.round(hh * 0.4)), "#6fb8ec"); const rw = Math.round(L * 0.9); for (let i = 0; i < rw; i++) { const k = Math.round(Math.min(i, rw - i) * 0.2); R(c, X(0.05) + i, wl - 3 - hh - k, 1, 1 + k, "#5a3a2a"); } return true; }
+    case "foil": { const lift = 4; tube(x, L, wl - 3 - lift, 3, hull); R(c, X(0.25), wl - lift, 1, lift + 1, "#8a8f97"); R(c, X(0.75), wl - lift, 1, lift + 1, "#8a8f97"); R(c, X(0.2), wl + 1, 4, 1, "#8a8f97"); R(c, X(0.7), wl + 1, 4, 1, "#8a8f97"); R(c, X(0.4), wl - 5 - lift, Math.round(L * 0.25), 2, "#1c2234"); if (wave) R(c, x - 4, wl, 3, 1, white); return true; }
+    case "amphib": { tube(x, L, wl - 4, 4, hull); R(c, X(0.3), wl - 7, Math.round(L * 0.35), 3, "#1c2234"); R(c, X(0.3), wl - 8, Math.round(L * 0.35), 1, white); [0.2, 0.75].forEach((f) => { R(c, X(f) - 1, wl - 1, 3, 3, "#15151a"); R(c, X(f), wl, 1, 1, "#c9c9c9"); }); return true; }
+    case "beachcat": case "catamaran": case "trimaran": case "powercat": {
+      const h = Math.max(2, Math.round(L * 0.07));
+      tube(x + 2, L - 2, wl - h + 1, h, shade(hull === white ? "#e8e8e8" : hull, 0.75));
+      tube(x, L, wl - h, h, hull);
+      if (type === "trimaran") tube(x + Math.round(L * 0.2), Math.round(L * 0.6), wl - h - 1, Math.max(1, h - 1), shade(hull, 0.85));
+      const bridge = wl - h - 1;
+      if (type === "beachcat") { R(c, X(0.1), bridge, Math.round(L * 0.8), 1, "#1b1b22"); sailRig(c, X(0.5), bridge, Math.min(Math.round(L * 2.2), bridge - 2), Math.round(L * 0.4), Math.round(L * 0.4), "#ff6fae"); return true; }
+      if (type !== "powercat") {
+        if (type === "catamaran") { const y1 = bridge - Math.max(2, Math.round(L * 0.08)); R(c, X(0.2), y1, Math.round(L * 0.5), bridge - y1, white); R(c, X(0.24), y1 + 1, Math.round(L * 0.42), 1, "#1c2234"); }
+        else R(c, X(0.35), bridge - 2, Math.round(L * 0.2), 2, "#1c2234");
+        sailRig(c, X(0.55), bridge, Math.min(Math.round(L * 1.2), bridge - 2), Math.round(L * 0.4), Math.round(L * 0.4), type === "trimaran" ? "#2a2a30" : "#f4f1ea"); return true;
+      }
+      let y = bridge; [[0.12, 0.84, 0.1], [0.24, 0.72, 0.08], [0.36, 0.6, 0.06]].slice(0, L > 30 ? 3 : 2).forEach(([a, b, hf]) => { const hh = Math.max(2, Math.round(L * hf)); R(c, X(a), y - hh, X(b) - X(a), hh, white); R(c, X(a) + 1, y - hh + 1, X(b) - X(a) - 2, Math.max(1, Math.round(hh / 3)), "#1c2234"); y -= hh; });
+      if (o.helipad) { R(c, X(0.8), bridge - 1, Math.round(L * 0.12), 1, "#3a3a3a"); R(c, X(0.85), bridge - 2, 1, 1, "#f5c542"); }
+      return true;
+    }
+    case "sub": { const h = Math.max(4, Math.round(L * 0.5)); for (let yy = 0; yy < h; yy++) { const w = Math.round(L * Math.sqrt(Math.max(0, 1 - Math.pow((yy - h / 2) / (h / 2), 2)))); R(c, x + Math.round((L - w) / 2), wl - Math.round(h * 0.4) + yy, w, 1, hull === white ? "#f5c542" : hull); } R(c, X(0.55), wl - Math.round(h * 0.4) + 1, Math.max(2, Math.round(L * 0.25)), Math.max(2, Math.round(h * 0.4)), "#6fd0ff"); R(c, X(0.4), wl - Math.round(h * 0.4) - 2, 2, 2, "#1b1b22"); return true; }
+    case "subyacht": { const h = Math.max(3, Math.round(L * 0.1)); tube(x, L, wl - Math.round(h / 2), h, hull); const tw = Math.round(L * 0.25), th = Math.max(3, Math.round(L * 0.12)); for (let i = 0; i < tw; i++) { const hh = Math.round(th * (1 - Math.abs(i - tw * 0.4) / tw)); R(c, X(0.45) + i, wl - Math.round(h / 2) - hh, 1, hh, hull); } R(c, X(0.5), wl - Math.round(h / 2) - th + 2, Math.round(tw * 0.5), 1, "#6fd0ff"); for (let i = X(0.1); i < X(0.9); i += 4) R(c, i, wl - 1, 1, 1, "#6fd0ff"); return true; }
+    case "floatisle": { const h = Math.max(3, Math.round(L * 0.06)); R(c, x, wl - h, L, h + 2, "#6b5a4a"); R(c, x, wl - h - 2, L, 2, "#f2dca6"); R(c, X(0.1), wl - h - 2, Math.round(L * 0.2), 1, "#3fd0e0"); const vh = Math.max(4, Math.round(L * 0.12)); R(c, X(0.45), wl - h - 2 - vh, Math.round(L * 0.3), vh, "#f4f1ea"); R(c, X(0.47), wl - h - vh, Math.round(L * 0.26), 1, "#1c2234"); R(c, X(0.43), wl - h - 3 - vh, Math.round(L * 0.34), 1, "#8a5a33"); [0.08, 0.36, 0.84].forEach((f) => { const px = X(f), ph = Math.max(4, Math.round(L * 0.12)); for (let i = 0; i < ph; i++) R(c, px + Math.round(i * 0.2), wl - h - 2 - i, 1, 1, "#6b4a2a"); for (let k = -3; k <= 3; k++) R(c, px + Math.round(ph * 0.2) + k, wl - h - 2 - ph + Math.round(Math.abs(k) * 0.5), 1, 1, "#3f7a4a"); }); if (o.helipad) R(c, X(0.8), wl - h - 3, Math.round(L * 0.12), 1, "#3a3a3a"); return true; }
+  }
+  return false;
+}
+
+function drawCarX(c, x, gy, W, type, col, t, o) {
+  const dark = shade(col, 0.62), rim = o.wheels ? "#f5c542" : "#c9c9c9", LED = "#e8fbff", TL = "#ff2a3a";
+  const wheel = (cx, r) => { for (let yy = -r; yy <= r; yy++) { const w = Math.floor(Math.sqrt(r * r - yy * yy)); R(c, cx - w, gy - r + yy, w * 2 + 1, 1, "#15151a"); } R(c, cx - 1, gy - r, 2, 2, rim); };
+  if (type === "moto") { const r = 5; wheel(x + 9, r); wheel(x + W - 9, r); const n = W - 22; for (let i = 0; i < n; i++) { const h = 5 - Math.round(Math.abs(i - n * 0.6) / (n * 0.2)); if (h > 0) R(c, x + 12 + i, gy - r - 2 - h, 1, h + 2, col); } R(c, x + 10, gy - r - 4, 8, 2, "#1b1b22"); R(c, x + W - 12, gy - r - 9, 3, 5, col); R(c, x + W - 10, gy - r - 7, 2, 1, LED); R(c, x + 9, gy - r - 4, 2, 1, TL); R(c, x + 14, gy - r, W - 26, 2, "#8a8f97"); return true; }
+  if (type === "buggy") { wheel(x + 10, 6); wheel(x + W - 10, 6); R(c, x + 6, gy - 9, W - 12, 2, col); for (let k = 0; k < 10; k++) { R(c, x + 14 + k, gy - 10 - k, 1, 1, "#3a3f4a"); R(c, x + W - 16 - k, gy - 10 - k, 1, 1, "#3a3f4a"); } R(c, x + 23, gy - 20, Math.max(2, W - 38), 1, "#3a3f4a"); R(c, x + Math.round(W / 2) - 2, gy - 14, 3, 4, "#1b1b22"); R(c, x + W - 8, gy - 10, 2, 1, LED); return true; }
+  if (type === "tuktuk") { wheel(x + 8, 3); wheel(x + W - 10, 3); R(c, x + 4, gy - 16, W - 14, 12, col); R(c, x + 2, gy - 18, W - 10, 2, "#1b1b22"); R(c, x + 8, gy - 14, W - 24, 6, "#1c2234"); R(c, x + W - 10, gy - 12, 4, 6, col); R(c, x + W - 7, gy - 11, 1, 2, LED); for (let k = 0; k < 4; k++) R(c, x + 6 + k * 6, gy - 18, 3, 1, ["#e24b3b", "#52c7b8", "#f5c542", "#ff6fae"][k]); return true; }
+  if (type === "track") { wheel(x + 9, 5); wheel(x + W - 10, 4); R(c, x + 6, gy - 7, W - 8, 3, col); for (let i = 0; i < W * 0.35; i++) R(c, x + W - 2 - i, gy - 6 - Math.round(i * 0.08), 1, 2, col); R(c, x + 18, gy - 10, 10, 3, col); R(c, x + 20, gy - 12, 3, 2, "#f5c542"); R(c, x + 2, gy - 14, 2, 8, "#1b1b22"); R(c, x, gy - 15, 8, 2, col); R(c, x + W - 4, gy - 5, 5, 1, "#1b1b22"); R(c, x + 16, gy - 13, 9, 1, "#8a8f97"); return true; }
+  if (type === "cyber") { for (let i = 0; i < W; i++) { const f = i / W, h = f < 0.5 ? f / 0.5 : 1 - ((f - 0.5) / 0.5) * 0.6, y = gy - 5 - Math.round(W * 0.28 * h); R(c, x + i, y, 1, gy - 3 - y, col); } R(c, x + Math.round(W * 0.34), gy - 5 - Math.round(W * 0.24), Math.round(W * 0.26), 2, "#1c2234"); R(c, x + W - 10, gy - 9, 10, 1, LED); R(c, x, gy - 10, 8, 1, TL); wheel(x + Math.round(W * 0.2), 5); wheel(x + Math.round(W * 0.8), 5); return true; }
+  if (type === "vintage") { const bt = gy - Math.round(W * 0.18); for (let i = 0; i < W; i++) { const f = i / W; let top = bt; if (f < 0.25) top = bt + Math.round(Math.pow((0.25 - f) / 0.25, 2) * W * 0.12); if (f > 0.72) top = bt + Math.round(((f - 0.72) / 0.28) * W * 0.05); const fender = Math.abs(f - 0.2) < 0.12 || Math.abs(f - 0.82) < 0.12 ? 0 : 4; R(c, x + i, top, 1, Math.max(1, gy - 3 - top - fender), col); } for (let i = Math.round(W * 0.35); i < W * 0.62; i++) { const h = Math.round(W * 0.14 * Math.sin(((i - W * 0.35) / (W * 0.27)) * Math.PI)); R(c, x + i, bt - h, 1, h, col); } R(c, x + Math.round(W * 0.42), bt - Math.round(W * 0.1), Math.round(W * 0.12), 2, "#1c2234"); R(c, x + Math.round(W * 0.45), bt - Math.round(W * 0.15), 1, Math.round(W * 0.15), dark); R(c, x + W - 5, bt + 2, 3, 3, "#f4f1ea"); wheel(x + Math.round(W * 0.2), 5); wheel(x + Math.round(W * 0.82), 5); R(c, x + Math.round(W * 0.3), gy - 5, Math.round(W * 0.4), 1, "#1b1b22"); return true; }
+  return false;
+}
+
+function drawPlane(c, x, y, W, type, col, t, o = {}) {
+  const white = "#f4f4f4", body = col || white, trim = body === white ? "#1c2656" : shade(body, 0.7), dark = "#5a5f6a", win = "#1c2234", sp = Math.floor(t / 60) % 2;
+  const cheat = (x0, w, yy) => { if (body === white && !o.stripe) return; R(c, x0, yy, w, 1, o.stripe || trim); };
+  const windows = (x0, x1, yy, step = 3) => { for (let i = x0; i < x1; i += step) R(c, i, yy, 1, 1, win); };
+  const prop = (px, py, h) => { R(c, px, py - (sp ? h : 1), 1, sp ? h * 2 + 1 : 3, "#c9c9c9"); R(c, px - 1, py, 2, 1, "#1b1b22"); };
+  const rotor = (cx, ry, w) => { R(c, cx - (sp ? w : Math.round(w * 0.6)), ry, sp ? w * 2 : Math.round(w * 1.2), 1, "#1b1b22"); R(c, cx, ry, 1, 3, "#3a3f4a"); };
+  if (JETS.includes(type)) {
+    const big = type === "bizliner" || type === "jumbo", ss = type === "supersonic", h = ss ? Math.max(2, Math.round(W * 0.06)) : Math.max(3, Math.round(W * (big ? 0.12 : 0.1))), top = y - Math.round(h / 2);
+    R(c, x + 4, top, W - 10, h, body);
+    for (let k = 0; k < 6; k++) { const hh = Math.max(1, h - Math.round((k * h) / 6)); R(c, x + W - 6 + k, top + Math.round((h - hh) / 2) + (ss ? Math.round(k / 3) : 0), 1, hh, body); }
+    for (let k = 0; k < 4; k++) R(c, x + k, top, 1, Math.max(1, Math.round(h * (0.3 + k * 0.18))), body);
+    const fh = Math.round(h * (ss ? 2.6 : 1.8)); for (let k = 0; k < fh; k++) R(c, x + 1 + Math.round(k * 0.45), top - fh + k, Math.max(2, 4 - Math.round(k / 4)), 1, ss ? body : trim);
+    if (!big && !ss) R(c, x + 1, top - fh, 7, 1, trim);
+    if (type === "jumbo") R(c, x + Math.round(W * 0.6), top - 2, Math.round(W * 0.26), 2, body);
+    windows(x + Math.round(W * 0.2), x + Math.round(W * 0.82), top + 1, big ? 2 : 3);
+    R(c, x + W - 7, top + 1, 2, 1, win); cheat(x + 4, W - 12, top + h - 2);
+    if (ss) { for (let k = 0; k < Math.round(W * 0.45); k++) R(c, x + Math.round(W * 0.2) + k, top + h, 1, Math.max(1, Math.round((Math.round(W * 0.45) - k) * 0.12)), shade(body === white ? "#dfe6ee" : body, 0.85)); R(c, x + Math.round(W * 0.28), top + h + 1, Math.round(W * 0.14), 2, dark); }
+    else { R(c, x + Math.round(W * 0.36), top + h - 1, Math.round(W * 0.3), 1, shade(body === white ? "#dfe6ee" : body, 0.8)); R(c, x + Math.round(W * 0.66), top + h - 3, 1, 2, trim); }
+    if (big) { R(c, x + Math.round(W * 0.42), top + h, Math.round(W * 0.08), 2, dark); if (type === "jumbo") R(c, x + Math.round(W * 0.56), top + h, Math.round(W * 0.07), 2, dark); }
+    else if (!ss) R(c, x + 6, top - 1, Math.round(W * 0.14), 2, dark);
+    return;
+  }
+  if (type === "prop" || type === "turboprop" || type === "warbird" || type === "seaplane" || type === "biplane") {
+    const h = Math.max(3, Math.round(W * 0.1)), top = y - Math.round(h / 2), L = Math.round(W * (type === "turboprop" ? 0.9 : 0.75)), x0 = x + Math.round((W - L) / 2);
+    for (let i = 0; i < L; i++) { const f = i / L, hh = f < 0.35 ? Math.max(1, Math.round(h * (0.35 + f * 1.8))) : h; R(c, x0 + i, top + (h - hh), 1, hh, body); }
+    const fh = Math.round(h * 1.6); for (let k = 0; k < fh; k++) R(c, x0 + Math.round(k * 0.3), top - fh + k, 3, 1, trim);
+    prop(x0 + L, y, Math.round(h * 1.2));
+    if (type === "warbird") { R(c, x0 + Math.round(L * 0.55), top - 2, 5, 2, "#9fd8f0"); R(c, x0 + Math.round(L * 0.4), top + h, Math.round(L * 0.35), 1, dark); R(c, x0 + Math.round(L * 0.5), top + h, 3, 2, dark); }
+    else if (type === "biplane") { R(c, x0 + Math.round(L * 0.45), top - 4, Math.round(L * 0.35), 1, trim); R(c, x0 + Math.round(L * 0.45), top + h, Math.round(L * 0.35), 1, trim); R(c, x0 + Math.round(L * 0.5), top - 4, 1, 4, dark); R(c, x0 + Math.round(L * 0.75), top - 4, 1, 4, dark); R(c, x0 + Math.round(L * 0.55), top - 1, 2, 1, "#6b4226"); }
+    else { R(c, x0 + Math.round(L * 0.5), top + 1, Math.round(L * 0.22), 1, win); if (type === "turboprop") { R(c, x0 + Math.round(L * 0.4), top + h, Math.round(L * 0.3), 1, dark); R(c, x0, top - fh, 6, 1, trim); windows(x0 + Math.round(L * 0.3), x0 + Math.round(L * 0.7), top + 1); } else { R(c, x0 + Math.round(L * 0.45), top - 1, Math.round(L * 0.35), 1, trim); R(c, x0 + Math.round(L * 0.55), top, 1, h, dark); } }
+    cheat(x0 + 2, L - 4, top + h - 1);
+    if (type === "seaplane") { const fy = top + h + 3; if (o.amphib) R(c, x0 + Math.round(L * 0.2), top + h, Math.round(L * 0.7), 2, shade(body, 0.85)); else { R(c, x0 + Math.round(L * 0.25), fy, Math.round(L * 0.7), 2, "#e8e8e8"); R(c, x0 + Math.round(L * 0.35), top + h, 1, 3, dark); R(c, x0 + Math.round(L * 0.75), top + h, 1, 3, dark); } }
+    return;
+  }
+  if (type === "heli" || type === "bigheli") {
+    const big = type === "bigheli", h = Math.round(W * (big ? 0.22 : 0.2)), cw = Math.round(W * (big ? 0.5 : 0.36)), cx0 = x + W - cw - 4, top = y - Math.round(h / 2);
+    for (let yy = 0; yy < h; yy++) { const e = Math.pow((yy - h / 2) / (h / 2), 2), w = Math.round(cw * Math.sqrt(Math.max(0, 1 - e * 0.6))); R(c, cx0 + (cw - w), top + yy, w, 1, body); }
+    R(c, cx0 + cw - Math.round(cw * 0.35), top + 2, Math.round(cw * 0.3), Math.round(h * 0.35), "#9fd8f0"); if (big) windows(cx0 + 3, cx0 + cw - Math.round(cw * 0.4), top + Math.round(h * 0.4), 3);
+    R(c, x + 4, y - 1, cx0 - x - 4, 2, body); R(c, x + 2, y - 5, 2, 6, trim); R(c, x + 1, y - 6 + (sp ? 0 : 1), 4, 1, "#1b1b22");
+    R(c, cx0 + Math.round(cw * 0.3), top - 2, 4, 2, dark); rotor(cx0 + Math.round(cw * 0.4), top - 3, Math.round(W * 0.45));
+    R(c, cx0 + 2, top + h + 1, cw - 4, 1, "#3a3f4a"); R(c, cx0 + 4, top + h, 1, 1, "#3a3f4a"); R(c, cx0 + cw - 6, top + h, 1, 1, "#3a3f4a");
+    cheat(cx0 + 1, cw - 2, top + h - 2);
+    return;
+  }
+  if (type === "tiltrotor" || type === "evtol") {
+    const h = Math.max(4, Math.round(W * 0.12)), L = Math.round(W * 0.7), x0 = x + Math.round((W - L) / 2), top = y - Math.round(h / 2);
+    for (let i = 0; i < L; i++) { const f = i / L, hh = f > 0.85 ? Math.max(2, Math.round(h * (1 - (f - 0.85) * 3))) : f < 0.2 ? Math.max(2, Math.round(h * (0.5 + f * 2.5))) : h; R(c, x0 + i, top + Math.round((h - hh) / 2), 1, hh, body); }
+    R(c, x0 + Math.round(L * 0.7), top + 1, Math.round(L * 0.12), 2, "#9fd8f0");
+    if (type === "tiltrotor") { R(c, x0 + Math.round(L * 0.45), top - 1, Math.round(L * 0.2), 1, dark); R(c, x0 + Math.round(L * 0.55), top - 6, 3, 6, dark); rotor(x0 + Math.round(L * 0.56), top - 7, Math.round(W * 0.2)); R(c, x0, top - 5, 3, 5, trim); }
+    else { [0.15, 0.4, 0.65, 0.9].forEach((f) => { R(c, x0 + Math.round(L * f), top - 3, 1, 3, dark); rotor(x0 + Math.round(L * f), top - 4, 4); }); }
+    cheat(x0 + 2, L - 4, top + h - 1);
+    return;
+  }
+  if (type === "balloon") { const r = 11, cx = x + Math.round(W / 2), cy = y - 3; const cols = [body === white ? "#e24b3b" : body, "#f5c542", "#52c7b8"]; for (let yy = -r; yy <= r; yy++) { const w = Math.round(Math.sqrt(r * r - yy * yy) * (yy > 4 ? 1 - (yy - 4) / 12 : 1)); for (let k = -w; k <= w; k++) R(c, cx + k, cy + yy, 1, 1, cols[(Math.floor((k + 12) / 5)) % 3]); } R(c, cx - 3, cy + r + 3, 6, 3, "#8a5a33"); R(c, cx - 3, cy + r, 1, 3, "#3a3f4a"); R(c, cx + 2, cy + r, 1, 3, "#3a3f4a"); return; }
+  if (type === "airship") { const L = W - 6, h = Math.round(W * 0.2), x0 = x + 3; for (let yy = 0; yy < h; yy++) { const e = Math.pow((yy - h / 2) / (h / 2), 2), w = Math.round(L * Math.sqrt(Math.max(0, 1 - e))); R(c, x0 + Math.round((L - w) / 2), y - Math.round(h / 2) + yy, w, 1, body === white ? "#dfe6ee" : body); } R(c, x0 + Math.round(L * 0.4), y + Math.round(h / 2), Math.round(L * 0.22), 3, "#f4f1ea"); windows(x0 + Math.round(L * 0.42), x0 + Math.round(L * 0.6), y + Math.round(h / 2) + 1, 2); R(c, x0 + 2, y - Math.round(h / 2) - 2, 4, 3, trim); R(c, x0 + 2, y + Math.round(h / 2) - 1, 4, 3, trim); R(c, x0 + Math.round(L * 0.3), y - 1, Math.round(L * 0.4), 1, "#f5c542"); return; }
+  if (type === "gyro") { R(c, x + 18, y - 3, 16, 6, body); R(c, x + 30, y - 2, 4, 2, "#9fd8f0"); R(c, x + 10, y - 1, 8, 2, dark); R(c, x + 8, y - 5, 2, 5, trim); R(c, x + 24, y - 9, 1, 6, dark); rotor(x + 24, y - 10, 14); prop(x + 16, y, 3); R(c, x + 20, y + 3, 1, 3, dark); R(c, x + 30, y + 3, 1, 3, dark); return; }
+  if (type === "para") { const cx = x + Math.round(W / 2); for (let k = -14; k <= 14; k++) R(c, cx + k, y - 10 + Math.round((k * k) / 40), 1, 2, body === white ? "#ff6fae" : body); for (let k = 0; k < 8; k++) { R(c, cx - 12 + k * 1.5, y - 8 + k, 1, 1, "#c9c9c9"); R(c, cx + 12 - k * 1.5, y - 8 + k, 1, 1, "#c9c9c9"); } R(c, cx - 1, y, 3, 5, "#6b4226"); R(c, cx - 4, y + 1, 3, 4, "#3a3f4a"); prop(cx - 5, y + 3, 3); return; }
+}
+
+function drawFlex(c, icon, t) {
+  const g = "#f5c542", sp = Math.floor(t / 300) % 2, W2 = 32;
+  R(c, 0, 0, 64, 32, "#1a1530"); R(c, 0, 27, 64, 5, "#2b2140");
+  const star = (x, y, col = "#fff4c0") => { R(c, x, y - 1, 1, 3, col); R(c, x - 1, y, 3, 1, col); };
+  switch (icon) {
+    case "painting": case "sculpture": {
+      if (icon === "painting") { R(c, 18, 4, 28, 20, g); R(c, 20, 6, 24, 16, "#f4f1ea"); R(c, 22, 8, 8, 6, "#e24b3b"); R(c, 31, 12, 10, 8, "#1c2656"); R(c, 26, 16, 6, 4, "#f5c542"); R(c, 36, 8, 5, 3, "#52c7b8"); R(c, 30, 25, 4, 2, "#8a8f97"); }
+      else { R(c, 26, 22, 12, 6, "#8a8f97"); for (let yy = 0; yy < 18; yy++) { const w = Math.round(6 + 4 * Math.sin((yy / 18) * Math.PI)); R(c, W2 - w, 4 + yy, w * 2, 1, "#8a5a33"); } R(c, 29, 3, 6, 5, "#8a5a33"); }
+      R(c, 10, 2, 1, 26, "#3a3f4a"); R(c, 53, 2, 1, 26, "#3a3f4a"); c.fillStyle = "rgba(255,240,190,.12)"; c.fillRect(14, 2, 36, 26); return;
+    }
+    case "horse": { const col = "#6b3b1f"; R(c, 18, 12, 24, 8, col); R(c, 40, 6, 5, 8, col); R(c, 43, 4, 6, 4, col); R(c, 48, 6, 2, 2, "#1b1b22"); R(c, 38, 4, 3, 8, "#1b1b22"); R(c, 14, 12, 4, 7, "#1b1b22"); [19, 23, 35, 39].forEach((lx, k) => R(c, lx + (sp && k % 2 ? 1 : 0), 20, 2, 7, col)); R(c, 26, 11, 8, 2, "#e24b3b"); return; }
+    case "bottle": { R(c, 28, 4, 6, 4, "#2a3a2a"); R(c, 29, 2, 4, 2, "#7a1f2b"); R(c, 25, 8, 12, 19, "#2f5a34"); R(c, 26, 14, 10, 7, "#f4f1ea"); R(c, 28, 16, 6, 1, "#7a1f2b"); R(c, 28, 18, 6, 1, g); R(c, 26, 9, 1, 17, "#5a8a5a"); return; }
+    case "gem": case "egg": {
+      if (icon === "gem") { for (let yy = 0; yy < 6; yy++) R(c, 24 + yy, 6 + yy - 6 + 6, 16 - yy * 2 + 0, 0, "#fff"); R(c, 22, 8, 20, 4, "#ff9ad0"); for (let yy = 0; yy < 12; yy++) R(c, 22 + Math.round(yy * 0.85), 12 + yy, Math.max(1, 20 - Math.round(yy * 1.7)), 1, yy % 3 ? "#ff6fae" : "#ffc0e0"); R(c, 26, 9, 4, 1, "#ffffff"); }
+      else { for (let yy = 0; yy < 22; yy++) { const w = Math.round(9 * Math.sqrt(Math.max(0, 1 - Math.pow((yy - 13) / 13, 2)))); R(c, W2 - w, 3 + yy, w * 2, 1, "#2b3a8a"); } for (let yy = 6; yy < 24; yy += 5) R(c, 24, 3 + yy, 16, 1, g); for (let k = 0; k < 6; k++) R(c, 25 + k * 3, 12, 1, 1, "#ff6fae"); }
+      star(18, 6); if (sp) star(46, 10); return;
+    }
+    case "trophy": { R(c, 24, 4, 16, 10, g); for (let yy = 0; yy < 6; yy++) R(c, 25 + yy, 14 + yy, 14 - yy * 2, 1, g); R(c, 30, 19, 4, 4, g); R(c, 26, 23, 12, 3, "#8a5a33"); R(c, 20, 6, 4, 2, g); R(c, 40, 6, 4, 2, g); R(c, 20, 6, 2, 6, g); R(c, 42, 6, 2, 6, g); R(c, 27, 6, 3, 5, "#fff2b0"); return; }
+    case "key": { for (let yy = -5; yy <= 5; yy++) { const w = Math.round(Math.sqrt(25 - yy * yy)); R(c, 18 - w, 15 + yy, w * 2, 1, g); } R(c, 16, 13, 4, 4, "#1a1530"); R(c, 23, 14, 26, 3, g); R(c, 42, 17, 2, 4, g); R(c, 46, 17, 2, 5, g); return; }
+    case "rocket": { R(c, 28, 4, 8, 18, "#f4f4f4"); for (let k = 0; k < 4; k++) R(c, 29 + k, 1 + (3 - k), 6 - k * 2 + 0, 1, "#f4f4f4"); R(c, 30, 1, 4, 3, "#e24b3b"); R(c, 30, 9, 4, 4, "#1c2656"); R(c, 24, 16, 4, 6, "#e24b3b"); R(c, 36, 16, 4, 6, "#e24b3b"); R(c, 29, 22, 6, 2 + (sp ? 3 : 1), "#ff9a5c"); R(c, 30, 24, 4, sp ? 4 : 2, "#fff4c0"); star(10, 6); star(52, 20); star(48, 4); return; }
+    case "vine": { R(c, 0, 18, 64, 10, "#5aa847"); for (let k = 0; k < 5; k++) { const x0 = 4 + k * 13; R(c, x0, 8, 1, 14, "#6b4a2a"); R(c, x0 - 3, 8, 8, 4, "#3f7a4a"); R(c, x0 + 2, 12, 3, 3, "#7a3a8a"); } for (let x = 0; x < 64; x++) R(c, x, 6 + Math.round(Math.sin(x / 9) * 2), 1, 1, "#e8a33a"); return; }
+    case "bag": { R(c, 20, 12, 24, 15, "#e8a33a"); R(c, 20, 12, 24, 2, "#b07a2a"); for (let k = 0; k < 10; k++) { R(c, 25 + k, 6 + Math.round(Math.abs(k - 5) * 0.8), 1, 1, "#b07a2a"); R(c, 30 + k, 6 + Math.round(Math.abs(k - 5) * 0.8), 1, 1, "#b07a2a"); } R(c, 30, 16, 4, 3, g); return; }
+    case "guitar": { for (let yy = 0; yy < 12; yy++) { const w = Math.round(8 * Math.sin(((yy + 1) / 13) * Math.PI)) + (yy > 6 ? 2 : 0); R(c, 22 - w + 10, 14 + yy, w * 2, 1, "#c0392b"); } R(c, 30, 18, 4, 4, "#1b1b22"); R(c, 31, 2, 2, 16, "#6b4a2a"); R(c, 29, 1, 6, 3, "#1b1b22"); for (let k = 0; k < 3; k++) R(c, 31 + (k % 2), 4 + k * 5, 1, 1, g); return; }
+    case "club": { for (let k = 0; k < 8; k++) { const on = (Math.floor(t / 200) + k) % 3; R(c, 4 + k * 7, 26 - ((k * 5) % 9), 3, 3, ["#ff5fa2", "#52c7b8", "#f5c542"][on]); } c.fillStyle = sp ? "#ff5fa2" : "#ff8ac0"; c.fillRect(16, 5, 32, 10); R(c, 18, 7, 28, 6, "#1a1530"); for (let k = 0; k < 4; k++) R(c, 20 + k * 7, 8, 4, 4, sp ? "#ff5fa2" : "#ff8ac0"); for (let k = 0; k < 6; k++) R(c, 10 + k * 9 + (sp ? 2 : 0), 1, 1, 26, "rgba(82,199,184,.25)"); return; }
+    case "cigar": { R(c, 14, 14, 36, 12, "#6b3b1f"); R(c, 14, 14, 36, 2, "#8a5a33"); R(c, 26, 18, 12, 4, g); R(c, 18, 8, 26, 3, "#8a5a33"); R(c, 44, 8, 3, 3, "#e24b3b"); R(c, 30, 8, 3, 3, g); for (let k = 0; k < 4; k++) R(c, 48 + k + (sp ? 1 : 0), 6 - k * 2, 1, 1, "#c9c9c9"); return; }
+    case "card": { R(c, 22, 3, 20, 26, "#f4f4f4"); R(c, 24, 5, 16, 11, "#ff9a5c"); R(c, 28, 8, 8, 6, "#e24b3b"); R(c, 24, 18, 16, 1, "#3a3f4a"); R(c, 24, 21, 12, 1, "#3a3f4a"); R(c, 20, 1, 24, 30, "rgba(160,220,255,.15)"); R(c, 44, 3, 6, 4, "#e24b3b"); return; }
+    case "star": { for (let k = 0; k < 30; k++) R(c, (k * 37) % 64, (k * 13) % 26, 1, 1, "#8a8fb0"); const cx = 32, cy = 13; for (let k = -5; k <= 5; k++) { R(c, cx + k, cy, 1, 1, "#fff4c0"); R(c, cx, cy + k, 1, 1, "#fff4c0"); } R(c, cx - 1, cy - 1, 3, 3, "#ffffff"); if (sp) star(cx + 8, cy - 7); return; }
+    case "fireworks": { [[18, 10, "#ff5fa2"], [40, 8, "#52c7b8"], [30, 16, "#f5c542"]].forEach(([fx, fy, col], k) => { const r = 3 + ((Math.floor(t / 150) + k * 2) % 5); for (let a = 0; a < 6.28; a += 0.8) R(c, fx + Math.round(Math.cos(a) * r), fy + Math.round(Math.sin(a) * r), 1, 1, col); }); R(c, 0, 26, 64, 6, "#10306a"); return; }
+    case "shirt": { R(c, 22, 6, 20, 20, "#f4f4f4"); R(c, 16, 6, 6, 8, "#f4f4f4"); R(c, 42, 6, 6, 8, "#f4f4f4"); R(c, 28, 6, 8, 2, "#1a1530"); for (let k = 0; k < 4; k++) R(c, 22 + k * 5, 6, 2, 20, "#6fb8ec"); R(c, 28, 11, 2, 6, "#1c2656"); R(c, 31, 11, 3, 6, "#1c2656"); R(c, 32, 12, 1, 4, "#f4f4f4"); R(c, 36, 20, 5, 2, "#1b1b22"); R(c, 14, 3, 36, 26, "rgba(245,197,66,.12)"); return; }
+    case "stadium": { R(c, 0, 20, 64, 12, "#3f8a3a"); for (let x = 4; x < 64; x += 8) R(c, x, 20, 4, 12, "#4f9a3f"); for (let yy = 4; yy < 20; yy += 2) for (let x = 0; x < 64; x += 2) R(c, x, yy, 1, 1, ((x * 7 + yy * 3 + Math.floor(t / 300)) % 11) ? "#c9d3ff" : "#f5c542"); R(c, 22, 14, 20, 6, "#1c2656"); R(c, 24, 15, 16, 3, "#6fb8ec"); return; }
+    case "chef": { R(c, 16, 22, 32, 3, "#e8e8e8"); for (let yy = 0; yy < 12; yy++) { const w = Math.round(12 * Math.sqrt(Math.max(0, 1 - Math.pow((yy - 12) / 12, 2)))); R(c, W2 - w, 10 + yy, w * 2, 1, "#c9c9c9"); } R(c, 31, 8, 2, 2, "#c9c9c9"); R(c, 22, 14, 3, 5, "#ffffff"); for (let k = 0; k < 3; k++) R(c, 26 + k * 5, 7 - (Math.floor(t / 200) + k) % 3, 1, 2, "rgba(255,255,255,.6)"); return; }
+    case "guard": { const pal = { hair: "#101014", skin: "#6b4226", jacket: "#15151a", shirt: "#f4f4f4", glasses: true, build: "broad", jaw: "square", style: "buzz" }; drawPerson(c, 12, 6, { ...pal, skin: "#8d5a3b" }, t, false, 3); drawPerson(c, 27, 5, pal, t, false, 4); drawPerson(c, 42, 6, { ...pal, skin: "#c68a5e" }, t, false, 5); return; }
+    case "dog": { const col = "#2a1a14"; R(c, 18, 14, 22, 7, col); R(c, 38, 8, 6, 8, col); R(c, 43, 10, 5, 3, col); R(c, 39, 5, 2, 4, col); R(c, 42, 5, 2, 4, col); R(c, 46, 10, 1, 1, "#1b1b22"); [19, 23, 33, 37].forEach((lx) => R(c, lx, 21, 2, 6, col)); R(c, 14, 12 + (sp ? 0 : 2), 4, 2, col); R(c, 36, 14, 2, 3, "#b07a48"); return; }
+    case "bird": { R(c, 30, 20, 16, 6, "#8a5a33"); R(c, 34, 8, 8, 12, "#6b4a2a"); R(c, 36, 5, 5, 4, "#6b4a2a"); R(c, 41, 6, 2, 2, g); R(c, 38, 6, 1, 1, "#1b1b22"); for (let k = 0; k < 5; k++) R(c, 34 - k, 10 + k, 1, 6, "#5a3a22"); for (let yy = 12; yy < 20; yy += 2) R(c, 36, yy, 4, 1, "#a07a5a"); return; }
+    case "piano": { R(c, 12, 12, 38, 8, g); for (let i = 0; i < 20; i++) R(c, 30 + i, 12 - Math.round(Math.sqrt(Math.max(0, 100 - (i - 10) * (i - 10))) * 0.6), 1, 1, g); for (let i = 0; i < 18; i++) R(c, 14 + i * 2, 16, 1, 3, i % 3 ? "#f4f4f4" : "#1b1b22"); [14, 46].forEach((lx) => R(c, lx, 20, 2, 7, g)); R(c, 12, 4, 1, 8, g); return; }
+    case "pen": { for (let k = 0; k < 30; k++) R(c, 14 + k, 24 - Math.round(k * 0.6), 3, 2, k < 22 ? "#101014" : g); for (let k = 0; k < 4; k++) R(c, 16 + k * 5, 22 - k * 3, 1, 1, "#ffffff"); R(c, 44, 5, 3, 2, "#f4f4f4"); star(48, 4); return; }
+    case "watch": { for (let k = 0; k < 4; k++) { const x0 = 6 + k * 14; R(c, x0 + 3, 4, 4, 24, k % 2 ? "#c9c9c9" : "#6b3b1f"); R(c, x0, 10, 10, 10, k === 1 ? g : "#e0e0e0"); R(c, x0 + 1, 11, 8, 8, ["#101a3a", "#2f5a34", "#f4f1ea", "#1c1f2b"][k]); R(c, x0 + 5, 12, 1, 3, "#ffffff"); R(c, x0 + 5, 15, 2, 1, "#ffffff"); } return; }
+    case "castle": { R(c, 0, 26, 64, 6, "#3f7a4a"); R(c, 14, 12, 36, 14, "#8a8f97"); [10, 26, 46].forEach((tx, k) => { const th = k === 1 ? 20 : 16; R(c, tx, 26 - th, 8, th, "#9aa0ad"); for (let q = 0; q < 8; q += 2) R(c, tx + q, 26 - th - 2, 1, 2, "#9aa0ad"); R(c, tx + 3, 26 - th + 4, 2, 3, "#ffd98a"); }); R(c, 29, 20, 6, 6, "#3a2a1a"); R(c, 30, 2, 1, 5, "#1b1b22"); R(c, 31, 2, 4, 2, "#e24b3b"); return; }
+    case "anchor": { R(c, 0, 20, 64, 12, "#1f6f8a"); for (let x = (sp ? 2 : 0); x < 64; x += 6) R(c, x, 22, 2, 1, "#5fb0c0"); R(c, 0, 18, 64, 2, "#8a5a33"); [6, 22, 40].forEach((bx, k) => { R(c, bx, 14, 14 - k * 2, 4, "#f4f4f4"); R(c, bx + 3, 11, 7 - k, 3, "#eef2f5"); }); R(c, 55, 4, 2, 12, g); R(c, 52, 6, 8, 1, g); R(c, 51, 14, 2, 2, g); R(c, 57, 14, 2, 2, g); return; }
+  }
 }
 
 function drawItem(c, it, lang, mods, t = 0) {
@@ -2320,7 +2796,8 @@ function drawItem(c, it, lang, mods, t = 0) {
   const lvl = lvlOf(it.id), wave = Math.floor(t / 250) % 2;
   if (it.cat === "ride") {
     R(c, 0, 28, 64, 4, "#2a2f45"); for (let x = (wave * 4); x < 64; x += 8) R(c, x, 30, 4, 1, "#3a4060");
-    drawCar(c, 6, 28, 52, carType(it.id, lang), col === "#f4f4f4" && !mods?.paint ? "#e24b3b" : col, t, { tint: up("tint"), wheels: up("wheels"), wing: up("wing"), exhaust: up("exhaust"), chauffeur: up("chauffeur"), plate: mods?.name, sig: mods?.sig || LIGHT_SIGS[hash(it.id + lang) % LIGHT_SIGS.length][0], accent: mods?.accent || "none" });
+    const cs = CAR_SPEC[it.id], carCol = mods?.paint > 0 ? col : cs?.col || (col === "#f4f4f4" ? "#e24b3b" : col);
+    drawCar(c, 6, 28, 52, carType(it.id, lang), carCol, t, { tint: up("tint"), wheels: up("wheels"), wing: up("wing") || cs?.wing, exhaust: up("exhaust"), chauffeur: up("chauffeur"), plate: mods?.name, sig: mods?.sig || (cs?.batwing ? "batwing" : LIGHT_SIGS[hash(it.id + lang) % LIGHT_SIGS.length][0]), accent: mods?.accent || "none", conv: cs?.conv });
   } else if (it.cat === "water") {
     R(c, 0, 24, 64, 8, "#1f6f8a"); for (let x = (wave * 3); x < 64; x += 6) R(c, x, 25, 2, 1, "#5fb0c0");
     const spec = boatOf(it.id, lang) || { type: "console" }, hullCol = mods?.paint != null ? col : spec.hull || "#f4f4f4";
@@ -2338,7 +2815,12 @@ function drawItem(c, it, lang, mods, t = 0) {
     R(c, 28, 2, 8, 28, lvl >= 3 ? "#c9c9c9" : "#2a2a2a"); R(c, 24, 8, 16, 16, lvl >= 4 ? "#f5c542" : lvl === 3 ? "#e0e0e0" : "#3a3a3a"); R(c, 26, 10, 12, 12, lvl === 1 ? "#9aa37a" : "#101a3a");
     R(c, 31, 12, 1, 5, "#ffffff"); R(c, 32, 16, 4, 1, "#ffffff");
   } else if (it.cat === "sky") {
-    R(c, 0, 0, 64, 26, "#3a6fb0"); R(c, 10, 14, 44, 5, "#f4f4f4"); R(c, 50, 12, 6, 4, "#f4f4f4"); R(c, 22, 10, 12, 4, "#e4e4e4"); R(c, 22, 19, 12, 4, "#e4e4e4"); R(c, 6, 8, 6, 8, "#f4f4f4"); for (let i = 0; i < 6; i++) R(c, 18 + i * 5, 15, 2, 2, "#2a3a5a");
+    const ps = SKY_SPEC[it.id] || SKY_SPEC.sky1; bands(c, 0, 0, 64, 32, ["#3a6fb0", "#4a80c0", "#5a90cc", "#7aa8d8"]);
+    R(c, 8 + ((t / 40) % 60), 6, 8, 2, "rgba(255,255,255,.7)");
+    if (ps.amphib || ps.type === "seaplane") { R(c, 0, 26, 64, 6, "#1f6f8a"); }
+    drawPlane(c, 6, ps.type === "balloon" ? 16 : 14, 52, ps.type, mods?.paint > 0 ? col : "#f4f4f4", t, { amphib: ps.amphib && ps.type !== "seaplane" });
+  } else if (FLEX_SPEC[it.id]) {
+    drawFlex(c, FLEX_SPEC[it.id].icon, t);
   } else {
     if (lvl === 1) { R(c, 0, 24, 64, 8, "#1f6f8a"); R(c, 18, 18, 28, 5, "#f5c542"); R(c, 36, 12, 4, 6, "#f5c542"); R(c, 20, 19, 26, 1, "#fff2b0"); }
     else { R(c, 0, 20, 64, 12, "#3fd0e0"); for (let x = 12; x < 52; x++) { const h = Math.round(6 * Math.sin(((x - 12) / 40) * Math.PI)); R(c, x, 21 - h, 1, h + 1, "#f2dca6"); } R(c, 30, 8, 2, 10, "#6b4a2a"); R(c, 24, 7, 14, 2, "#3f7a4a"); }
@@ -2699,13 +3181,15 @@ function renderInteract() {
   box.querySelector('[data-act="checkin"]')?.addEventListener("click", () => checkIn(W.tier.id));
   box.querySelector('[data-act="meet"]')?.addEventListener("click", () => { G.tier[G.lang] = career().tiers.indexOf(W.tier); save(); beginMeeting(); });
 }
-function exchange(n, node, onDone) {
+function exchange(n, node, onDone, pool) {
   const area = $("#talk-area"); W.talk = n.id;
+  node = harden(node, pool || (BANK[G.lang] || []).concat((SMALLTALK[G.lang] || []).map(toNode)));
   const ch = shuffle(node.choices.map((c, k) => [c, k]));
-  area.innerHTML = '<div class="dialog" style="margin-top:6px"><div class="who">' + esc(n.name.toUpperCase()) + '</div><div class="line" style="font-size:18px">' + esc(node.npc) + "</div>" + (node.r ? '<div class="rom">' + esc(node.r) + "</div>" : "") + (G.showEn ? '<div class="en">' + esc(node.en) + "</div>" : "") + '</div><div class="answers">' + ch.map(([c, k]) => '<button class="answer" data-k="' + k + '"><span class="t" style="font-size:15px">' + esc(c.t) + "</span>" + (c.r ? '<span class="rom">' + esc(c.r) + "</span>" : "") + "</button>").join("") + "</div>";
+  area.innerHTML = '<div class="dialog" style="margin-top:6px"><div class="who">' + esc(n.name.toUpperCase()) + '</div><div class="line" style="font-size:18px">' + esc(node.npc) + "</div>" + (node.r ? '<div class="rom">' + esc(node.r) + "</div>" : "") + '<div class="en" id="ex-hint" hidden></div><div class="row" style="margin-top:6px">' + hintBtnHtml("ex-hint-btn") + '</div></div><div class="answers">' + ch.map(([c, k]) => '<button class="answer" data-k="' + k + '"><span class="t" style="font-size:15px">' + esc(c.t) + "</span>" + (c.r ? '<span class="rom">' + esc(c.r) + "</span>" : "") + "</button>").join("") + "</div>";
   if (canSpeak) speak(node.npc, G.lang);
+  wireHint($("#ex-hint-btn"), $("#ex-hint"), node, area, () => { life().xp = Math.max(0, life().xp - 3); save(); toast("Translation used: -3 XP"); });
   area.querySelectorAll(".answer").forEach((b) => b.addEventListener("click", () => {
-    const c = node.choices[+b.dataset.k]; W.talk = null; W.talkingYou = true; setTimeout(() => (W.talkingYou = false), 1200);
+    const c = node.choices[+b.dataset.k]; W.talk = null; $("#ex-hint-btn") && ($("#ex-hint-btn").hidden = true); W.talkingYou = true; setTimeout(() => (W.talkingYou = false), 1200);
     area.querySelectorAll("button").forEach((x) => (x.disabled = true));
     sfx(c.q === "good" ? "good" : c.q === "major" ? "bad" : "coin");
     if (c.q !== "good" && c.better) { const L = life(); if (!L.deck.some((d) => d.said === c.t)) { L.deck.push({ said: c.t, better: c.better, why: c.why }); L.deck = L.deck.slice(-80); save(); } }
@@ -2714,6 +3198,38 @@ function exchange(n, node, onDone) {
   }));
 }
 function toNode(a) { return op(a[0], a[1], a[2], a[3], a[4], a[5], a[6]); }
+/* Harder talk: every exchange gets fluent lines from other moments as traps, and English only comes as hints. */
+const HINT_STOP = new Set("the a an and or but to of in on at for with you your i me my we our it is are was be do does did have has had this that these those what how why when where who can could would will just so if not no yes please about from they them their he she his her there here very really been being into out up down then than too also only some any more most much many like want know think tell said says get got let lets make made take took come came going well sure okay".split(" "));
+function hintWords(en) { return [...new Set(String(en || "").toLowerCase().replace(/[^a-z' -]/g, " ").split(/\s+/).filter((w) => w.length > 3 && !w.includes("'") && !HINT_STOP.has(w)))].sort((a, b) => b.length - a.length).slice(0, 3); }
+function harden(node, pool) {
+  if (!node || !pool?.length) return node;
+  if (node._hardened) return node;
+  if (node._hard) return node._hard;
+  const best = node.choices.find((c) => c.q === "good") || node.choices[0], have = new Set(node.choices.map((c) => c.t));
+  const r = rng(hash(node.npc || "")), cands = pool.filter((n) => n && n !== node && n.choices).flatMap((n) => n.choices.filter((c) => c.q === "good" && !have.has(c.t)));
+  const extra = [];
+  while (extra.length < 2 && cands.length) { const c = cands.splice(Math.floor(r() * cands.length), 1)[0]; if (extra.some((x) => x.t === c.t)) continue; extra.push({ t: c.t, r: c.r, q: "major", cat: "comprehension", better: best.t, why: "A good line, wrong moment. It answers something they didn't ask. Listen for the question." }); }
+  node._hard = { ...node, choices: [...node.choices, ...extra], _hardened: true };
+  return node._hard;
+}
+function hintBtnHtml(id) { return '<button class="btn sm" id="' + id + '">💡 Hint</button>'; }
+function wireHint(btn, out, node, answersRoot, onFull) {
+  if (!btn) return;
+  let lv = 0;
+  const label = () => { btn.textContent = lv === 0 ? "💡 Hint" : lv === 1 ? "💡 Cut a wrong answer" : lv === 2 ? "💡 Translate (costs you)" : ""; btn.hidden = lv >= 3; };
+  label();
+  btn.onclick = () => {
+    lv++;
+    if (lv === 1) { const w = hintWords(node.en); out.hidden = false; out.textContent = w.length ? "Listen for: " + w.join(" · ") : "Short question. Answer it directly."; }
+    else if (lv === 2) {
+      const bad = [...answersRoot.querySelectorAll(".answer[data-k]:not([disabled])")].filter((b) => node.choices[+b.dataset.k]?.q === "major");
+      const b = bad[Math.floor(Math.random() * bad.length)];
+      if (b) { b.disabled = true; b.classList.add("struck"); b.title = "Hint: not this one"; }
+    } else if (lv === 3) { out.hidden = false; out.textContent = node.en || ""; onFull?.(); }
+    label();
+  };
+}
+
 function smallTalk(n) {
   const bank = SMALLTALK[G.lang];
   if (!bank) { toast(sample ? "Small talk in this language runs through the Circle chat for now." : "Small talk here needs Claude."); return; }
@@ -2909,7 +3425,8 @@ function flirtFlow(n) {
   const closer = bank.findIndex((x) => /tengo que ir|得走了/.test(x[0]));
   const r = rng(hash(n.id + n.name + today())), seq = bank.map((_, i) => i).filter((i) => i !== closer).sort(() => r() - 0.5).slice(0, 2).concat(closer);
   n.talked = true; n.score = 0; renderInteract();
-  const step = (k) => exchange(n, toNode(bank[seq[k]]), (q) => {
+  const pool = bank.map(toNode);
+  const step = (k) => exchange(n, harden(pool[seq[k]], pool), (q) => {
     n.score += q === "good" ? 2 : q === "minor" ? 1 : 0;
     addXp(q === "good" ? 3 : 1);
     const area = $("#talk-area");
@@ -2932,7 +3449,8 @@ function networkFlow(n) {
   if (!bank) { toast("Networking in this language needs a written career pack."); return; }
   const r = rng(hash(n.id + n.name + today())), seq = [0, 1, 2].sort(() => r() - 0.5).slice(0, 2);
   n.talked = true; n.score = 0; renderInteract();
-  const step = (k) => exchange(n, toNode(bank[seq[k]]), (q) => {
+  const pool = bank.map(toNode).concat(BANK[G.lang] || []);
+  const step = (k) => exchange(n, harden(pool[seq[k]], pool), (q) => {
     n.score += q === "good" ? 2 : q === "minor" ? 1 : 0; addXp(q === "good" ? 4 : 1);
     const area = $("#talk-area"), L = life();
     if (k < 1) { area.insertAdjacentHTML("beforeend", '<div class="row" style="margin-top:8px"><button class="btn sm" id="net-next">Continue</button></div>'); $("#net-next").onclick = () => step(k + 1); }
@@ -2966,7 +3484,7 @@ function leaveEvent() { const id = W.tier.id; W.event = null; W.tier = null; ope
 function hostVenues() {
   const L = life(), out = [];
   const boat = myBoat(); if (boat && boat.lvl >= 3) out.push({ venue: "yacht", label: "your boat “" + boat.name + "”", cost: Math.max(2000, Math.round(boat.it.price * 0.02)) });
-  if (L.owned.sky1) out.push({ venue: "jet", label: "your jet", cost: 120000 });
+  const jet = hasJet(); if (jet && (SKY_SPEC[jet.id]?.seats || 0) >= 8) out.push({ venue: "jet", label: "your " + shopName(jet.id)[0], cost: 120000 });
   const crib = SHOP_BASE.filter((x) => x.cat === "crib" && L.owned[x.id] && lvlOf(x.id) >= 3).pop();
   if (crib) out.push({ venue: "home", label: ownedLabel(crib), cost: Math.max(3000, Math.round(crib.price * 0.01)) });
   return out;
@@ -3214,8 +3732,10 @@ function giftMenu(id, area) {
   }));
 }
 function quickExchange(area, who, node, onDone) {
+  node = harden(node, BANK[G.lang] || []);
   const ch = shuffle(node.choices.map((c, k) => [c, k]));
-  area.innerHTML = '<div class="dialog" style="margin-top:14px"><div class="who">' + esc(who.toUpperCase()) + '</div><div class="line" style="font-size:17px">' + esc(node.npc) + "</div>" + (node.r ? '<div class="rom">' + esc(node.r) + "</div>" : "") + (G.showEn ? '<div class="en">' + esc(node.en) + "</div>" : "") + '</div><div class="answers">' + ch.map(([c, k]) => '<button class="answer" data-k="' + k + '"><span class="t" style="font-size:15px">' + esc(c.t) + "</span>" + (c.r ? '<span class="rom">' + esc(c.r) + "</span>" : "") + "</button>").join("") + "</div>";
+  area.innerHTML = '<div class="dialog" style="margin-top:14px"><div class="who">' + esc(who.toUpperCase()) + '</div><div class="line" style="font-size:17px">' + esc(node.npc) + "</div>" + (node.r ? '<div class="rom">' + esc(node.r) + "</div>" : "") + '<div class="en" data-qhint hidden></div><div class="row" style="margin-top:6px"><button class="btn sm" data-qhint-btn>💡 Hint</button></div></div><div class="answers">' + ch.map(([c, k]) => '<button class="answer" data-k="' + k + '"><span class="t" style="font-size:15px">' + esc(c.t) + "</span>" + (c.r ? '<span class="rom">' + esc(c.r) + "</span>" : "") + "</button>").join("") + "</div>";
+  wireHint(area.querySelector("[data-qhint-btn]"), area.querySelector("[data-qhint]"), node, area, () => { life().xp = Math.max(0, life().xp - 3); save(); });
   area.querySelectorAll(".answer").forEach((b) => b.addEventListener("click", () => {
     const c = node.choices[+b.dataset.k]; area.querySelectorAll("button").forEach((x) => (x.disabled = true));
     sfx(c.q === "good" ? "good" : c.q === "major" ? "bad" : "coin");
@@ -3907,7 +4427,7 @@ function beginMeeting() {
   showTab("meeting");
   $("#hud-meet").textContent = t.place.toUpperCase() + " · " + t.clock;
   $("#stakes-meet").textContent = "ON THE TABLE " + money(t.stakes) + (M.replay ? " · REPLAY 35%" : "");
-  $("#toggle-en").textContent = G.showEn ? "Hide English" : "Show English";
+  M.hints = 0;
   renderMeter();
   if (mode === "script") scriptNode(); else { $("#compose").hidden = false; liveTurn(null); }
 }
@@ -3916,21 +4436,23 @@ function showNpc(text, rom, en) {
   const el = $("#npc-line"); clearInterval(showNpc.h); talk("npc", text);
   if (reduceMotion) el.textContent = text;
   else { let i = 0; el.textContent = ""; showNpc.h = setInterval(() => { i++; el.textContent = text.slice(0, i); if (i >= text.length) clearInterval(showNpc.h); }, 28); }
-  $("#npc-rom").textContent = rom || ""; $("#npc-en").textContent = en || ""; $("#npc-en").hidden = !G.showEn || !en; $("#hear").hidden = !canSpeak;
+  $("#npc-rom").textContent = rom || ""; if (M.mode !== "script") { $("#npc-en").textContent = en || ""; $("#npc-en").hidden = true; $("#toggle-en").hidden = !en; $("#toggle-en").textContent = "💡 Translate"; $("#toggle-en").onclick = () => { $("#npc-en").hidden = false; $("#toggle-en").hidden = true; }; } else $("#toggle-en").hidden = false; $("#hear").hidden = !canSpeak;
 }
-$("#toggle-en").addEventListener("click", () => { G.showEn = !G.showEn; save(); $("#toggle-en").textContent = G.showEn ? "Hide English" : "Show English"; $("#npc-en").hidden = !G.showEn || !$("#npc-en").textContent; });
+
 $("#hear").addEventListener("click", () => speak([...M.turns].reverse().find((t) => t.who === "npc")?.text, G.lang));
 $("#walk").addEventListener("click", () => {
   if (!M.tier || M.done) return;
   ctl?.abort(); award("walkout"); addRep(-5); M.deal = Math.min(M.deal, 3); endMeeting("You walked out. The trip money is gone.");
 });
 function scriptNode() {
-  const node = scriptFor(M.tier)[M.node];
+  const node = harden(scriptFor(M.tier)[M.node], scriptFor(M.tier).concat(BANK[G.lang] || []));
   M.turns.push({ who: "npc", text: node.npc, rom: node.r, en: node.en });
   showNpc(node.npc, node.r, node.en); renderLog();
   const box = $("#answers"), strike = perks().hint ? node.choices.findIndex((c) => c.q === "major") : -1;
   box.innerHTML = shuffle(node.choices.map((ch, k) => [ch, k])).map(([ch, k]) =>
     '<button class="answer' + (k === strike ? " struck" : "") + '" data-k="' + k + '"' + (k === strike ? ' disabled title="Your watch says no"' : "") + '><span class="t" style="font-size:16px">' + esc(ch.t) + "</span>" + (ch.r ? '<span class="rom">' + esc(ch.r) + "</span>" : "") + "</button>").join("");
+  $("#npc-en").hidden = true; $("#npc-en").textContent = "";
+  wireHint($("#toggle-en"), $("#npc-en"), node, box, () => { M.hints = (M.hints || 0) + 1; toast("Full translation: -4% on this deal's payout"); });
   box.querySelectorAll(".answer").forEach((b) => b.addEventListener("click", () => {
     const ch = node.choices[+b.dataset.k];
     box.querySelectorAll("button").forEach((x) => (x.disabled = true));
@@ -3983,7 +4505,7 @@ function settle() {
   const flawless = you.length >= 4 && c.good === you.length;
   const firstWin = !wasWon && M.deal >= 5;
   const xp = c.good * 10 + c.minor * 3 + (flawless ? 25 : 0) + (firstWin ? 30 + 10 * t.ch : 0);
-  const payout = Math.round(t.stakes * clamp((M.deal - 4) / 6, 0, 1) * (1 + pk.pay) * streakMult() * (M.replay ? 0.35 : 1));
+  const payout = Math.round(t.stakes * clamp((M.deal - 4) / 6, 0, 1) * (1 + pk.pay) * streakMult() * (M.replay ? 0.35 : 1) * (1 - Math.min(0.3, (M.hints || 0) * 0.04)));
   L.cleared[t.id] = Math.max(L.cleared[t.id] ?? -1, M.deal); L.meetings++;
   let newClient = false;
   if (M.deal >= 5) { stat("wins"); newClient = makeClient(t, M.deal); }
@@ -4132,12 +4654,12 @@ function renderWorkshop() {
   const perkText = (p) => [p.pay && "+" + Math.round(p.pay * 100) + "% payouts", p.xp && "+" + Math.round(p.xp * 100) + "% XP", p.fee && Math.round(p.fee * 100) + "% off travel", p.deal && "+" + p.deal + " deal meter", p.chem && "+" + Math.round(p.chem * 100) + "% chemistry", p.secret && "Reveals a sealed dossier file"].filter(Boolean).join(" · ");
   const ups = cfg.ups.filter((u) => lvl >= (u.min || 1));
   const locked = cfg.ups.filter((u) => lvl < (u.min || 1));
-  const catWord = { water: { es: "el barco", zh: "船 chuán", en: "Boat" }, ride: { es: "el coche", zh: "车 chē", en: "Car" }, crib: { es: "la casa", zh: "房子 fángzi", en: "Home" } }[it.cat];
+  const catWord = { water: { es: "el barco", zh: "船 chuán", en: "Boat" }, ride: { es: "el coche", zh: "车 chē", en: "Car" }, crib: { es: "la casa", zh: "房子 fángzi", en: "Home" }, sky: { es: "el avión", zh: "飞机 fēijī", en: "Aircraft" } }[it.cat];
   $("#modal").innerHTML =
     '<div class="row between"><div class="stack" style="gap:2px"><span class="label">Workshop · ' + esc(termOf(catWord) || catWord.en) + "</span><h2>" + esc(m.name && it.cat !== "ride" ? "“" + m.name + "”" : nm) + '</h2></div><button class="btn sm" id="ws-close">Done</button></div>' +
     '<canvas class="ws-cv" id="ws-cv" width="64" height="32"></canvas>' +
     '<p class="muted small">' + esc(nm) + (fl ? ". " + esc(fl) : "") + (ports ? " Berthed at " + esc(ports[m.port % ports.length]) + "." : "") + "</p>" +
-    '<div class="form2"><div class="field"><label class="label" for="ws-name">' + esc(termOf(cfg.name) ? termOf(cfg.name) + " · " + cfg.name.en : cfg.name.en) + '</label><div class="compose" style="margin-top:0"><input type="text" id="ws-name" maxlength="' + cfg.name.max + '" value="' + esc(m.name) + '" placeholder="' + (it.cat === "ride" ? "e.g. JEFE" : it.cat === "water" ? "e.g. Sin Vergüenza" : "e.g. Casa Sol") + '"><button class="btn sm" id="ws-name-save">' + (it.cat === "water" ? "Christen" : "Save") + "</button></div></div>" +
+    '<div class="form2"><div class="field"><label class="label" for="ws-name">' + esc(termOf(cfg.name) ? termOf(cfg.name) + " · " + cfg.name.en : cfg.name.en) + '</label><div class="compose" style="margin-top:0"><input type="text" id="ws-name" maxlength="' + cfg.name.max + '" value="' + esc(m.name) + '" placeholder="' + (it.cat === "ride" ? "e.g. JEFE" : it.cat === "sky" ? "e.g. N888DA" : it.cat === "water" ? "e.g. Sin Vergüenza" : "e.g. Casa Sol") + '"><button class="btn sm" id="ws-name-save">' + (it.cat === "water" ? "Christen" : "Save") + "</button></div></div>" +
     (ports ? '<div class="field"><label class="label" for="ws-port">' + esc(termOf(cfg.port) ? termOf(cfg.port) + " · " + cfg.port.en : cfg.port.en) + '</label><select id="ws-port">' + ports.map((p, k) => '<option value="' + k + '"' + (k === m.port ? " selected" : "") + ">" + esc(p) + "</option>").join("") + "</select></div>" : "") + "</div>" +
     '<div class="stack" style="gap:8px"><div class="row between">' + termHtml(cfg.paint) + hearBtn(cfg.paint) + '</div><div class="swatches">' + cfg.paint.opts.map(([n, hex, f], k) => { const pr = f ? Math.max(50, Math.round(it.price * f)) : 0; return '<button class="swatch" data-paint="' + k + '" aria-pressed="' + (m.paint === k) + '"' + (m.paint !== k && L.cash < pr ? " disabled" : "") + '><i style="background:' + hex + '"></i>' + esc(n) + (m.paint === k ? "" : " · " + (pr ? money(pr) : "free")) + "</button>"; }).join("") + "</div></div>" +
     (it.cat === "ride" ? '<div class="stack" style="gap:8px"><div class="row between"><div class="label">Light signature</div><button class="btn sm" id="ws-rand">🎲 Randomize look · free</button></div><div class="swatches">' + LIGHT_SIGS.map(([v, n]) => '<button class="swatch" data-sig="' + v + '" aria-pressed="' + ((m.sig || LIGHT_SIGS[hash(it.id + G.lang) % LIGHT_SIGS.length][0]) === v) + '">' + n + "</button>").join("") + '</div><div class="label">Body accent</div><div class="swatches">' + ACCENTS.map(([v, n]) => '<button class="swatch" data-acc="' + v + '" aria-pressed="' + ((m.accent || "none") === v) + '">' + n + "</button>").join("") + "</div></div>" : "") +
@@ -4209,7 +4731,38 @@ function renderReview() {
 /* =========================================================
    EMPIRE (shop)
    ========================================================= */
-function perkLine(p) { return !p ? "Pure flex." : [p.pay && "+" + Math.round(p.pay * 100) + "% deal payouts", p.xp && "+" + Math.round(p.xp * 100) + "% XP", p.fee && Math.round(p.fee * 100) + "% off travel", p.deal && "+" + p.deal + " deal meter at every meeting", p.hint && "Knocks out one terrible answer in scripted meetings", p.secret && "Opens invitation-only doors"].filter(Boolean).join(" · "); }
+const SHOP_FILTERS = {
+  water: [["all", "All"], ["sail", "Sail"], ["range", "Ocean-crossing"], ["shallow", "Shallow bays"], ["garage", "Toy garage"], ["helipad", "Helipad"], ["ice", "Ice-class"], ["fast", "40+ knots"]],
+  ride: [["all", "All"], ["exotic", "Exotic"], ["hyper", "Hyper"], ["classic", "Classic"], ["lux", "Luxury"], ["offroad", "Off-road"], ["conv", "Convertible"], ["ev", "Electric"], ["moto", "Two wheels"]],
+  sky: [["all", "All"], ["jet", "Jets"], ["vertical", "Helis & VTOL"], ["amphib", "Lands on water"], ["fun", "Just for fun"]],
+  flex: [["all", "All"], ["unlock", "Unlocks something"], ["chem", "Chemistry"], ["pay", "Payouts"], ["deal", "Deal meter"]],
+};
+const shopUi = { f: {}, all: {} };
+function shopMatch(it, f) {
+  if (!f || f === "all") return true;
+  if (it.cat === "water") { const b = boatOf(it.id) || {}; return f === "fast" ? (b.kn || 0) >= 40 : f === "range" ? (b.nm || 0) >= 2500 : !!b[f]; }
+  if (it.cat === "ride") { const c = carSpec(it.id); return f === "conv" ? !!c.conv : f === "offroad" ? !!c.offroad || c.cls === "offroad" : f === "moto" ? ["moto", "scooter", "bike"].includes(c.type) : c.cls === f; }
+  if (it.cat === "sky") { const k = SKY_SPEC[it.id] || {}; return f === "fun" ? ["balloon", "para", "gyro", "biplane", "warbird", "prop"].includes(k.type) : !!k[f]; }
+  if (it.cat === "flex") return f === "unlock" ? !!FLEX_SPEC[it.id]?.unlock : !!it.perk?.[f];
+  return true;
+}
+function shopList(cat) {
+  const L = life(), all = SHOP_BASE.filter((it) => it.cat === cat && shopMatch(it, shopUi.f[cat]));
+  if (shopUi.all[cat] || (shopUi.f[cat] && shopUi.f[cat] !== "all") || all.length <= 10) return { list: all, more: 0 };
+  const own = all.filter((it) => L.owned[it.id]), afford = all.filter((it) => !L.owned[it.id] && it.price <= L.cash).slice(-5), next = all.filter((it) => !L.owned[it.id] && it.price > L.cash).slice(0, 4);
+  const keep = new Set([...own, ...afford, ...next]), list = all.filter((it) => keep.has(it));
+  return { list, more: all.length - list.length };
+}
+function shopHead(cat, label) {
+  const L = life(), all = SHOP_BASE.filter((it) => it.cat === cat), n = all.filter((it) => L.owned[it.id]).length, fs = SHOP_FILTERS[cat];
+  return '<div class="box shop-cat"><div class="row between"><h3>' + esc(label) + '</h3><span class="muted small">' + n + " of " + all.length + " owned</span></div>" +
+    (fs ? '<div class="swatches">' + fs.map(([k, nm]) => '<button class="swatch" data-shopf="' + cat + ":" + k + '" aria-pressed="' + ((shopUi.f[cat] || "all") === k) + '">' + nm + "</button>").join("") + "</div>" : "");
+}
+function shopFoot(cat) {
+  const { more } = shopList(cat);
+  return more ? '<div class="row"><button class="btn sm" data-shopall="' + cat + '">Show all · ' + more + " more</button></div>" : shopUi.all[cat] ? '<div class="row"><button class="btn sm" data-shopall="' + cat + '">Show fewer</button></div>' : "";
+}
+function perkLine(p) { return !p ? "Pure flex." : [p.pay && "+" + Math.round(p.pay * 100) + "% deal payouts", p.xp && "+" + Math.round(p.xp * 100) + "% XP", p.fee && Math.round(p.fee * 100) + "% off travel", p.deal && "+" + p.deal + " deal meter at every meeting", p.chem && "+" + Math.round(p.chem * 100) + "% chemistry", p.hint && "Knocks out one terrible answer in scripted meetings", p.secret && "Opens invitation-only doors"].filter(Boolean).join(" · "); }
 function renderEmpire() {
   const L = life();
   if (!career()) { $("#shop").innerHTML = '<div class="box"><p class="muted">Write a career for this language first.</p></div>'; $("#empire-title").textContent = LANGS[G.lang].name + " empire"; $("#empire-worth").textContent = money(netWorth()); $("#empire-life").textContent = lifeLine(); return; }
@@ -4219,22 +4772,22 @@ function renderEmpire() {
   renderLook($("#look")); renderWardrobe(); renderMarina();
   const pk = perks();
   $("#shop").innerHTML = '<div class="box row" style="gap:10px"><span class="chip good">Payouts +' + Math.round(pk.pay * 100) + '%</span><span class="chip good">XP +' + Math.round(pk.xp * 100) + '%</span><span class="chip good">Travel -' + Math.round(pk.fee * 100) + '%</span><span class="chip good">Deal +' + pk.deal + '</span><span class="chip love">Chemistry +' + Math.round(pk.chem * 100) + "%</span>" + (pk.hint ? '<span class="chip good">Watch hints</span>' : "") + (pk.secret ? '<span class="chip gold">VIP access</span>' : "") + "</div>" +
-    Object.entries(CATS).map(([cat, label]) => '<div class="box shop-cat"><h3>' + esc(label) + '</h3><div class="items">' + SHOP_BASE.filter((it) => it.cat === cat).map((it) => {
+    Object.entries(CATS).map(([cat, label]) => shopHead(cat, label) + '<div class="items">' + shopList(cat).list.map((it) => {
       const [nm, fl] = shopName(it.id), own = !!L.owned[it.id], can = L.cash >= it.price, m = L.mods[it.id];
       const nUps = m?.ups ? Object.keys(m.ups).length : 0, custom = !!CUSTOM[cat];
       const val = Math.round(((L.paid[it.id] || it.price) + (m?.spent || 0)) * 0.7);
       return '<div class="item' + (own ? " owned" : "") + (!own && !can ? " cant" : "") + '"><canvas width="64" height="32" data-item="' + it.id + '"></canvas><div class="nm">' + esc(nm) + "</div>" +
         (own && m?.name ? '<div class="custom">' + (cat === "ride" ? "Plate: " + esc(m.name) : "“" + esc(m.name) + "”") + "</div>" : "") +
         (own && nUps ? '<div class="custom">' + nUps + " upgrade" + (nUps > 1 ? "s" : "") + " installed</div>" : "") +
-        '<div class="pr">' + money(it.price) + '</div><div class="perk">' + esc(perkLine(it.perk)) + "</div>" + (fl ? '<div class="fl">' + esc(fl) + "</div>" : "") +
+        '<div class="pr">' + money(it.price) + "</div>" + (capsLine(it) ? '<div class="caps">' + esc(capsLine(it)) + "</div>" : "") + '<div class="perk">' + esc(perkLine(it.perk)) + "</div>" + (fl ? '<div class="fl">' + esc(fl) + "</div>" : "") +
         (own ? '<div class="row">' + (custom ? '<button class="btn sm gold" data-custom="' + it.id + '">Customize</button>' : "") + '<button class="btn sm" data-sell="' + it.id + '">Sell · ' + money(val) + "</button></div>"
           : '<button class="btn sm gold" data-buy="' + it.id + '"' + (can ? "" : " disabled") + ">" + (can ? "Buy" : "Need " + money(it.price - L.cash) + " more") + "</button>") + "</div>";
-    }).join("") + "</div></div>").join("");
+    }).join("") + "</div>" + shopFoot(cat) + "</div>").join("");
   document.querySelectorAll("#shop canvas[data-item]").forEach((cv) => { const it = SHOP_BASE.find((x) => x.id === cv.dataset.item); drawItem(cv.getContext("2d"), it, G.lang, L.owned[it.id] ? L.mods[it.id] : null); });
   document.querySelectorAll("#shop [data-buy]").forEach((b) => b.addEventListener("click", async () => {
     const it = SHOP_BASE.find((x) => x.id === b.dataset.buy);
     if (L.cash < it.price || L.owned[it.id]) return;
-    if (it.id === "water9" && !(L.owned.water4 || L.owned.water8)) { toast("A shadow vessel needs a mothership. Buy the explorer or the superyacht first."); return; }
+    if (BOATS[it.id]?.needs && !SHOP_BASE.some((x) => x.cat === "water" && L.owned[x.id] && !BOATS[x.id]?.support && (boatOf(x.id)?.len || 0) >= 30)) { toast("That needs a mothership. Own a yacht of 30m or more first."); return; }
     const r = await sayIt("buy", { it, cost: it.price }, shopName(it.id)[0] + " · " + money(it.price));
     if (!r.ok) return;
     const price = r.peeked ? Math.round(it.price * 1.05) : it.price;
@@ -4245,6 +4798,8 @@ function renderEmpire() {
     if (CUSTOM[it.cat]) openWorkshop(it.id); else toast("Bought: " + shopName(it.id)[0]);
   }));
   document.querySelectorAll("#shop [data-custom]").forEach((b) => b.addEventListener("click", () => openWorkshop(b.dataset.custom)));
+  document.querySelectorAll("#shop [data-shopf]").forEach((b) => b.addEventListener("click", () => { const [cat, f] = b.dataset.shopf.split(":"); shopUi.f[cat] = f; renderEmpire(); }));
+  document.querySelectorAll("#shop [data-shopall]").forEach((b) => b.addEventListener("click", () => { const cat = b.dataset.shopall; shopUi.all[cat] = !shopUi.all[cat]; renderEmpire(); }));
   document.querySelectorAll("#shop [data-sell]").forEach((b) => b.addEventListener("click", async () => {
     const it0 = SHOP_BASE.find((x) => x.id === b.dataset.sell);
     if (!(await sayIt("sell", { it: it0 }, shopName(it0.id)[0])).ok) return;
@@ -4327,7 +4882,7 @@ function dateOptions() {
     const crib = SHOP_BASE.filter((x) => x.cat === "crib" && L.owned[x.id]).pop();
     out.push({ name: "Night at " + (crib ? ownedLabel(crib) : "your hostel (bold)"), cost: 0, chem: crib ? 8 : 3, night: "home" });
     const bt = myBoat(); if (bt) out.push({ name: "Night on “" + bt.name + "”", cost: 0, chem: 12, night: "yacht" });
-    if (L.owned.sky1) out.push({ name: "Overnight flight on your jet", cost: 25000, chem: 16, night: "jet" });
+    if (hasJet()) out.push({ name: "Overnight flight on your " + shopName(hasJet().id)[0], cost: 25000, chem: 16, night: "jet" });
     out.push({ name: "Night at their place", cost: 0, chem: 8, night: "theirs" });
     const hereT = tierById(L.here);
     if (hereT && ["shack", "villa", "deck", "boat"].includes(hereT.kind)) out.push({ name: "Bonfire night on the beach", cost: 0, chem: 10, night: "beach" });
