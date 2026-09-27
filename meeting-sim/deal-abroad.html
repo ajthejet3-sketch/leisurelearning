@@ -324,7 +324,7 @@
       <div class="stack">
         <div class="row"><button class="citybtn" id="view-map" aria-pressed="true">Region map</button><button class="citybtn" id="view-globe" aria-pressed="false">Globe</button></div>
         <div class="stage" id="map-stage"><canvas class="px" id="map-cv" width="192" height="108" data-map="1"></canvas><div class="hud"><div class="place" id="map-title"></div><div class="place" id="map-here"></div></div></div>
-        <div class="stage" id="globe-stage" hidden style="background:#070a1c"><canvas id="globe-cv" width="192" height="108" style="display:block;width:100%;aspect-ratio:16/9;image-rendering:pixelated;cursor:grab;touch-action:none"></canvas><div class="hud"><div class="place">THE WORLD · DRAG TO SPIN</div><div class="place" id="globe-legend">● SPANISH ● MANDARIN</div></div></div>
+        <div class="stage" id="globe-stage" hidden style="background:#070a1c"><canvas id="globe-cv" width="320" height="180" style="display:block;width:100%;aspect-ratio:16/9;image-rendering:pixelated;cursor:grab;touch-action:none"></canvas><div class="hud"><div class="place">THE WORLD · DRAG TO SPIN</div><div class="place" id="globe-legend">● SPANISH ● MANDARIN</div></div></div>
         <p class="muted small">Tap a city on the map or pick one from the list. You can visit anywhere in your current chapter or earlier. Meetings still open in order, but the people, bars and gossip are yours to find.</p>
       </div>
       <div class="box stack">
@@ -419,6 +419,7 @@
         <p id="empire-life"></p>
         <p class="muted small">Everything you own pays you back. Customize your cars, boats and homes: every option is labeled in the language you're playing, and upgrades stack their own perks. Sell anything for 70% of what you put in.</p>
       </div>
+      <div class="box stack" id="wardrobe"></div>
       <div class="box stack" id="marina"></div>
       <div class="stack" id="shop"></div>
     </div>
@@ -998,6 +999,13 @@ const CAREERS = {
       { id: "camila", name: "Camila Restrepo", g: "w", rank: 2, role: "DJ, Cartagena rooftops", persona: "teasing, mocks your accent, costeña slang, dares you to dance", pal: { hair: "#1b1411", skin: "#a46b45", jacket: "#ff6fae", shirt: "#ff6fae", long: true }, secret: "es2" },
       { id: "ines", name: "Inés Vidal", g: "w", rank: 3, role: "M&A lawyer, Madrid", persona: "dry wit, uses vosotros, flirts by correcting your grammar", pal: { hair: "#6b3b1f", skin: "#e8c09b", jacket: "#1c1f2b", shirt: "#f4f4f4", long: true }, secret: "es3" },
       { id: "nico", name: "Nico Ferrán", g: "m", rank: 4, role: "polo player and heir, Ibiza", persona: "bored rich kid, outrageous compliments, secretly sharp", pal: { hair: "#e9d7a5", skin: "#d9a57b", jacket: "#ffffff", shirt: "#52c7b8" }, secret: "es4" },
+      { id: "yuleisy", name: "Yuleisy Arends", g: "w", rank: 0, role: "bartender, Savaneta", persona: "quick-witted Aruban, switches between Papiamento and Spanish, roasts tourists lovingly", pal: { hair: "#1b1411", skin: "#8d5a3b", jacket: "#f2c14e", shirt: "#f2c14e", long: true } },
+      { id: "paula", name: "Paula Riveros", g: "w", rank: 1, role: "events manager, Eagle Beach resort", persona: "organized by day, flirty off duty, knows every guest's secrets", pal: { hair: "#6b3b1f", skin: "#e2b48c", jacket: "#1c2656", shirt: "#f4f4f4", long: true } },
+      { id: "ximena", name: "Ximena Duarte", g: "w", rank: 2, role: "fashion designer, Medellín", persona: "paisa charm, says pues constantly, judges your outfit before your Spanish", pal: { hair: "#101014", skin: "#c99870", jacket: "#e24b3b", shirt: "#e24b3b", long: true } },
+      { id: "renata", name: "Renata Solís", g: "w", rank: 3, role: "architect, Mexico City", persona: "dry humor, chilanga slang, falls for people who actually listen", pal: { hair: "#2a1a14", skin: "#b57d55", jacket: "#f4f4f4", shirt: "#101014", long: true } },
+      { id: "carla", name: "Carla Montiel", g: "w", rank: 4, role: "model and yacht-club regular, Marbella", persona: "glamorous and competitive, only impressed by confidence and good Spanish", pal: { hair: "#e9d7a5", skin: "#e8c09b", jacket: "#f4f4f4", shirt: "#52c7b8", long: true } },
+      { id: "julieta", name: "Julieta Paz", g: "w", rank: 4, role: "tango dancer, San Telmo", persona: "porteña, voseo, intense, insists on teaching you to lead", pal: { hair: "#101014", skin: "#e2b48c", jacket: "#7a1f2b", shirt: "#7a1f2b", long: true } },
+      { id: "alma", name: "Alma Irazábal", g: "w", rank: 5, role: "heiress, Punta del Este", persona: "old money, bored by flattery, loves a challenge", pal: { hair: "#6b3b1f", skin: "#f0c8a4", jacket: "#f5c542", shirt: "#f4f4f4", long: true } },
       { id: "sol", name: "Sol Albarrán", g: "w", rank: 4, role: "gallery owner, Ibiza", persona: "mysterious, speaks in half-sentences, knows where the island is", pal: { hair: "#101010", skin: "#c99870", jacket: "#101014", shirt: "#f5c542", long: true }, secret: "es5" },
     ],
     secrets: [
@@ -1130,6 +1138,13 @@ const CAREERS = {
       { id: "vivian", name: "Vivian Zhou 周薇", g: "w", rank: 2, role: "art dealer, Shanghai", persona: "elegant, sly, flirts in chengyu, knows the Bund's gossip", pal: { hair: "#101014", skin: "#f0c8a4", jacket: "#b565c9", shirt: "#f1e2c4", long: true }, secret: "zh2" },
       { id: "jasmine", name: "Jasmine Ho 何嘉敏", g: "w", rank: 3, role: "racing driver, Hong Kong", persona: "competitive, fast talker, Cantonese-flavored Mandarin, dares you", pal: { hair: "#101014", skin: "#e2b48c", jacket: "#e24b3b", shirt: "#101014", long: true }, secret: "zh3" },
       { id: "leo", name: "Leo Wang 王磊", g: "m", rank: 4, role: "Macau VIP host", persona: "smooth, superstitious, always knows who is losing", pal: { hair: "#101014", skin: "#e8bc95", jacket: "#101014", shirt: "#b8892d" }, secret: "zh4" },
+      { id: "zoe", name: "Zoe Tan 陈颖", g: "w", rank: 0, role: "barista, Tiong Bahru", persona: "sarcastic, Singlish-flavored Mandarin, remembers your order and your mistakes", pal: { hair: "#101014", skin: "#f0c8a4", jacket: "#3f7a4a", shirt: "#f4f4f4", long: true } },
+      { id: "lily", name: "Lily Wu 吴莉莉", g: "w", rank: 0, role: "night-market DJ, Taipei", persona: "bubbly Taiwanese Mandarin, says 超 and 欸, lives for bubble-tea dates", pal: { hair: "#b8432a", skin: "#e8bc95", jacket: "#ff6fae", shirt: "#ff6fae", long: true } },
+      { id: "sophia", name: "Sophia Chen 陈思雨", g: "w", rank: 2, role: "hardware founder, Shenzhen", persona: "fast and direct, flirts through blunt product feedback", pal: { hair: "#101014", skin: "#ecc19b", jacket: "#262a33", shirt: "#52c7b8", long: true } },
+      { id: "coco", name: "Coco Li 李可可", g: "w", rank: 3, role: "racehorse owner's daughter, Hong Kong", persona: "spoiled but sharp, mixes Cantonese and English, only likes winners", pal: { hair: "#2a1a14", skin: "#f0c8a4", jacket: "#f5c542", shirt: "#101014", long: true } },
+      { id: "iris", name: "Iris Qian 钱艾琳", g: "w", rank: 3, role: "concert pianist, Taipei", persona: "reserved and poetic, warms up to patience", pal: { hair: "#101014", skin: "#f0c8a4", jacket: "#101014", shirt: "#f4f4f4", long: true } },
+      { id: "grace", name: "Grace Song 宋佳", g: "w", rank: 4, role: "yoga instructor, Sanya", persona: "calm, teasing, dares you to slow down", pal: { hair: "#6b3b1f", skin: "#e2b48c", jacket: "#52c7b8", shirt: "#52c7b8", long: true } },
+      { id: "luna", name: "Luna Xu 徐月", g: "w", rank: 4, role: "gallery curator, Beijing", persona: "elegant and cultured, flirts in classical allusions", pal: { hair: "#101014", skin: "#ecc19b", jacket: "#7a1f2b", shirt: "#f1e2c4", long: true } },
       { id: "stella", name: "Stella Lau 刘思琪", g: "w", rank: 4, role: "flight attendant on private charters", persona: "discreet, dry humor, has flown everyone", pal: { hair: "#2a1a14", skin: "#f0c8a4", jacket: "#1c1f2b", shirt: "#f5c542", long: true }, secret: "zh5" },
     ],
     secrets: [
@@ -1332,6 +1347,7 @@ const ACHS = [
   { id: "host", name: "The host", hint: "Throw your own party." },
   { id: "official", name: "Official", hint: "Make it exclusive with someone." },
   { id: "castaway", name: "Castaway", hint: "A night under the stars on a beach." },
+  { id: "offgrid", name: "Off the grid", hint: "Take a 14-night vacation." },
   { id: "bookofbiz", name: "Book of business", hint: "Have 10 clients at once." },
   { id: "captain", name: "Captain's quarters", hint: "Spend a night on your boat." },
   { id: "skyhigh", name: "Red-eye", hint: "An overnight flight on your own jet." },
@@ -1363,10 +1379,11 @@ const RIVALS = {
    SAVE STATE
    ========================================================= */
 const SAVE_KEY = "dealabroad.save.v2";
-const today = () => new Date().toISOString().slice(0, 10);
+const today = () => new Date(Date.now() + ((typeof G !== "undefined" && G.dayOffset) || 0) * 864e5).toISOString().slice(0, 10);
 function newLife() { return { cash: START_CASH, xp: 0, owned: {}, paid: {}, mods: {}, cleared: {}, secrets: {}, chem: {}, chats: {}, deck: [], quiz: {}, meetings: 0, peak: 0, rivalBonus: {}, pos: 0 }; }
-function freshGame() { return { v: 2, lang: "es", pref: "everyone", mute: false, showEn: false, level: "intermediate", tier: {}, ach: {}, streak: { n: 0, last: "" }, langs: {}, careers: {}, packs: {}, updated: 0 }; }
+function freshGame() { return { v: 2, lang: "es", pref: "women", mute: false, showEn: false, level: "intermediate", tier: {}, ach: {}, streak: { n: 0, last: "" }, langs: {}, careers: {}, packs: {}, updated: 0 }; }
 let G = (() => { try { const s = JSON.parse(localStorage.getItem(SAVE_KEY)); if (s && s.v === 2) return Object.assign(freshGame(), s); } catch {} return freshGame(); })();
+if (!G.prefWomen) { G.pref = "women"; G.prefWomen = true; }
 if (!G.layout18) { Object.keys(G.tier).forEach((k) => { G.tier[k] = Math.min(17, (G.tier[k] || 0) * 3); }); G.layout18 = true; }
 const life = (lang = G.lang) => { const L = (G.langs[lang] ||= newLife()); L.mods ||= {}; L.rivalBonus ||= {}; L.peak ||= 0; return L; };
 let cloud = null, cloudTimer = 0, cloudBusy = false, cloudDirty = false;
@@ -1445,6 +1462,7 @@ function perks(lang = G.lang) {
     const cfg = CUSTOM[it.cat], m = L.mods[it.id];
     if (cfg && m?.ups) cfg.ups.forEach((u) => { if (m.ups[u.id]) add(u.perk); });
   });
+  const cp = clothesPerks(lang); o.pay += cp.pay; o.chem += cp.chem;
   o.deal = Math.min(o.deal, 2);
   return o;
 }
@@ -1470,7 +1488,7 @@ function intelFor(t) { return (career()?.secrets || []).filter((s) => s.tier ===
 function hasScript(t = tier()) { return !!scriptFor(t); }
 function touchStreak() {
   const d = today(); if (G.streak.last === d) return;
-  const y = new Date(Date.now() - 864e5).toISOString().slice(0, 10);
+  const y = new Date(Date.parse(d) - 864e5).toISOString().slice(0, 10);
   G.streak.n = G.streak.last === y ? G.streak.n + 1 : 1; G.streak.last = d;
   if (G.streak.n >= 7) award("streak7");
   save();
@@ -1576,6 +1594,8 @@ function phrase(action, a = {}) {
       order: { t: "¿Me da " + a.item + ", por favor?", en: "Order " + a.en + "." },
       treat: { t: "¿Te invito a " + a.item + "?", en: "Offer to buy " + a.who + " " + a.en + "." },
       exclusive: { t: "¿Quieres ser mi pareja?", en: "Ask " + a.who + " to make it official." },
+      buyclothes: { t: "Me llevo " + a.es + ".", en: "Tell the shop assistant you'll take the " + a.en + "." },
+      vacation: { t: "Quiero reservar " + ({ 3: "tres", 7: "siete", 14: "catorce" })[a.n] + " noches, por favor.", en: "Book " + a.n + " nights." },
       checkin: { t: "¿Cómo va todo con el proyecto?", en: "Call " + a.who + " and ask how the project is going." },
       hire: { t: "Quiero contratar a " + String(a.term).replace(/^(El|La) /i, (m) => m.toLowerCase()) + ".", en: "Tell the agency you want to hire: " + a.en + "." },
     }[action];
@@ -1593,12 +1613,14 @@ function phrase(action, a = {}) {
       fly: { t: "我要一张去" + a.city[0] + "的机票。", r: "Wǒ yào yì zhāng qù " + a.city[1] + " de jīpiào.", en: "Buy a plane ticket to " + a.city[1] + "." },
       order: { t: "我要" + a.item + "。", r: "Wǒ yào " + a.itemR + ".", en: "Order " + a.en + "." },
       treat: { t: "我请你喝" + a.item + "。", r: "Wǒ qǐng nǐ hē " + a.itemR + ".", en: "Offer to buy " + a.who + " " + a.en + "." },
+      buyclothes: { t: "我要买" + a.zhm[0] + "。", r: "Wǒ yào mǎi " + a.zhm[1] + ".", en: "Tell the shop assistant you'll take the " + a.en + "." },
+      vacation: { t: "我想订" + ({ 3: "三", 7: "七", 14: "十四" })[a.n] + "个晚上。", r: "Wǒ xiǎng dìng " + ({ 3: "sān", 7: "qī", 14: "shísì" })[a.n] + " ge wǎnshang.", en: "Book " + a.n + " nights." },
       checkin: { t: "项目进展怎么样？", r: "Xiàngmù jìnzhǎn zěnmeyàng?", en: "Call " + a.who + " and ask how the project is going." },
       hire: { t: "我想请一个" + splitTerm(a.term)[0] + "。", r: "Wǒ xiǎng qǐng yí ge " + splitTerm(a.term)[1] + ".", en: "Tell the agency you want to hire: " + a.en + "." },
       exclusive: { t: a.g === "m" ? "你愿意做我的男朋友吗？" : "你愿意做我的女朋友吗？", r: "Nǐ yuànyì zuò wǒ de " + (a.g === "m" ? "nán" : "nǚ") + " péngyou ma?", en: "Ask " + a.who + " to make it official." },
     }[action];
   }
-  const en = { buy: "Tell the seller you want to buy it.", sell: "Tell the broker you want to sell it.", install: "Ask the yard to install: " + a.en + ".", paint: "Ask to change the " + String(a.en).toLowerCase() + ".", name: "Say it's called " + a.name + ".", date: "Ask " + a.who + " out tonight.", night: "Ask " + a.who + " to stay the night.", fly: "Buy a ticket to " + (a.city || "the city") + ".", order: "Order " + a.en + ".", treat: "Offer to buy " + a.who + " " + a.en + ".", exclusive: "Ask " + a.who + " to make it official.", checkin: "Call " + a.who + " and ask how the project is going.", hire: "Hire: " + a.en + "." }[action];
+  const en = { buy: "Tell the seller you want to buy it.", sell: "Tell the broker you want to sell it.", install: "Ask the yard to install: " + a.en + ".", paint: "Ask to change the " + String(a.en).toLowerCase() + ".", name: "Say it's called " + a.name + ".", date: "Ask " + a.who + " out tonight.", night: "Ask " + a.who + " to stay the night.", fly: "Buy a ticket to " + (a.city || "the city") + ".", order: "Order " + a.en + ".", treat: "Offer to buy " + a.who + " " + a.en + ".", exclusive: "Ask " + a.who + " to make it official.", checkin: "Call " + a.who + " and ask how the project is going.", hire: "Hire: " + a.en + ".", buyclothes: "Buy the " + a.en + ".", vacation: "Book " + a.n + " nights." }[action];
   return { t: null, en };
 }
 const bare = (s) => norm(String(s).normalize("NFD").replace(/[\u0300-\u036f]/g, ""));
@@ -1686,7 +1708,7 @@ const LEGS = {
 };
 function drawPerson(c, x, y, pal, t, talking, seed, walking) {
   const legs = walking ? (Math.floor(t / 160) % 2 ? LEGS.a : LEGS.b) : LEGS.stand;
-  const pants = pal.pants || shade(pal.jacket === pal.shirt ? "#3a4a6a" : pal.jacket, 0.62), shoes = pal.chain ? "#f5c542" : "#1b1b22";
+  const pants = pal.pants || shade(pal.jacket === pal.shirt ? "#3a4a6a" : pal.jacket, 0.62), shoes = (pal.goldShoes ?? pal.chain) ? "#f5c542" : "#1b1b22";
   legs.forEach((row, r) => { for (let k = 0; k < 10; k++) { const ch = row[k]; if (ch === ".") continue; R(c, x + k, y + 14 + r, 1, 1, pal.swim ? (ch === "p" && r < 2 ? pal.swim : pal.skin) : ch === "p" ? pants : shoes); } });
   const blink = ((t + seed * 997) % 3400) < 140;
   const mouthOpen = talking && Math.floor(t / 130) % 2 === 0;
@@ -2076,7 +2098,7 @@ function anchoredFor(t) {
   if (!["deck", "boat", "villa"].includes(t.kind) || !career()) return [];
   return fleet().filter((b) => !b.none && !b.me && b.lvl >= 3).sort((a, b) => b.len - a.len).slice(0, 2);
 }
-function sceneState(t, extra) { return { id: t.id, kind: t.kind, opts: t.opts, anchored: anchoredFor(t), npc: t.npc || genNpcPal(hash(t.id)), you: youPal(rank()), speaking: null, thinking: false, ...extra }; }
+function sceneState(t, extra) { return { id: t.id, kind: t.kind, opts: t.opts, anchored: anchoredFor(t), npc: t.npc || genNpcPal(hash(t.id)), you: myLook(), speaking: null, thinking: false, ...extra }; }
 function paintTier(c, tt, time, extra, locked) {
   drawGeneric(c, time, sceneState(tt, extra));
   if (locked) {
@@ -2212,7 +2234,7 @@ const LAND = {
   es: [[25, 24, 20, 14], [40, 46, 6, 10], [48, 57, 5, 3], [72, 72, 14, 14], [96, 88, 30, 20], [118, 102, 22, 8], [66, 92, 10, 14], [100, 72, 18, 8], [142, 88, 6, 10], [164, 20, 20, 12], [152, 31, 6, 4], [174, 40, 16, 5], [76, 27, 14, 3], [101, 32, 7, 2], [96, 40, 2, 1], [110, 45, 2, 1], [126, 49, 2, 1], [179, 28, 2, 1]],
   zh: [[110, 22, 42, 22], [88, 36, 22, 14], [132, 32, 12, 10], [80, 62, 14, 16], [72, 78, 6, 10], [60, 88, 3, 6], [60, 93, 2, 1], [112, 100, 18, 8], [165, 62, 4, 10], [166, 14, 4, 6], [184, 18, 4, 12], [152, 46, 3, 6], [100, 73, 5, 3], [120, 50, 16, 8]],
 };
-const CIRCLE_HOME = { dayana: "es0b", mateo: "es1", camila: "es2", ines: "es3", nico: "es4", sol: "es4", kai: "zh0b", mei: "zh1", vivian: "zh2", jasmine: "zh3", leo: "zh4", stella: "zh5" };
+const CIRCLE_HOME = { yuleisy: "es0c", paula: "es1b", ximena: "es2b", renata: "es3b", carla: "es4b", julieta: "es4c", alma: "es5b", zoe: "zh0b", lily: "zh0c", sophia: "zh2b", coco: "zh3b", iris: "zh3c", grace: "zh4b", luna: "zh4c", dayana: "es0b", mateo: "es1", camila: "es2", ines: "es3", nico: "es4", sol: "es4", kai: "zh0b", mei: "zh1", vivian: "zh2", jasmine: "zh3", leo: "zh4", stella: "zh5" };
 function citiesFor(lang = G.lang) {
   if (CITIES[lang]) return CITIES[lang];
   const c = career(lang); if (!c) return [];
@@ -2400,7 +2422,7 @@ function drawWorld(c, t) {
       const st = life().staff || {}, crew = [["bodyguard", { hair: "#101014", skin: "#8d5a3b", jacket: "#101014", shirt: "#101014", glasses: true }], ["assistant", { hair: "#2a1a14", skin: "#f0c8a4", jacket: "#2b3a67", shirt: "#f4f4f4", long: true }], ["publicist", { hair: "#e9d7a5", skin: "#e2b48c", jacket: "#ff6fae", shirt: "#101014", glasses: true }]].filter(([id]) => st[id]);
       crew.forEach(([, pal], k) => drawPerson(c, x - 13 * (k + 1), 64, pal, t + k * 97, false, 7 + k, W.moving));
     }
-    if (n.you) { const yp = swimScene ? { ...youPal(rank()), swim: "#1e5aa8", glasses: rank() >= 3, chain: rank() >= 4 } : youPal(rank()); drawPerson(c, x, 64, yp, t, W.talkingYou, 1, W.moving); return; }
+    if (n.you) { const yp = swimScene ? { ...myLook(), swim: wornItem()?.swim || myLook().swim || "#1e5aa8" } : myLook(); drawPerson(c, x, 64, yp, t, W.talkingYou, 1, W.moving); return; }
     const np = swimScene && swimTypes.includes(n.type) ? { ...n.pal, swim: ["#e24b3b", "#ff6fae", "#52c7b8", "#f5c542", "#101014", "#1e5aa8"][hash(n.id + n.name) % 6] } : partyScene && n.type === "flirt" ? { ...n.pal, party: true } : n.pal;
     if (n.type !== "vendor") drawPerson(c, x, 64, np, t, W.talk === n.id, hash(n.id) % 9, false);
     const near = W.near === n.id, iy = (n.type === "vendor" ? 58 : 64) - 8 + (near ? Math.round(Math.sin(t / 200)) : 0);
@@ -2421,8 +2443,10 @@ function buildNpcs(t) {
   list.push({ id: "vendor", type: "vendor", x: 150, name: vendorTitle(t), role: "sells drinks and snacks", pal: genNpcPal(hash(t.id + "v")) });
   for (let k = 0; k < 2; k++) list.push({ id: "local" + k, type: "local", x: 230 + k * 110 + Math.floor(r() * 30), name: names[Math.floor(r() * names.length)], role: roles[k % roles.length], pal: genNpcPal(hash(t.id + today() + k)) });
   const r0 = rank();
-  (career().circle || []).forEach((p) => { const home = CIRCLE_HOME[p.id] || career().tiers.find((x) => x.ch === p.rank)?.id; if (home === t.id && p.rank <= r0 && (G.pref === "everyone" || (G.pref === "women" ? p.g === "w" : p.g === "m"))) list.push({ id: "c-" + p.id, type: "circle", x: 290, name: p.name, role: p.role, pal: p.pal || genNpcPal(hash(p.name)), person: p }); });
-  list.push(makeFlirt("flirt0", 190 + Math.floor(r() * 40), r));
+  (career().circle || []).forEach((p) => { const home = CIRCLE_HOME[p.id] || career().tiers.find((x) => x.ch === p.rank)?.id; if (home === t.id && p.rank <= r0 && (G.pref === "everyone" || (G.pref === "women" ? p.g === "w" : p.g === "m"))) list.push({ id: "c-" + p.id, type: "circle", x: 270 + (list.filter((q) => q.type === "circle").length * 24), name: p.name, role: p.role, pal: p.pal || genNpcPal(hash(p.name)), person: p }); });
+  const fUsed = new Set((life().contacts || []).map((c) => c.name));
+  list.push(makeFlirt("flirt0", 190 + Math.floor(r() * 30), r, fUsed));
+  list.push(makeFlirt("flirt1", 370 + Math.floor(r() * 30), r, fUsed));
   contactsHere(t.id).forEach((c, k) => list.push({ id: "c-" + c.id, type: "circle", x: 320 + k * 20, name: c.name, role: c.role, pal: c.pal, person: c }));
   if (r() < 0.45) { const rv = rivalsFor()[Math.floor(r() * 4)]; list.push({ id: "rival", type: "rival", x: 95, name: rv.name, role: "your rival", pal: genNpcPal(hash(rv.id)), rival: rv }); }
   if (life().staff?.tutor) list.push({ id: "tutor", type: "tutor", x: 60, name: staffName("tutor"), role: "your tutor, on the clock", pal: { hair: "#6b3b1f", skin: "#e2b48c", jacket: "#b565c9", shirt: "#f4f4f4", long: true, glasses: true } });
@@ -2497,6 +2521,8 @@ function renderInteract() {
     box.innerHTML = '<div class="label">' + esc(W.tier.title) + '</div><p class="muted">Walk up to someone. Gold is a vendor, purple someone to flirt with, pink your circle, orange ' + esc(W.tier.who.name) + ", red a rival.</p>" +
       '<div class="card"><div class="label">Tonight here</div><div class="t">' + esc(ev.name) + '</div><div class="muted small">' + (ev.type === "party" ? "Music, drinks, people to flirt with, maybe an investor." : "Investors and decision-makers. Bring your best " + esc(LANGS[G.lang].name) + ".") + '</div><div class="row"><button class="btn sm ' + (ev.type === "party" ? "love" : "primary") + '" id="go-ev"' + (!went && L.cash < ev.cover ? " disabled" : "") + ">" + (went ? "Go back in" : "Go · " + money(ev.cover) + " cover") + "</button></div></div>" +
       (hosts.length ? '<div class="card"><div class="label">Or throw your own</div><div class="row">' + hosts.map((v, k) => '<button class="btn sm gold" data-host="' + k + '"' + (L.cash < v.cost ? " disabled" : "") + ">Party on " + esc(v.label) + " · " + money(v.cost) + "</button>").join("") + "</div></div>" : "");
+    box.insertAdjacentHTML("beforeend", '<div class="card"><div class="label">Stay longer</div><div class="muted small">Book 3, 7 or 14 nights here. Bring someone if you like.</div><div class="row"><button class="btn sm primary" id="go-vac">Plan a vacation</button></div></div>');
+    $("#go-vac").onclick = () => openVacation(W.tier);
     $("#go-ev").onclick = () => attendEvent(ev);
     box.querySelectorAll("[data-host]").forEach((b) => b.addEventListener("click", () => throwParty(hosts[+b.dataset.host])));
     return;
@@ -2609,7 +2635,7 @@ $("#walk-cv").addEventListener("click", (e) => { const r = e.target.getBoundingC
 /* =========================================================
    REPUTATION AND RELATIONSHIPS
    ========================================================= */
-function repOf(lang = G.lang) { const L = life(lang), w = netWorth(lang); return clamp(Math.round((L.rep ?? 10) + Math.max(0, Math.log10(Math.max(1, w)) - 3) * 4), 0, 100); }
+function repOf(lang = G.lang) { const L = life(lang), w = netWorth(lang); return clamp(Math.round((L.rep ?? 10) + clothesPerks(lang).rep + Math.max(0, Math.log10(Math.max(1, w)) - 3) * 4), 0, 100); }
 function repLabel(r) { return r >= 85 ? "Legend" : r >= 60 ? "Hot" : r >= 35 ? "Known" : r >= 15 ? "Noticed" : "Unknown"; }
 function addRep(n, why) {
   const L = life(), before = repLabel(repOf()); L.rep = clamp((L.rep ?? 10) + n, 0, 100); save();
@@ -2653,6 +2679,9 @@ const FLIRT = {
     ["¿Bailas?", "Do you dance?", ["Mal, pero contigo me arriesgo.", "Badly, but with you I'll risk it.", "Self-deprecating and flirty."], ["Mal, pero con tú me arriesgo.", "grammar", "…contigo me arriesgo.", "Con + tú becomes contigo."], ["No, bailar es para turistas.", "culture", "You just insulted the whole dance floor."]],
     ["Esta canción me encanta.", "I love this song.", ["A mí también. ¿Me enseñas a bailarla?", "Me too. Will you teach me to dance to it?", "An invitation disguised as a question."], ["Yo también.", "grammar", "A mí también.", "With encantar, agree with a mí también."], ["¿En serio? Es horrible.", "register", "Never trash their song."]],
     ["¿Y qué haces por aquí?", "So what are you doing around here?", ["Negocios de día, y de noche… busco buena compañía.", "Business by day, and by night… looking for good company.", "Mysterious in exactly the right amount."], ["Negocios de día, y de noche busco buena compañero.", "vocabulary", "…busco buena compañía.", "Company (the feeling) is compañía."], ["Busco a alguien con dinero.", "register", "Honest, maybe. Charming, no."]],
+    ["Tu cara me suena. ¿Nos conocemos?", "Your face looks familiar. Do we know each other?", ["Todavía no, pero podemos arreglarlo ahora mismo.", "Not yet, but we can fix that right now.", "Quick and smooth."], ["Todavía no, pero podemos arreglarla ahora.", "grammar", "…podemos arreglarlo ahora.", "'Fix it' refers to the situation: lo, not la."], ["No, nunca te he visto.", "register", "Correct, and you just killed the moment."]],
+    ["¿Qué estás tomando?", "What are you drinking?", ["Un mojito. ¿Te pido otro para ti?", "A mojito. Shall I get you one?", "Generous and direct."], ["Un mojito. ¿Te pido un otro?", "grammar", "¿Te pido otro?", "Otro already means another. No un."], ["¿Por qué? ¿Me vas a invitar?", "register", "Cheap vibes."]],
+    ["Tienes un acento muy lindo.", "You have a really cute accent.", ["Gracias. Es que estoy practicando contigo.", "Thanks. I'm practicing on you.", "Playful and true."], ["Gracias. Estoy practicando con ti.", "grammar", "…contigo.", "Con + ti becomes contigo."], ["¿Qué acento? Hablo perfecto.", "register", "Defensive, and not true."]],
     ["Bueno… ya me tengo que ir.", "Well… I have to go now.", ["Qué pena. ¿Me das tu número para seguir la conversación?", "Too bad. Will you give me your number so we can keep talking?", "The close. Clean."], ["Qué pena. ¿Me das tu número por seguir la conversación?", "grammar", "…para seguir la conversación.", "Purpose takes para."], ["Vale, adiós.", "culture", "You let them walk away."]],
   ],
   zh: [
@@ -2661,6 +2690,9 @@ const FLIRT = {
     ["你会跳舞吗？", "Can you dance?", ["跳得不好，但是可以跟你学。", "Not well, but I could learn from you.", "Humble and flirty."], ["跳不好得。", "grammar", "跳得不好", "得 comes right after the verb."], ["跳舞很无聊。", "culture", "You just insulted the dance floor."], "Nǐ huì tiàowǔ ma?", { g: "Tiào de bù hǎo, dànshì kěyǐ gēn nǐ xué.", mi: "Tiào bù hǎo de.", ma: "Tiàowǔ hěn wúliáo." }],
     ["这首歌我很喜欢。", "I love this song.", ["我也是。要不要一起跳？", "Me too. Want to dance?", "An invitation, instantly."], ["我也喜欢是。", "grammar", "我也是。", "Just 我也是."], ["太吵了。", "register", "Never trash their song."], "Zhè shǒu gē wǒ hěn xǐhuan.", { g: "Wǒ yě shì. Yào bu yào yìqǐ tiào?", mi: "Wǒ yě xǐhuan shì.", ma: "Tài chǎo le." }],
     ["你来这里做什么？", "What brings you here?", ["白天谈生意，晚上认识有意思的人，比如你。", "Business by day, interesting people by night. Like you.", "Smooth, with a compliment at the end."], ["白天谈生意，晚上认识有意思人。", "grammar", "有意思的人", "You need 的 before the noun."], ["找有钱的人。", "register", "Honest, maybe. Charming, no."], "Nǐ lái zhèlǐ zuò shénme?", { g: "Báitiān tán shēngyì, wǎnshang rènshi yǒu yìsi de rén, bǐrú nǐ.", mi: "…rènshi yǒu yìsi rén.", ma: "Zhǎo yǒu qián de rén." }],
+    ["我们是不是在哪里见过？", "Haven't we met somewhere?", ["还没有，不过现在认识也不晚。", "Not yet, but it's not too late now.", "Smooth."], ["还没有，不过现在认识也不晚了吗。", "grammar", "现在认识也不晚。", "No 吗 on a statement."], ["没有，我不认识你。", "register", "Correct, and fatal."], "Wǒmen shì bu shì zài nǎlǐ jiànguo?", { g: "Hái méiyǒu, búguò xiànzài rènshi yě bù wǎn.", mi: "…yě bù wǎn le ma.", ma: "Méiyǒu, wǒ bú rènshi nǐ." }],
+    ["你在喝什么？", "What are you drinking?", ["莫吉托。要不要我也帮你点一杯？", "A mojito. Want me to order you one?", "Generous and direct."], ["莫吉托。要不要我也帮你点一个杯？", "grammar", "点一杯", "杯 is already the measure word."], ["干嘛？你要请我吗？", "register", "Cheap vibes."], "Nǐ zài hē shénme?", { g: "Mòjítuō. Yào bu yào wǒ yě bāng nǐ diǎn yì bēi?", mi: "…diǎn yí ge bēi?", ma: "Gànmá? Nǐ yào qǐng wǒ ma?" }],
+    ["你的口音好可爱。", "Your accent is so cute.", ["谢谢，因为我在跟你练习。", "Thanks, because I'm practicing with you.", "Playful and true."], ["谢谢，因为我在跟你练习了。", "grammar", "我在跟你练习。", "Ongoing 在 doesn't take 了 here."], ["什么口音？我说得很标准。", "register", "Defensive, and not true."], "Nǐ de kǒuyīn hǎo kě'ài.", { g: "Xièxie, yīnwèi wǒ zài gēn nǐ liànxí.", mi: "…liànxí le.", ma: "Shénme kǒuyīn? Wǒ shuō de hěn biāozhǔn." }],
     ["我得走了……", "I have to go…", ["那可以加个微信吗？", "Then can I add you on WeChat?", "Adding WeChat is how numbers get swapped."], ["那可以加个微信吗了？", "grammar", "可以加个微信吗？", "No 了 in this question."], ["好，拜拜。", "culture", "You let them walk away."], "Wǒ děi zǒu le…", { g: "Nà kěyǐ jiā ge Wēixìn ma?", mi: "Nà kěyǐ jiā ge Wēixìn ma le?", ma: "Hǎo, bàibai." }],
   ],
 };
@@ -2724,7 +2756,8 @@ function contactsHere(tid) { return (life().contacts || []).filter((c) => c.home
 function flirtFlow(n) {
   const bank = FLIRT[G.lang];
   if (!bank) { toast(sample ? "Flirting in this language happens in Circle chats for now." : "Flirting here needs Claude."); return; }
-  const r = rng(hash(n.id + n.name + today())), seq = [0, 1, 2, 3, 4].sort(() => r() - 0.5).slice(0, 2).concat(5);
+  const closer = bank.findIndex((x) => /tengo que ir|得走了/.test(x[0]));
+  const r = rng(hash(n.id + n.name + today())), seq = bank.map((_, i) => i).filter((i) => i !== closer).sort(() => r() - 0.5).slice(0, 2).concat(closer);
   n.talked = true; n.score = 0; renderInteract();
   const step = (k) => exchange(n, toNode(bank[seq[k]]), (q) => {
     n.score += q === "good" ? 2 : q === "minor" ? 1 : 0;
@@ -2816,7 +2849,7 @@ const MORNINGS = {
   other: [[true, "Last night was fun."], [true, "Don't get used to it."], [false, "Coffee's ready."], [true, "Call me before Friday."]],
 };
 function drawNightScene(c, venue, t, phase, them) {
-  const you = youPal(rank()), morning = phase >= 3;
+  const you = myLook(), morning = phase >= 3;
   let boat = myBoat();
   if (venue === "charter") { boat = { col: "#f4f4f4", name: "Catamaran" }; venue = "yacht"; W._charter = true; } else W._charter = false;
   if (venue === "firstclass") { venue = "jet"; W._fc = true; } else if (venue === "jet") W._fc = false;
@@ -3089,54 +3122,83 @@ const GEO = {
   aruba: [12.52, -69.97], curacao: [12.11, -68.93], roques: [11.85, -66.75], panama: [8.98, -79.52], cartagena: [10.39, -75.51], medellin: [6.24, -75.58], salento: [4.64, -75.57], cdmx: [19.43, -99.13], madrid: [40.42, -3.7], marbella: [36.51, -4.88], ibiza: [38.91, 1.43], bsas: [-34.6, -58.38], punta: [-34.96, -54.95],
   sg: [1.35, 103.82], taipei: [25.03, 121.56], hangzhou: [30.27, 120.15], shanghai: [31.23, 121.47], shenzhen: [22.54, 114.06], hk: [22.32, 114.17], macau: [22.2, 113.54], beijing: [39.9, 116.4], sanya: [18.25, 109.51], lijiang: [26.87, 100.23], air: [15, 115], monaco: [43.73, 7.42],
 };
-const BLOBS = [[50, -100, 15, 30], [40, -95, 10, 20], [60, -120, 10, 25], [65, -150, 6, 15], [25, -103, 8, 10], [15, -90, 5, 8], [70, -80, 8, 25], [48, -75, 8, 12], [72, -42, 8, 14], [-5, -60, 12, 15], [-20, -55, 10, 12], [-35, -65, 8, 6], [-45, -70, 6, 4], [5, -70, 6, 8], [-10, -75, 8, 5], [50, 10, 8, 15], [60, 20, 8, 15], [41, -4, 4, 6], [44, 12, 3, 5], [54, -2, 4, 3], [63, 12, 5, 8], [10, 20, 12, 25], [-5, 22, 12, 14], [-20, 25, 10, 10], [-30, 23, 6, 8], [28, 10, 8, 20], [8, -8, 5, 8], [25, 45, 8, 10], [55, 90, 12, 40], [40, 90, 10, 25], [30, 105, 10, 15], [35, 115, 8, 8], [20, 80, 8, 8], [15, 102, 6, 5], [5, 102, 4, 3], [60, 140, 10, 20], [45, 130, 6, 8], [36, 138, 5, 3], [0, 114, 4, 5], [0, 101, 5, 3], [12, 122, 5, 2], [-7, 110, 2, 8], [-25, 134, 10, 17], [-42, 172, 5, 3], [-19, 46, 6, 2], [65, -18, 2, 4], [24, 121, 1.5, 1], [19, 110, 1, 1.3], [21.5, -79, 1.2, 5], [19, -71, 1, 3], [-80, 0, 8, 180]];
+const BLOBS = [[50, -100, 15, 30], [40, -95, 10, 20], [60, -120, 10, 25], [65, -150, 6, 15], [25, -103, 8, 10], [28, -114, 5, 1.2], [28, -81.5, 3, 1.2], [15, -90, 5, 8], [12, -85, 4, 4], [9, -80, 2, 3], [70, -80, 8, 25], [48, -75, 8, 12], [72, -42, 8, 14], [-5, -60, 12, 15], [-20, -55, 10, 12], [-35, -65, 8, 6], [-45, -70, 6, 4], [5, -70, 6, 8], [-10, -75, 8, 5], [50, 10, 8, 15], [60, 20, 8, 15], [64, 15, 6, 6], [41, -4, 4, 6], [42, 13, 4, 2], [54, -2, 4, 3], [63, 12, 5, 8], [10, 20, 12, 25], [-5, 22, 12, 14], [-20, 25, 10, 10], [-30, 23, 6, 8], [28, 10, 8, 20], [8, -8, 5, 8], [23, 47, 8, 8], [55, 90, 12, 40], [40, 90, 10, 25], [30, 105, 10, 15], [35, 115, 8, 8], [20, 78, 8, 7], [12, 78, 5, 4], [7.5, 80.7, 1, 0.8], [15, 102, 6, 5], [5, 102, 4, 3], [60, 140, 10, 20], [45, 130, 6, 8], [37, 127, 3, 1.5], [36, 138, 5, 3], [0, 114, 4, 5], [0, 101, 5, 3], [12, 122, 5, 2], [-7, 110, 2, 8], [-25, 134, 10, 17], [-42, 172, 5, 3], [-19, 46, 6, 2], [65, -18, 2, 4], [24, 121, 1.5, 1], [19, 110, 1, 1.3], [21.5, -79, 1.2, 5], [19, -71, 1, 3], [-80, 0, 8, 180]];
+const WATER = [[36, 3, 3, 8], [38, 17, 3, 6], [34, 26, 3, 8], [43, 34, 2, 5], [20, 38, 6, 1.5], [27, 51, 2, 3], [25, -90, 5, 7], [60, -85, 6, 8], [15, -75, 4, 10], [15, 88, 5, 5], [15, 63, 5, 6], [58, 20, 4, 3], [40, 135, 4, 4], [13, 114, 6, 5]];
 let LANDMASK = null;
 function landAt(lat, lon) {
   if (!LANDMASK) {
-    LANDMASK = new Uint8Array(90 * 180);
-    for (let i = 0; i < 90; i++) for (let j = 0; j < 180; j++) {
-      const la = -89 + i * 2, lo = -179 + j * 2;
-      LANDMASK[i * 180 + j] = BLOBS.some(([a, b, ra, rb]) => { let d = lo - b; if (d > 180) d -= 360; if (d < -180) d += 360; return ((la - a) / ra) ** 2 + (d / rb) ** 2 < 1; }) ? 1 : 0;
-    }
+    LANDMASK = new Uint8Array(180 * 360);
+    const inside = (list, la, lo) => list.some(([a, b, ra, rb]) => { let d = lo - b; if (d > 180) d -= 360; if (d < -180) d += 360; return ((la - a) / ra) ** 2 + (d / rb) ** 2 < 1; });
+    for (let i = 0; i < 180; i++) for (let j = 0; j < 360; j++) { const la = -89.5 + i, lo = -179.5 + j; LANDMASK[i * 360 + j] = inside(BLOBS, la, lo) && !inside(WATER, la, lo) ? 1 : 0; }
   }
-  const i = clamp(Math.floor((lat + 90) / 2), 0, 89), j = ((Math.floor((lon + 180) / 2) % 180) + 180) % 180;
-  return LANDMASK[i * 180 + j];
+  const i = clamp(Math.floor(lat + 90), 0, 179), j = ((Math.floor(lon + 180) % 360) + 360) % 360;
+  return LANDMASK[i * 360 + j];
 }
-const GL = { rot: -60, tilt: 12, drag: null, auto: true, sel: null };
+const GL = { rot: -60, tilt: 14, drag: null, auto: true, sel: null, hover: null };
+const GW = 320, GH = 180, GR = 76, GCX = 160, GCY = 90;
 function globeCities() {
   const out = [];
-  ["es", "zh"].forEach((lang) => (CITIES[lang] || []).forEach((ct) => { const g = GEO[ct.k]; if (g) out.push({ lang, k: ct.k, name: ct.name, lat: g[0], lon: g[1] }); }));
+  ["es", "zh"].forEach((lang) => (CITIES[lang] || []).forEach((ct) => { const g = GEO[ct.k]; if (g) out.push({ lang, k: ct.k, name: ct.name, lat: g[0], lon: g[1], won: ct.tiers.some((id) => (life(lang).cleared[id] ?? -1) >= 5) }); }));
   return out;
 }
 function projectG(lat, lon) {
-  const R0 = 46, cx = 96, cy = 54, la = (lat * Math.PI) / 180, lo = ((lon + GL.rot) * Math.PI) / 180, tl = (GL.tilt * Math.PI) / 180;
-  let x = Math.cos(la) * Math.sin(lo), y = Math.sin(la), z = Math.cos(la) * Math.cos(lo);
+  const la = (lat * Math.PI) / 180, lo = ((lon + GL.rot) * Math.PI) / 180, tl = (GL.tilt * Math.PI) / 180;
+  const x = Math.cos(la) * Math.sin(lo), y = Math.sin(la), z = Math.cos(la) * Math.cos(lo);
   const y2 = y * Math.cos(tl) - z * Math.sin(tl), z2 = y * Math.sin(tl) + z * Math.cos(tl);
-  return { x: cx + x * R0, y: cy - y2 * R0, vis: z2 > 0 };
+  return { x: GCX + x * GR, y: GCY - y2 * GR, vis: z2 > 0 };
+}
+function sunPos() {
+  const d = new Date(), doy = Math.floor((d - new Date(Date.UTC(d.getUTCFullYear(), 0, 0))) / 864e5), h = d.getUTCHours() + d.getUTCMinutes() / 60;
+  return { lat: 23.44 * Math.sin((2 * Math.PI * (doy - 81)) / 365), lon: -(h - 12) * 15 };
+}
+function slerpPts(a, b, n) {
+  const toV = (la, lo) => { la *= Math.PI / 180; lo *= Math.PI / 180; return [Math.cos(la) * Math.cos(lo), Math.cos(la) * Math.sin(lo), Math.sin(la)]; };
+  const A = toV(a.lat, a.lon), B = toV(b.lat, b.lon), dot = clamp(A[0] * B[0] + A[1] * B[1] + A[2] * B[2], -1, 1), om = Math.acos(dot), out = [];
+  for (let k = 0; k <= n; k++) { const f = k / n, s1 = om ? Math.sin((1 - f) * om) / Math.sin(om) : 1 - f, s2 = om ? Math.sin(f * om) / Math.sin(om) : f; const v = [A[0] * s1 + B[0] * s2, A[1] * s1 + B[1] * s2, A[2] * s1 + B[2] * s2]; out.push({ lat: (Math.asin(clamp(v[2], -1, 1)) * 180) / Math.PI, lon: (Math.atan2(v[1], v[0]) * 180) / Math.PI, f }); }
+  return out;
 }
 function drawGlobe(c, t) {
-  if (GL.auto && !GL.drag) GL.rot = (GL.rot + 0.25) % 360;
-  R(c, 0, 0, 192, 108, "#070a1c");
-  const r = rng(17); for (let i = 0; i < 60; i++) R(c, r() * 192, r() * 108, 1, 1, (Math.floor(t / 500) + i) % 5 ? "#3a4070" : "#dfe6ff");
-  const R0 = 46, cx = 96, cy = 54, tl = (GL.tilt * Math.PI) / 180;
-  for (let py = -R0; py <= R0; py++) for (let px = -R0; px <= R0; px++) {
-    const nx = px / R0, ny = -py / R0, d2 = nx * nx + ny * ny; if (d2 > 1) continue;
-    const nz = Math.sqrt(1 - d2);
-    const y = ny * Math.cos(tl) + nz * Math.sin(tl), z = -ny * Math.sin(tl) + nz * Math.cos(tl);
-    const lat = (Math.asin(clamp(y, -1, 1)) * 180) / Math.PI, lon = (Math.atan2(nx, z) * 180) / Math.PI - GL.rot;
-    const lonN = ((lon + 540) % 360) - 180, land = landAt(lat, lonN), shadeK = 0.55 + 0.45 * nz;
-    const col = land ? (Math.abs(lat) > 66 ? [230, 236, 240] : [63, 122, 74]) : [22, 64, 126];
-    R(c, cx + px, cy + py, 1, 1, "rgb(" + Math.round(col[0] * shadeK) + "," + Math.round(col[1] * shadeK) + "," + Math.round(col[2] * shadeK) + ")");
+  if (GL.auto && !GL.drag) GL.rot = (GL.rot + 0.18) % 360;
+  R(c, 0, 0, GW, GH, "#050817");
+  const r = rng(17); for (let i = 0; i < 140; i++) R(c, r() * GW, r() * GH, 1, 1, (Math.floor(t / 500) + i) % 6 ? "#2a3060" : "#dfe6ff");
+  for (let k = 5; k >= 1; k--) { c.fillStyle = "rgba(90,150,255," + (0.05 * (6 - k)) + ")"; c.beginPath(); c.arc(GCX, GCY, GR + k, 0, 6.2832); c.fill(); }
+  const tl = (GL.tilt * Math.PI) / 180, sun = sunPos(), sLa = (sun.lat * Math.PI) / 180, img = c.getImageData(0, 0, GW, GH), px = img.data;
+  const cloudT = t / 900;
+  for (let py = -GR; py <= GR; py++) for (let pxx = -GR; pxx <= GR; pxx++) {
+    const nx = pxx / GR, ny = -py / GR, d2 = nx * nx + ny * ny; if (d2 > 1) continue;
+    const nz = Math.sqrt(1 - d2), y = ny * Math.cos(tl) + nz * Math.sin(tl), z = -ny * Math.sin(tl) + nz * Math.cos(tl);
+    const lat = (Math.asin(clamp(y, -1, 1)) * 180) / Math.PI, lonN = ((((Math.atan2(nx, z) * 180) / Math.PI - GL.rot) + 540) % 360) - 180;
+    const land = landAt(lat, lonN), polar = Math.abs(lat) > 68;
+    let col = land ? (polar ? [226, 234, 240] : Math.abs(lat) < 25 && lonN > -20 && lonN < 60 && lat > 12 ? [196, 170, 110] : [60, 126, 70]) : polar ? [190, 214, 232] : [20, 62, 128];
+    const la = (lat * Math.PI) / 180, cz = Math.sin(la) * Math.sin(sLa) + Math.cos(la) * Math.cos(sLa) * Math.cos(((lonN - sun.lon) * Math.PI) / 180);
+    const cl = Math.sin((lonN + cloudT) / 9) * Math.cos(lat / 7) + Math.sin((lonN * 1.7 - cloudT * 1.6) / 13 + lat / 5);
+    if (cl > 1.15 && !polar) col = [236, 240, 245];
+    let k = (0.6 + 0.4 * nz);
+    if (cz < -0.08) k *= 0.28; else if (cz < 0.08) k *= 0.28 + ((cz + 0.08) / 0.16) * 0.72;
+    let rr = col[0] * k, gg = col[1] * k, bb = col[2] * k;
+    if (cz < -0.08 && land && !polar && cl <= 1.15) { const hsh = (Math.round(lat * 3) * 73856093) ^ (Math.round(lonN * 3) * 19349663); if ((hsh >>> 0) % 31 === 0) { rr = 255; gg = 214; bb = 122; } }
+    if (!land && cz > 0.2) { const spec = Math.max(0, nz - 0.85) * 3; rr += 80 * spec; gg += 90 * spec; bb += 100 * spec; }
+    const idx = ((GCY + py) * GW + (GCX + pxx)) * 4; px[idx] = rr; px[idx + 1] = gg; px[idx + 2] = bb; px[idx + 3] = 255;
   }
-  for (let a = 0; a < 6.29; a += 0.02) R(c, cx + Math.cos(a) * (R0 + 1), cy + Math.sin(a) * (R0 + 1), 1, 1, "#4f7fae");
-  const hereK = life().here ? cityOfTier(life().here)?.k : null;
-  globeCities().forEach((ct) => {
+  c.putImageData(img, 0, 0);
+  const cities = globeCities(), hereK = life().here ? cityOfTier(life().here)?.k : null;
+  const from = cities.find((x) => x.lang === G.lang && x.k === hereK), toKey = GL.hover || GL.sel, to = toKey ? cities.find((x) => x.lang + ":" + x.k === toKey) : null;
+  if (from && to && from !== to) {
+    const pts = slerpPts(from, to, 60);
+    pts.forEach((q, k) => { const pr = projectG(q.lat, q.lon); const lift = Math.sin(q.f * Math.PI) * 10; if (pr.vis && (k + Math.floor(t / 90)) % 3) R(c, pr.x, pr.y - lift, 1, 1, "#f1e9d6"); });
+    const f = (t / 3000) % 1, q = pts[Math.floor(f * 60)], pr = projectG(q.lat, q.lon);
+    if (pr.vis) { const lift = Math.sin(f * Math.PI) * 10; R(c, pr.x - 2, pr.y - lift, 5, 1, "#f5c542"); R(c, pr.x, pr.y - lift - 1, 1, 3, "#f5c542"); }
+  }
+  cities.forEach((ct) => {
     const q = projectG(ct.lat, ct.lon); if (!q.vis) return;
-    const mine = ct.lang === G.lang && ct.k === hereK, col = ct.lang === "es" ? "#ff9a5c" : "#ff6f6f";
-    R(c, q.x - 1, q.y - 1, 3, 3, "#0b0e1a"); R(c, q.x, q.y, 1, 1, col);
-    if (mine || GL.sel === ct.lang + ":" + ct.k) { const b = Math.floor(t / 300) % 2; R(c, q.x - 2, q.y - 2, 5, 1, b ? "#f5c542" : col); R(c, q.x - 2, q.y + 2, 5, 1, b ? "#f5c542" : col); R(c, q.x - 2, q.y - 2, 1, 5, b ? "#f5c542" : col); R(c, q.x + 2, q.y - 2, 1, 5, b ? "#f5c542" : col); }
+    const col = ct.lang === "es" ? "#ff9a5c" : "#ff6f6f", mine = ct.lang === G.lang && ct.k === hereK;
+    R(c, q.x - 1, q.y - 1, 3, 3, "#0b0e1a"); R(c, q.x, q.y, 1, 1, ct.won ? "#f5c542" : col);
+    if (ct.won) { R(c, q.x - 1, q.y - 2, 3, 1, "#f5c542"); }
+    if (mine || GL.sel === ct.lang + ":" + ct.k || GL.hover === ct.lang + ":" + ct.k) { const b = Math.floor(t / 300) % 2, cc = b ? "#f5c542" : col; R(c, q.x - 3, q.y - 3, 7, 1, cc); R(c, q.x - 3, q.y + 3, 7, 1, cc); R(c, q.x - 3, q.y - 3, 1, 7, cc); R(c, q.x + 3, q.y - 3, 1, 7, cc); }
   });
-  if (GL.sel) { const ct = globeCities().find((x) => x.lang + ":" + x.k === GL.sel); if (ct) { c.fillStyle = "#f1e9d6"; c.font = "6px monospace"; c.fillText(ct.name.split(" ")[0], 4, 104); } }
+  const lab = cities.find((x) => x.lang + ":" + x.k === (GL.hover || GL.sel));
+  if (lab) { const q = projectG(lab.lat, lab.lon); if (q.vis) { const txt = lab.name.split(" ")[0] + (lab.won ? " ★" : ""); c.font = "8px monospace"; const w = c.measureText(txt).width + 6; const lx = clamp(q.x + 6, 2, GW - w - 2), ly = clamp(q.y - 14, 2, GH - 12); c.fillStyle = "rgba(11,14,26,.85)"; c.fillRect(lx, ly, w, 11); c.fillStyle = lab.lang === "es" ? "#ff9a5c" : "#ff6f6f"; c.fillText(txt, lx + 3, ly + 8); } }
+  c.font = "7px monospace"; c.fillStyle = "#a9adc6"; c.fillText("NIGHT SIDE = REAL TIME NOW", 4, GH - 4);
 }
 function setMapView(globe) {
   $("#globe-stage").hidden = !globe; $("#map-stage").hidden = globe;
@@ -3146,16 +3208,20 @@ $("#view-globe").addEventListener("click", () => setMapView(true));
 $("#view-map").addEventListener("click", () => setMapView(false));
 (() => {
   const cv = $("#globe-cv"); let moved = 0;
-  cv.addEventListener("pointerdown", (e) => { GL.drag = { x: e.clientX, rot: GL.rot }; moved = 0; cv.setPointerCapture(e.pointerId); cv.style.cursor = "grabbing"; });
-  cv.addEventListener("pointermove", (e) => { if (!GL.drag) return; const r = cv.getBoundingClientRect(), dx = ((e.clientX - GL.drag.x) / r.width) * 192; moved = Math.max(moved, Math.abs(dx)); GL.rot = GL.drag.rot + dx * 1.6; GL.auto = false; });
+  const pick = (e) => { const r = cv.getBoundingClientRect(), x = ((e.clientX - r.left) / r.width) * GW, y = ((e.clientY - r.top) / r.height) * GH; let best = null, bd = 10; globeCities().forEach((ct) => { const q = projectG(ct.lat, ct.lon); if (!q.vis) return; const d = Math.hypot(q.x - x, q.y - y); if (d < bd) { bd = d; best = ct; } }); return best; };
+  cv.addEventListener("pointerdown", (e) => { GL.drag = { x: e.clientX, y: e.clientY, rot: GL.rot, tilt: GL.tilt }; moved = 0; cv.setPointerCapture(e.pointerId); cv.style.cursor = "grabbing"; });
+  cv.addEventListener("pointermove", (e) => {
+    if (!GL.drag) { const b = pick(e); GL.hover = b ? b.lang + ":" + b.k : null; cv.style.cursor = b ? "pointer" : "grab"; return; }
+    const r = cv.getBoundingClientRect(), dx = ((e.clientX - GL.drag.x) / r.width) * GW, dy = ((e.clientY - GL.drag.y) / r.height) * GH;
+    moved = Math.max(moved, Math.abs(dx) + Math.abs(dy)); GL.rot = GL.drag.rot + dx * 0.9; GL.tilt = clamp(GL.drag.tilt + dy * 0.5, -60, 60); GL.auto = false;
+  });
+  cv.addEventListener("pointerleave", () => { if (!GL.drag) GL.hover = null; });
   cv.addEventListener("pointerup", (e) => {
     GL.drag = null; cv.style.cursor = "grab";
-    if (moved > 3) return;
-    const r = cv.getBoundingClientRect(), x = ((e.clientX - r.left) / r.width) * 192, y = ((e.clientY - r.top) / r.height) * 108;
-    let best = null, bd = 8; globeCities().forEach((ct) => { const q = projectG(ct.lat, ct.lon); if (!q.vis) return; const d = Math.hypot(q.x - x, q.y - y); if (d < bd) { bd = d; best = ct; } });
-    if (!best) return;
+    if (moved > 4) return;
+    const best = pick(e); if (!best) return;
     GL.sel = best.lang + ":" + best.k;
-    if (best.lang !== G.lang) { switchLang(best.lang); showTab("explore"); exploreMapOpen = true; }
+    if (best.lang !== G.lang) { switchLang(best.lang); showTab("explore"); }
     mapSel = best.k; exploreMapOpen = true; renderExplore(); setMapView(true);
   });
 })();
@@ -3186,6 +3252,145 @@ function tutorSession(n) {
     }));
   };
   ask();
+}
+
+
+/* =========================================================
+   WARDROBE AND DRESS CODE
+   ========================================================= */
+const CLOTHES = [
+  { id: "linen", slot: "outfit", style: "beach", price: 300, es: "la camisa de lino", zh: "亚麻衬衫 yàmá chènshān", zhm: ["一件亚麻衬衫", "yí jiàn yàmá chènshān"], en: "Linen shirt and shorts", pal: { jacket: "#f4efe6", shirt: "#f4efe6", pants: "#d9c9a8" }, perk: { chem: 0.03 } },
+  { id: "swim", slot: "outfit", style: "beach", price: 800, es: "el bañador", zh: "泳裤 yǒngkù", zhm: ["一条泳裤", "yì tiáo yǒngkù"], en: "Designer swim shorts", swim: "#e24b3b", perk: { chem: 0.04 } },
+  { id: "navy", slot: "outfit", style: "business", price: 3000, es: "el traje azul marino", zh: "西装 xīzhuāng", zhm: ["一套西装", "yí tào xīzhuāng"], en: "Tailored navy suit", pal: { jacket: "#1c2656", shirt: "#f4f4f4", pants: "#1c2656" }, perk: { pay: 0.01 } },
+  { id: "silk", slot: "outfit", style: "party", price: 5000, es: "la camisa de seda", zh: "丝绸衬衫 sīchóu chènshān", zhm: ["一件丝绸衬衫", "yí jiàn sīchóu chènshān"], en: "Silk party shirt", pal: { jacket: "#b565c9", shirt: "#b565c9", pants: "#101014" }, perk: { chem: 0.06 } },
+  { id: "dinner", slot: "outfit", style: "party", price: 12000, es: "el esmoquin blanco", zh: "白色礼服 báisè lǐfú", zhm: ["一套白色礼服", "yí tào báisè lǐfú"], en: "White dinner jacket", pal: { jacket: "#f4f1ea", shirt: "#101014", pants: "#101014" }, perk: { rep: 3 } },
+  { id: "savile", slot: "outfit", style: "business", price: 60000, es: "el traje a medida", zh: "定制西装 dìngzhì xīzhuāng", zhm: ["一套定制西装", "yí tào dìngzhì xīzhuāng"], en: "Bespoke three-piece suit", pal: { jacket: "#2b2b33", shirt: "#f4f4f4", pants: "#2b2b33" }, perk: { pay: 0.03 } },
+  { id: "shades", slot: "acc", price: 400, es: "las gafas de sol", zh: "墨镜 mòjìng", zhm: ["一副墨镜", "yí fù mòjìng"], en: "Aviator sunglasses", acc: "glasses", perk: { chem: 0.02 } },
+  { id: "chain", slot: "acc", price: 15000, es: "la cadena de oro", zh: "金链子 jīn liànzi", zhm: ["一条金链子", "yì tiáo jīn liànzi"], en: "Gold chain", acc: "chain", perk: { rep: 2 } },
+  { id: "sneakers", slot: "acc", price: 25000, es: "las zapatillas doradas", zh: "金色球鞋 jīnsè qiúxié", zhm: ["一双金色球鞋", "yì shuāng jīnsè qiúxié"], en: "Gold sneakers", acc: "goldShoes", perk: { rep: 2 } },
+];
+const STYLE_OF_KIND = { shack: "beach", villa: "beach", office: "business", teahouse: "business", jet: "business", stadium: "business", deck: "smart", boat: "smart", street: "casual", rooftop: "casual", farm: "casual" };
+function closet(lang = G.lang) { const L = life(lang); L.closet ||= {}; L.acc ||= {}; return L; }
+function wornItem(lang = G.lang) { const L = closet(lang); return L.wear && L.closet[L.wear] ? CLOTHES.find((x) => x.id === L.wear) : null; }
+function clothesPerks(lang = G.lang) {
+  const L = closet(lang), o = { pay: 0, chem: 0, rep: 0 }, w = wornItem(lang);
+  const add = (p) => { o.pay += p.pay || 0; o.chem += p.chem || 0; o.rep += p.rep || 0; };
+  if (w?.perk) add(w.perk);
+  CLOTHES.filter((x) => x.slot === "acc" && L.closet[x.id] && L.acc[x.id]).forEach((x) => add(x.perk));
+  return o;
+}
+function myLook(lang = G.lang) {
+  const base = youPal(rank(lang)), L = closet(lang), w = wornItem(lang), any = Object.keys(L.closet).length > 0;
+  let pal = { ...base, goldShoes: !!base.chain };
+  if (any) { pal.glasses = !!(L.closet.shades && L.acc.shades); pal.chain = !!(L.closet.chain && L.acc.chain); pal.goldShoes = !!(L.closet.sneakers && L.acc.sneakers); }
+  if (w) pal = w.swim ? { ...pal, swim: w.swim } : { ...pal, ...w.pal };
+  return pal;
+}
+function dressCheck(t) {
+  const want = STYLE_OF_KIND[t.kind] || "casual", w = wornItem(), have = w ? w.style : "street";
+  if (want === "casual") return { d: 0 };
+  if (want === "beach") return have === "beach" ? { d: 1, why: "Dressed for the beach. They relax instantly." } : have === "business" ? { d: -1, why: "A suit at a beach bar. You're sweating and everyone can tell." } : { d: 0 };
+  if (want === "business") return have === "business" ? { d: 1, why: "The suit does half the talking." } : have === "beach" ? { d: -1, why: "Swimwear at a business meeting. They're not taking you seriously." } : { d: 0 };
+  if (want === "smart") return have === "business" || have === "party" ? { d: 1, why: "Sharp enough for the deck." } : have === "beach" && w?.swim ? { d: -1, why: "Swim shorts to a deal on a yacht. Bold, wrong." } : { d: 0 };
+  return { d: 0 };
+}
+function renderWardrobe() {
+  const L = closet(), el = $("#wardrobe"), w = wornItem();
+  el.innerHTML = '<div class="row between"><h3>' + (G.lang === "es" ? "El armario · " : G.lang === "zh" ? "衣柜 yīguì · " : "") + 'Wardrobe</h3><span class="chip info">Wearing: ' + esc(w ? termOf(w) || w.en : "street clothes") + '</span></div><p class="muted small">Dress for the room. A suit at an office or banquet, linen or swim shorts at the beach, a sharp look on a yacht: +1 on the deal meter. Get it wrong and it costs you one.</p><div class="items">' +
+    CLOTHES.map((x) => {
+      const own = !!L.closet[x.id], tm = termOf(x), wearing = L.wear === x.id, on = x.slot === "acc" && L.acc[x.id];
+      const perk = [x.perk.pay && "+" + Math.round(x.perk.pay * 100) + "% payouts", x.perk.chem && "+" + Math.round(x.perk.chem * 100) + "% chemistry", x.perk.rep && "+" + x.perk.rep + " rep"].filter(Boolean).join(" · ");
+      return '<div class="item' + (own ? " owned" : "") + '"><canvas width="20" height="22" data-cl="' + x.id + '" style="aspect-ratio:10/11;width:70px;margin:0 auto;background:#2b2140"></canvas><div class="nm">' + esc(tm ? (G.lang === "zh" ? splitTerm(tm)[0] : tm) : x.en) + '</div><div class="small muted">' + esc(tm ? x.en : "") + (x.style ? " · " + x.style : " · accessory") + '</div><div class="perk">' + esc(perk) + '</div><div class="pr">' + money(x.price) + '</div><div class="row">' +
+        (!own ? '<button class="btn sm gold" data-clbuy="' + x.id + '"' + (L.cash < x.price ? " disabled" : "") + ">Buy</button>" : x.slot === "outfit" ? (wearing ? '<button class="btn sm" data-clwear="">Take off</button>' : '<button class="btn sm primary" data-clwear="' + x.id + '">Wear</button>') : '<button class="btn sm' + (on ? " primary" : "") + '" data-clacc="' + x.id + '">' + (on ? "On" : "Off") + "</button>") + "</div></div>";
+    }).join("") + "</div>";
+  el.querySelectorAll("canvas[data-cl]").forEach((cv) => {
+    const x = CLOTHES.find((y) => y.id === cv.dataset.cl), c = cv.getContext("2d"), base = { ...youPal(0), goldShoes: false };
+    let pal = x.swim ? { ...base, swim: x.swim } : x.pal ? { ...base, ...x.pal } : { ...base, [x.acc]: true };
+    R(c, 0, 0, 20, 22, "#2b2140"); drawPerson(c, 5, 1, pal, 0, false, 1, false);
+  });
+  el.querySelectorAll("[data-clbuy]").forEach((b) => b.addEventListener("click", async () => {
+    const x = CLOTHES.find((y) => y.id === b.dataset.clbuy); if (L.cash < x.price) return;
+    if (!(await sayIt("buyclothes", { es: x.es, zhm: x.zhm, en: x.en.toLowerCase() }, money(x.price))).ok) return;
+    L.cash -= x.price; L.closet[x.id] = true; if (x.slot === "acc") L.acc[x.id] = true; else L.wear = x.id; save(); pop("-" + money(x.price), b); sfx("buy"); renderHud(); renderWardrobe();
+  }));
+  el.querySelectorAll("[data-clwear]").forEach((b) => b.addEventListener("click", () => { L.wear = b.dataset.clwear || null; save(); renderWardrobe(); renderHud(); }));
+  el.querySelectorAll("[data-clacc]").forEach((b) => b.addEventListener("click", () => { L.acc[b.dataset.clacc] = !L.acc[b.dataset.clacc]; save(); renderWardrobe(); }));
+}
+
+/* =========================================================
+   EXTENDED VACATIONS
+   ========================================================= */
+const VAC_DAYS = {
+  es: ["You rent a jeep and get lost. “¿Cómo llego a la playa?” gets you there.", "Breakfast on the terrace: “¿Me trae un café con leche, por favor?”", "A fisherman teaches you “¡Qué buena pesca!” and gives you half his catch.", "At the market: “¿Me hace un descuento?” Works every time.", "Rain all afternoon. You read a Spanish novel and understand most of it.", "Salsa class. “Un, dos, tres… ¡otra vez!”", "Sunset on a rooftop. The bartender corrects your subjunctive. Twice.", "You explain your business to a stranger in Spanish, start to finish, no English.", "A kid laughs at your accent, then teaches you three slang words.", "You call your clients from a hammock. Nobody can tell."],
+  zh: ["You get lost and ask: “请问海边怎么走？” It works.", "Breakfast: “我要一碗粥，谢谢。”", "At the market: “便宜一点吧？” The auntie laughs and gives in.", "A tea master shows you how to taste: “好茶要慢慢品。”", "Karaoke night. You survive an entire song in Mandarin.", "Rain all day. You finish a Chinese drama without subtitles. Almost.", "You explain your business to a taxi driver in Mandarin, start to finish.", "Night market: “老板，再来一份！”", "A kid corrects your tones: 妈、麻、马、骂, ten times.", "You call your clients from a hammock. Nobody can tell."],
+  other: ["You order every meal in the local language.", "You get lost and ask for directions. It works.", "A local teaches you three slang words.", "You call your clients from a hammock."],
+};
+const VAC_WITH = {
+  es: ["{name} orders for both of you and makes you repeat it.", "{name} teaches you a song and won't let you stop singing it.", "You and {name} miss the last ferry on purpose.", "{name} introduces you to their cousins. All nine of them.", "{name} steals your sunglasses and wears them better."],
+  zh: ["{name} orders for both of you and makes you repeat it.", "{name} drags you to karaoke. You sing a duet.", "You and {name} watch the sunrise from the roof.", "{name} teaches you three new chengyu and quizzes you at dinner.", "{name} steals your sunglasses and wears them better."],
+  other: ["{name} orders for both of you.", "You and {name} watch the sunrise."],
+};
+function vacStays(t) {
+  const mult = Math.pow((t.ch || 0) + 1, 2), L = life(), out = [
+    { id: "guest", name: "Guesthouse", night: 60 * mult, rep: 0 },
+    { id: "boutique", name: "Boutique hotel", night: 500 * mult, rep: 0.25 },
+    { id: "villa", name: "Rented luxury villa", night: 4000 * mult, rep: 0.5 },
+  ];
+  const bt = myBoat(); if (bt) out.push({ id: "yacht", name: "Your boat “" + bt.name + "”", night: 0, rep: 0.5 });
+  const crib = SHOP_BASE.filter((x) => x.cat === "crib" && L.owned[x.id] && lvlOf(x.id) >= 3).pop(); if (crib) out.push({ id: "home", name: ownedLabel(crib), night: 0, rep: 0.4 });
+  if (L.owned.flex2) out.push({ id: "island", name: "Your island", night: 0, rep: 0.75 });
+  return out;
+}
+function openVacation(t) {
+  const L = life(), stays = vacStays(t), comps = circleList().filter((p) => (L.chem[p.id] || 0) >= 35 && p.rank <= rank());
+  const m = $("#modal"); m.className = "modal wide"; $("#overlay").hidden = false;
+  const state = { n: 7, stay: stays[1].id, comp: "" };
+  const draw = () => {
+    const st = stays.find((x) => x.id === state.stay), cost = st.night * state.n;
+    m.innerHTML = '<div class="row between"><div><span class="label">Stay longer</span><h2>' + esc(t.place) + '</h2></div><button class="btn sm" id="vac-x">Cancel</button></div>' +
+      '<div class="field"><span class="label">How long</span><div class="row">' + [3, 7, 14].map((n) => '<button class="citybtn" data-vn="' + n + '" aria-pressed="' + (state.n === n) + '">' + n + " nights</button>").join("") + "</div></div>" +
+      '<div class="field"><span class="label">Where you stay</span><div class="row">' + stays.map((x) => '<button class="citybtn" data-vs="' + x.id + '" aria-pressed="' + (state.stay === x.id) + '">' + esc(x.name) + (x.night ? " · " + money(x.night) + "/night" : " · free") + "</button>").join("") + "</div></div>" +
+      '<div class="field"><label class="label" for="vac-comp">Bring someone</label><select id="vac-comp"><option value="">Go solo</option>' + comps.map((p) => '<option value="' + esc(p.id) + '"' + (state.comp === p.id ? " selected" : "") + ">" + esc(p.name) + " · chemistry " + (L.chem[p.id] || 0) + "</option>").join("") + "</select></div>" +
+      '<p class="muted small">Total ' + money(cost) + ". Every day earns immersion XP. Retainers keep coming in while you're away, but loyalty keeps dropping and wages still get paid. The calendar moves forward " + state.n + " days.</p>" +
+      '<div class="row"><button class="btn primary" id="vac-go"' + (L.cash < cost ? " disabled" : "") + ">Book it · " + money(cost) + "</button></div>";
+    m.querySelectorAll("[data-vn]").forEach((b) => b.addEventListener("click", () => { state.n = +b.dataset.vn; draw(); }));
+    m.querySelectorAll("[data-vs]").forEach((b) => b.addEventListener("click", () => { state.stay = b.dataset.vs; draw(); }));
+    $("#vac-comp").onchange = (e) => { state.comp = e.target.value; };
+    $("#vac-x").onclick = () => { m.className = "modal"; $("#overlay").hidden = true; };
+    $("#vac-go").onclick = async () => {
+      if (!(await sayIt("vacation", { n: state.n }, st.name + " · " + money(cost))).ok) return;
+      if (L.cash < cost) return;
+      L.cash -= cost; save(); renderHud();
+      playVacation(t, state.n, st, circleList().find((p) => p.id === state.comp));
+    };
+  };
+  draw();
+}
+function playVacation(t, n, st, comp) {
+  const m = $("#modal"), L = life(), pool = VAC_DAYS[G.lang] || VAC_DAYS.other, withP = VAC_WITH[G.lang] || VAC_WITH.other, r = rng(hash(t.id + today() + n));
+  const days = Array.from({ length: n }, (_, k) => (comp && r() < 0.45 ? withP[Math.floor(r() * withP.length)].replace("{name}", comp.name.split(" ")[0]) : pool[Math.floor(r() * pool.length)]));
+  m.innerHTML = '<div class="row between"><span class="label" id="vac-day">Day 1 of ' + n + '</span><button class="btn sm" id="vac-skip">Skip</button></div><canvas class="ws-cv" id="vac-cv" width="192" height="108" style="aspect-ratio:16/9"></canvas><p id="vac-cap" style="min-height:3em"></p>';
+  const cv = $("#vac-cv").getContext("2d"); let k = 0, raf = 0, t0 = performance.now(), done = false;
+  const scene = (now) => {
+    paintTier(cv, t, now, { you: myLook(), npc: comp ? comp.pal || genNpcPal(hash(comp.name)) : t.npc || genNpcPal(hash(t.id)) }, false);
+    const dayPhase = (k % 3); if (dayPhase === 2) { cv.fillStyle = "rgba(10,10,40,.45)"; cv.fillRect(0, 0, 192, 108); } else if (dayPhase === 1) { cv.fillStyle = "rgba(255,160,90,.14)"; cv.fillRect(0, 0, 192, 108); }
+    if (!done) raf = requestAnimationFrame(scene);
+  };
+  const showDay = () => { $("#vac-day").textContent = "Day " + (k + 1) + " of " + n; $("#vac-cap").textContent = days[k]; };
+  showDay(); raf = requestAnimationFrame(scene);
+  const timer = setInterval(() => { k++; if (k >= n) finish(); else showDay(); }, reduceMotion ? 300 : 1600);
+  const finish = () => {
+    if (done) return; done = true; clearInterval(timer); cancelAnimationFrame(raf);
+    const xp = n * 12, repGain = Math.round(n * st.rep), chemGain = comp ? Math.round(n * 3 * (1 + perks().chem)) : 0;
+    addXp(xp); if (repGain) addRep(repGain, "Everyone saw the photos");
+    if (comp) { bumpChem(comp, chemGain); pushMsg(comp, { sys: true, text: n + " nights together in " + t.place + ". " + days[days.length - 1] }); jealousy(comp, 15, "your trip with " + comp.name.split(" ")[0]); }
+    let extra = ""; if (r() < 0.35) { const s2 = grantSecret(); if (s2) extra = "You overheard something at the pool: " + s2.title + "."; }
+    stat("vacations"); if (n >= 14) award("offgrid");
+    G.dayOffset = (G.dayOffset || 0) + n; G.streak.last = today(); save();
+    m.innerHTML = '<div class="label">Back from ' + esc(t.place) + '</div><div class="big">+' + xp + ' XP</div><p>' + n + " days of " + esc(LANGS[G.lang].name) + " all day long." + (repGain ? " +" + repGain + " reputation." : "") + (comp ? " +" + chemGain + " chemistry with " + esc(comp.name.split(" ")[0]) + "." : "") + "</p>" + (extra ? "<p>" + esc(extra) + "</p>" : "") + '<button class="btn primary" id="vac-ok">Back to work</button>';
+    $("#vac-ok").onclick = () => { m.className = "modal"; $("#overlay").hidden = true; dailyTick(); renderHud(); if (current === "explore") renderInteract(); };
+  };
+  $("#vac-skip").onclick = finish;
 }
 
 /* =========================================================
@@ -3520,6 +3725,7 @@ function beginMeeting() {
   M.tier = t; M.mode = mode; M.replay = mode === "script" && L.cleared[t.id] != null;
   M.deal = clamp(5 + perks().deal + intelFor(t).reduce((s, x) => s + (x.deal || 0), 0) + (L.sharp ? 1 : 0), 0, 9);
   if (L.sharp) { L.sharp = false; save(); }
+  const dc = dressCheck(t); if (dc.d) { M.deal = clamp(M.deal + dc.d, 0, 9); toast(dc.why + " (" + (dc.d > 0 ? "+1" : "-1") + " deal meter)"); }
   if (L.heartbreak) { M.deal = clamp(M.deal - 1, 0, 9); L.heartbreak = false; save(); toast("They heard about your breakup: -1 deal meter."); }
   if (L.intros) { M.deal = clamp(M.deal + 1, 0, 9); L.intros--; save(); toast("A contact put in a good word: +1 deal meter."); }
   if (t.secret) award("invite");
@@ -3831,7 +4037,7 @@ function renderEmpire() {
   $("#empire-title").textContent = LANGS[G.lang].name + " empire";
   $("#empire-worth").textContent = "NET WORTH " + money(netWorth());
   $("#empire-life").textContent = lifeLine();
-  renderMarina();
+  renderWardrobe(); renderMarina();
   const pk = perks();
   $("#shop").innerHTML = '<div class="box row" style="gap:10px"><span class="chip good">Payouts +' + Math.round(pk.pay * 100) + '%</span><span class="chip good">XP +' + Math.round(pk.xp * 100) + '%</span><span class="chip good">Travel -' + Math.round(pk.fee * 100) + '%</span><span class="chip good">Deal +' + pk.deal + '</span><span class="chip love">Chemistry +' + Math.round(pk.chem * 100) + "%</span>" + (pk.hint ? '<span class="chip good">Watch hints</span>' : "") + (pk.secret ? '<span class="chip gold">VIP access</span>' : "") + "</div>" +
     Object.entries(CATS).map(([cat, label]) => '<div class="box shop-cat"><h3>' + esc(label) + '</h3><div class="items">' + SHOP_BASE.filter((it) => it.cat === cat).map((it) => {

@@ -43,7 +43,14 @@ superyachts and private jets. It is a single self-contained page:
   a rival). Hire an assistant, tutor, bodyguard, fixer and publicist, who
   follow you around the world. A mentor sets escalating quests and a daily
   proverb.
-- **Globe**: spin the world and jump between both passports' cities.
+- **Globe**: a draggable globe with the real day/night line, city lights,
+  clouds, flight arcs, and your won cities in gold. Tap to jump between both
+  passports.
+- **Wardrobe and dress code**: outfits and accessories named in the target
+  language; dress for the room for +1 on the deal meter, or pay for it.
+- **Vacations**: book 3, 7 or 14 nights anywhere, pick a stay and a
+  companion, and watch a day-by-day montage of language moments. The
+  calendar moves forward while you're away.
 - **Circle**: flirty locals you text in the target language (PG-13, fade to
   black). Chemistry unlocks gossip that helps your deals.
 - **Dossier**: leverage on counterparts, from envelopes, flawless meetings,
