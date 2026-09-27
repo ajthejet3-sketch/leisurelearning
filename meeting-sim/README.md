@@ -29,6 +29,15 @@ superyachts and private jets. It is a single self-contained page:
 - **Rivals**: four AI competitors per language whose fortunes track yours.
   They take the deals you lose, show up on a leaderboard, and moor their
   yachts next to yours in the marina.
+- **Nightlife**: flirt with strangers in the language (win their number),
+  a party or networking event at every place, investor cards that boost
+  future deals, and parties you host on your boat, jet or villa. Swimwear at
+  beaches and pool/yacht parties.
+- **Reputation**: rises with wins, hosting and networking, falls with
+  walkouts and breakups; decides who shows up and how easily they say yes.
+- **Relationships**: go exclusive (asked in the language); seeing others
+  makes a partner jealous, and a breakup costs reputation and your next deal.
+  Overnights play out differently every time and fade to black.
 - **Circle**: flirty locals you text in the target language (PG-13, fade to
   black). Chemistry unlocks gossip that helps your deals.
 - **Dossier**: leverage on counterparts, from envelopes, flawless meetings,

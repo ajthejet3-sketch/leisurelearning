@@ -258,6 +258,7 @@
       <div class="hudcell cash"><span class="k">Cash</span><span class="v" id="hud-cash">$0</span></div>
       <div class="hudcell"><span class="k">Net worth</span><span class="v" id="hud-worth">$0</span></div>
       <div class="hudcell"><span class="k">Rank</span><span class="v" id="hud-rank"></span><div class="xpbar"><i id="hud-xp"></i></div></div>
+      <div class="hudcell"><span class="k">Rep</span><span class="v" id="hud-rep"></span><div class="xpbar"><i id="hud-repbar" style="background:var(--love)"></i></div></div>
       <div class="hudcell"><span class="k">Streak</span><span class="v" id="hud-streak"></span></div>
       <div class="hudcell life"><span class="k">Lifestyle</span><span class="v" id="hud-life"></span></div>
       <button class="iconbtn" id="mute" aria-pressed="false">SOUND ON</button>
@@ -1320,6 +1321,7 @@ const ACHS = [
   { id: "heart", name: "Heartbreaker", hint: "Max out chemistry with someone." },
   { id: "walkout", name: "Walked out", hint: "Leave a meeting early." },
   { id: "host", name: "The host", hint: "Throw your own party." },
+  { id: "official", name: "Official", hint: "Make it exclusive with someone." },
   { id: "captain", name: "Captain's quarters", hint: "Spend a night on your boat." },
   { id: "skyhigh", name: "Red-eye", hint: "An overnight flight on your own jet." },
 ];
@@ -1562,6 +1564,7 @@ function phrase(action, a = {}) {
       fly: { t: "Un billete a " + a.city + ", por favor.", en: "Buy a ticket to " + a.city + "." },
       order: { t: "¿Me da " + a.item + ", por favor?", en: "Order " + a.en + "." },
       treat: { t: "¿Te invito a " + a.item + "?", en: "Offer to buy " + a.who + " " + a.en + "." },
+      exclusive: { t: "¿Quieres ser mi pareja?", en: "Ask " + a.who + " to make it official." },
     }[action];
   }
   if (lang === "zh") {
@@ -1577,9 +1580,10 @@ function phrase(action, a = {}) {
       fly: { t: "我要一张去" + a.city[0] + "的机票。", r: "Wǒ yào yì zhāng qù " + a.city[1] + " de jīpiào.", en: "Buy a plane ticket to " + a.city[1] + "." },
       order: { t: "我要" + a.item + "。", r: "Wǒ yào " + a.itemR + ".", en: "Order " + a.en + "." },
       treat: { t: "我请你喝" + a.item + "。", r: "Wǒ qǐng nǐ hē " + a.itemR + ".", en: "Offer to buy " + a.who + " " + a.en + "." },
+      exclusive: { t: a.g === "m" ? "你愿意做我的男朋友吗？" : "你愿意做我的女朋友吗？", r: "Nǐ yuànyì zuò wǒ de " + (a.g === "m" ? "nán" : "nǚ") + " péngyou ma?", en: "Ask " + a.who + " to make it official." },
     }[action];
   }
-  const en = { buy: "Tell the seller you want to buy it.", sell: "Tell the broker you want to sell it.", install: "Ask the yard to install: " + a.en + ".", paint: "Ask to change the " + String(a.en).toLowerCase() + ".", name: "Say it's called " + a.name + ".", date: "Ask " + a.who + " out tonight.", night: "Ask " + a.who + " to stay the night.", fly: "Buy a ticket to " + (a.city || "the city") + ".", order: "Order " + a.en + ".", treat: "Offer to buy " + a.who + " " + a.en + "." }[action];
+  const en = { buy: "Tell the seller you want to buy it.", sell: "Tell the broker you want to sell it.", install: "Ask the yard to install: " + a.en + ".", paint: "Ask to change the " + String(a.en).toLowerCase() + ".", name: "Say it's called " + a.name + ".", date: "Ask " + a.who + " out tonight.", night: "Ask " + a.who + " to stay the night.", fly: "Buy a ticket to " + (a.city || "the city") + ".", order: "Order " + a.en + ".", treat: "Offer to buy " + a.who + " " + a.en + ".", exclusive: "Ask " + a.who + " to make it official." }[action];
   return { t: null, en };
 }
 const bare = (s) => norm(String(s).normalize("NFD").replace(/[\u0300-\u036f]/g, ""));
@@ -1668,7 +1672,7 @@ const LEGS = {
 function drawPerson(c, x, y, pal, t, talking, seed, walking) {
   const legs = walking ? (Math.floor(t / 160) % 2 ? LEGS.a : LEGS.b) : LEGS.stand;
   const pants = pal.pants || shade(pal.jacket === pal.shirt ? "#3a4a6a" : pal.jacket, 0.62), shoes = pal.chain ? "#f5c542" : "#1b1b22";
-  legs.forEach((row, r) => { for (let k = 0; k < 10; k++) { const ch = row[k]; if (ch !== ".") R(c, x + k, y + 14 + r, 1, 1, ch === "p" ? pants : shoes); } });
+  legs.forEach((row, r) => { for (let k = 0; k < 10; k++) { const ch = row[k]; if (ch === ".") continue; R(c, x + k, y + 14 + r, 1, 1, pal.swim ? (ch === "p" && r < 2 ? pal.swim : pal.skin) : ch === "p" ? pants : shoes); } });
   const blink = ((t + seed * 997) % 3400) < 140;
   const mouthOpen = talking && Math.floor(t / 130) % 2 === 0;
   for (let r = 0; r < SPRITE.length; r++) for (let k = 0; k < 10; k++) {
@@ -1676,6 +1680,8 @@ function drawPerson(c, x, y, pal, t, talking, seed, walking) {
     if (pal.long && (k === 0 || k === 9) && r >= 2 && r <= 7) ch = "h";
     if (ch === ".") continue;
     let col = { h: pal.hair, s: pal.skin, e: "#1b1b22", S: pal.shirt, J: pal.jacket }[ch];
+    if (pal.swim && (ch === "J" || ch === "S")) col = r >= 12 || (pal.long && (r === 8 || r === 9) && k >= 2 && k <= 7) ? pal.swim : pal.skin;
+    if (pal.party && (ch === "J" || ch === "S") && (Math.floor(t / 180) + k * 3 + r * 5) % 17 === 0) col = "#fff4c0";
     if (ch === "e" && blink) col = pal.skin;
     if (ch === "m") col = mouthOpen ? "#5a1f24" : shade(pal.skin);
     R(c, x + k, y + r, 1, 1, col);
@@ -2368,10 +2374,14 @@ function drawWorld(c, t) {
   });
   // people, sorted
   const all = [...W.npcs.map((n) => ({ ...n, isNpc: true })), { you: true, x: W.x }].sort((a, b) => a.x - b.x);
+  const g0 = W.theme.ground, swimScene = ((g0 === "sand" || g0 === "pooldeck") && !(W.theme.night && !W.event)) || (W.event?.type === "party" && (W.event.venue === "yacht" || W.event.venue === "home" || g0 === "teak" || g0 === "sand" || g0 === "pooldeck"));
+  const partyScene = W.event?.type === "party" && !swimScene;
   all.forEach((n) => {
     const x = Math.round(n.x - cam) - 5; if (x < -12 || x > 200) return;
-    if (n.you) { drawPerson(c, x, 64, youPal(rank()), t, W.talkingYou, 1, W.moving); return; }
-    if (n.type !== "vendor") drawPerson(c, x, 64, n.pal, t, W.talk === n.id, hash(n.id) % 9, false);
+    const swimTypes = ["flirt", "local", "circle"];
+    if (n.you) { const yp = swimScene ? { ...youPal(rank()), swim: "#1e5aa8", glasses: rank() >= 3, chain: rank() >= 4 } : youPal(rank()); drawPerson(c, x, 64, yp, t, W.talkingYou, 1, W.moving); return; }
+    const np = swimScene && swimTypes.includes(n.type) ? { ...n.pal, swim: ["#e24b3b", "#ff6fae", "#52c7b8", "#f5c542", "#101014", "#1e5aa8"][hash(n.id + n.name) % 6] } : partyScene && n.type === "flirt" ? { ...n.pal, party: true } : n.pal;
+    if (n.type !== "vendor") drawPerson(c, x, 64, np, t, W.talk === n.id, hash(n.id) % 9, false);
     const near = W.near === n.id, iy = (n.type === "vendor" ? 58 : 64) - 8 + (near ? Math.round(Math.sin(t / 200)) : 0);
     const icol = { vendor: "#f5c542", circle: "#ff6fae", boss: "#ff9a5c", rival: "#ff6f6f", local: "#f1e9d6", flirt: "#b565c9", investor: "#52c7b8" }[n.type];
     if (near || n.type !== "local") { R(c, x + 3, iy, 4, 4, "#0b0e1a"); R(c, x + 4, iy + 1, 2, 2, icol); if (near) R(c, x + 4, iy - 2, 2, 1, icol); }
@@ -2520,7 +2530,7 @@ function rivalTalk(n) {
   n.talked = true; renderInteract();
   exchange(n, toNode(a), (q) => {
     const L = life(), id = n.rival.id;
-    if (q === "good") { L.rivalBonus[id] = Math.max(0, (L.rivalBonus[id] || 0) - Math.round(W.tier.stakes * 0.2)); addXp(6); toast(n.name + " loses a client who overheard that."); }
+    if (q === "major") addRep(-3); if (q === "good") { addRep(2); L.rivalBonus[id] = Math.max(0, (L.rivalBonus[id] || 0) - Math.round(W.tier.stakes * 0.2)); addXp(6); toast(n.name + " loses a client who overheard that."); }
     else if (q === "major") { L.rivalBonus[id] = (L.rivalBonus[id] || 0) + Math.round(W.tier.stakes * 0.2); toast(n.name + " tells everyone you froze."); }
     save(); renderHud();
   });
@@ -2531,7 +2541,7 @@ async function orderAt(m) {
   if (!r.ok) return;
   L.cash -= m.price; pop("-" + money(m.price)); addXp(3);
   if (m.sharp) { L.sharp = true; toast("Sharp: +1 on the deal meter in your next meeting."); }
-  else if (m.price > 100) { toast("The whole terrace saw that. Rivals are talking about you."); rivalsFor().forEach((rv) => { L.rivalBonus[rv.id] = Math.max(0, (L.rivalBonus[rv.id] || 0) - Math.round(m.price * 2)); }); }
+  else if (m.price > 100) { addRep(1); toast("The whole terrace saw that. Rivals are talking about you."); rivalsFor().forEach((rv) => { L.rivalBonus[rv.id] = Math.max(0, (L.rivalBonus[rv.id] || 0) - Math.round(m.price * 2)); }); }
   save(); renderHud(); renderInteract();
 }
 async function treat(n, m) {
@@ -2540,7 +2550,7 @@ async function treat(n, m) {
   if (!r.ok) return;
   L.cash -= cost; pop("-" + money(cost));
   pushMsg(n.person, { sys: true, text: "You bought " + n.person.name.split(" ")[0] + " " + m.en + " in person. " + dateLine(n.person, { name: m.en }) });
-  bumpChem(n.person, Math.round(5 * (1 + perks().chem))); save(); renderHud(); renderInteract();
+  bumpChem(n.person, Math.round(5 * (1 + perks().chem))); jealousy(n.person, 6, "you buying " + n.person.name.split(" ")[0] + " drinks"); save(); renderHud(); renderInteract();
 }
 function walkStep(dt) {
   if (!W.tier) return;
@@ -2569,6 +2579,43 @@ document.addEventListener("keyup", (e) => { if (keyMap[e.key]) W.keys[keyMap[e.k
 $("#walk-talk").addEventListener("click", () => { $("#interact button:not([disabled])")?.focus(); $("#interact").scrollIntoView({ behavior: "smooth", block: "nearest" }); });
 $("#walk-cv").addEventListener("click", (e) => { const r = e.target.getBoundingClientRect(); W.target = clamp(W.cam + ((e.clientX - r.left) / r.width) * 192, 8, W.width - 8); });
 
+
+/* =========================================================
+   REPUTATION AND RELATIONSHIPS
+   ========================================================= */
+function repOf(lang = G.lang) { const L = life(lang), w = netWorth(lang); return clamp(Math.round((L.rep ?? 10) + Math.max(0, Math.log10(Math.max(1, w)) - 3) * 4), 0, 100); }
+function repLabel(r) { return r >= 85 ? "Legend" : r >= 60 ? "Hot" : r >= 35 ? "Known" : r >= 15 ? "Noticed" : "Unknown"; }
+function addRep(n, why) {
+  const L = life(), before = repLabel(repOf()); L.rep = clamp((L.rep ?? 10) + n, 0, 100); save();
+  const after = repLabel(repOf());
+  if (after !== before) toast((n > 0 ? "Reputation up: " : "Reputation down: ") + after + (why ? ". " + why : ""), n > 0 ? "ach" : "");
+  renderHud();
+}
+function flirtBar() { const r = repOf(); return r >= 60 ? 3 : r >= 15 ? 4 : 5; }
+function partnerOf() { const L = life(); return L.partner ? circleList().concat(career()?.circle || []).find((x) => x.id === L.partner) : null; }
+function jealousy(p, hurt, what) {
+  const L = life(), partner = partnerOf();
+  if (partner && partner.id !== p.id) {
+    if (Math.random() < (hurt >= 15 ? 0.9 : 0.55)) {
+      L.chem[partner.id] = clamp((L.chem[partner.id] || 0) - hurt, 0, 100); save();
+      pushMsg(partner, { sys: true, text: partner.name.split(" ")[0] + " heard about " + what + ". They are not happy." });
+      toast(partner.name.split(" ")[0] + " found out about " + what + ".");
+      if ((L.chem[partner.id] || 0) < 45) breakup(partner, "They found out about " + what + ".");
+    }
+    return;
+  }
+  const others = circleList().filter((x) => x.id !== p.id && (L.chem[x.id] || 0) >= 60);
+  if (others.length && Math.random() < 0.5) { const o = others[Math.floor(Math.random() * others.length)]; L.chem[o.id] -= 3; save(); pushMsg(o, { sys: true, text: o.name.split(" ")[0] + " saw a photo of you with " + p.name.split(" ")[0] + ". A little cold today." }); }
+}
+function breakup(p, reason) {
+  const L = life(); if (L.partner !== p.id) return;
+  L.partner = null; L.chem[p.id] = 8; L.heartbreak = true; save();
+  pushMsg(p, { sys: true, text: "It's over. " + reason });
+  const rv = rivalsFor()[Math.floor(Math.random() * 4)], t = tierById(L.here) || career().tiers[0];
+  L.rivalBonus[rv.id] = (L.rivalBonus[rv.id] || 0) + Math.round(t.stakes * 0.3); save();
+  addRep(-8, "The breakup is all anyone is talking about");
+  toast(p.name.split(" ")[0] + " broke up with you. " + rv.name + " is already consoling them. Word will reach your next meeting.");
+}
 
 /* =========================================================
    NIGHTLIFE: flirting, parties, networking, overnights
@@ -2636,10 +2683,10 @@ function makeInvestor(id, x, r, used = new Set()) {
 function eventNpcs(ev, t) {
   const r = rng(hash(ev.key)), list = [], width = W.width;
   list.push({ id: "vendor", type: "vendor", x: 150, name: ev.host ? "Your bartender" : vendorTitle(t), role: ev.host ? "on your payroll tonight" : "pours the drinks", pal: genNpcPal(hash(t.id + "v")) });
-  const nFlirt = ev.type === "party" ? (ev.host ? 5 : 4) : 1, nInv = ev.type === "network" ? 4 : ev.host ? 2 : 1;
+  const rp = repOf(), nFlirt = (ev.type === "party" ? (ev.host ? 5 : 3) : 1) + (rp >= 35 ? 1 : 0) + (rp >= 70 ? 1 : 0), nInv = (ev.type === "network" ? 3 : ev.host ? 2 : 1) + (rp >= 50 ? 1 : 0);
   const slots = []; for (let x = 70; x < width - 30; x += 34) if (Math.abs(x - 150) > 22) slots.push(x);
   const pick = () => slots.splice(Math.floor(r() * slots.length), 1)[0] ?? 200;
-  const used = new Set(contactsHere(t.id).map((c) => c.name));
+  const used = new Set((life().contacts || []).map((c) => c.name));
   for (let k = 0; k < nFlirt; k++) list.push(makeFlirt("f" + k, pick(), r, used));
   for (let k = 0; k < nInv; k++) list.push(makeInvestor("i" + k, pick(), r, used));
   if (!ev.host && r() < 0.6) { const rv = rivalsFor()[Math.floor(r() * 4)]; list.push({ id: "rival", type: "rival", x: pick(), name: rv.name, role: "your rival, also here", pal: genNpcPal(hash(rv.id)), rival: rv }); }
@@ -2657,7 +2704,7 @@ function flirtFlow(n) {
     addXp(q === "good" ? 3 : 1);
     const area = $("#talk-area");
     if (k < 2) { area.insertAdjacentHTML("beforeend", '<div class="row" style="margin-top:8px"><button class="btn sm love" id="flirt-next">Keep talking</button></div>'); $("#flirt-next").onclick = () => step(k + 1); }
-    else if (n.score >= 4) { const c = newContact(n); area.insertAdjacentHTML("beforeend", '<div class="fb good" style="margin-top:8px"><p><strong>' + esc(n.name) + " gives you their number.</strong> Find them in your Circle, or right here next time you're in town.</p></div>"); sfx("level"); }
+    else if (n.score >= flirtBar()) { const c = newContact(n); addRep(2); jealousy(c, 8, "you flirting with " + c.name.split(" ")[0]); area.insertAdjacentHTML("beforeend", '<div class="fb good" style="margin-top:8px"><p><strong>' + esc(n.name) + " gives you their number.</strong> Find them in your Circle, or right here next time you're in town.</p></div>"); sfx("level"); }
     else area.insertAdjacentHTML("beforeend", '<div class="fb minor" style="margin-top:8px"><p>' + esc(n.name) + " smiles and disappears into the crowd. Smoother " + esc(LANGS[G.lang].name) + " next time.</p></div>");
   });
   step(0);
@@ -2665,7 +2712,7 @@ function flirtFlow(n) {
 function newContact(n) {
   const L = life(); L.contacts ||= [];
   const c = { id: "k" + Date.now().toString(36), name: n.name, g: n.g, role: n.role, rank: 0, home: W.tier.id, met: W.tier.place, pal: n.pal, persona: "playful, flirty " + n.role + " you met at " + (W.event ? W.event.name.toLowerCase() + " in " : "") + W.tier.place + "; teases you, likes confidence and good " + LANGS[G.lang].name };
-  L.contacts.push(c); L.chem[c.id] = 20; save();
+  L.contacts.push(c); L.chem[c.id] = 20 + Math.round(repOf() / 5); save();
   n.type = "circle"; n.person = c; n.id = "c-" + c.id; W.near = n.id;
   toast("New contact: " + c.name, "ach"); renderAround();
   return c;
@@ -2679,7 +2726,7 @@ function networkFlow(n) {
     n.score += q === "good" ? 2 : q === "minor" ? 1 : 0; addXp(q === "good" ? 4 : 1);
     const area = $("#talk-area"), L = life();
     if (k < 1) { area.insertAdjacentHTML("beforeend", '<div class="row" style="margin-top:8px"><button class="btn sm" id="net-next">Continue</button></div>'); $("#net-next").onclick = () => step(k + 1); }
-    else if (n.score >= 3) {
+    else if (n.score >= (repOf() >= 60 ? 2 : 3)) { addRep(2);
       L.intros = Math.min(3, (L.intros || 0) + 1); save();
       const ref = Math.random() < 0.3 ? Math.max(50, Math.round(W.tier.stakes * 0.08)) : 0; if (ref) addCash(ref);
       area.insertAdjacentHTML("beforeend", '<div class="fb good" style="margin-top:8px"><p><strong>Business card from ' + esc(n.name) + ".</strong> +1 on the deal meter in your next meeting (" + L.intros + " banked)." + (ref ? " They also send a referral worth " + money(ref) + "." : "") + "</p></div>");
@@ -2719,7 +2766,7 @@ async function throwParty(v) {
   if (!L.here || !tierById(L.here)) { toast("Fly somewhere first. The party happens where you are."); return; }
   L.cash -= v.cost; pop("-" + money(v.cost)); save(); renderHud();
   rivalsFor().forEach((rv) => { L.rivalBonus[rv.id] = Math.max(0, (L.rivalBonus[rv.id] || 0) - Math.round(v.cost * 0.5)); });
-  award("host");
+  award("host"); addRep(8, "Everyone was there");
   showTab("explore"); exploreMapOpen = false; openWalk(L.here);
   enterEvent({ name: "Your party", type: "party", host: true, venue: v.venue, where: v.label.toUpperCase(), key: "host:" + Date.now() });
   toast("Word gets around. Your rivals are furious they weren't invited.", "ach");
@@ -2797,7 +2844,7 @@ function playNight(p, venue) {
     const inside = { yacht: ["You head below deck together.", "You wander down to the cabin, still laughing."], home: ["You head inside together.", "The door clicks shut behind you."], jet: ["The cabin lights dim to night mode.", "The flight attendant draws the curtain and disappears."], theirs: ["They take your hand and lead you inside.", "Up the stairs, trying not to wake the neighbors."] }[venue][nth % 2];
     const caps = [act[0].replace("{lang}", LANGS[G.lang].name), inside, "The lights go out.", gone ? "Morning. " + first + " is gone, with a note: “" + note + "”" : "Morning. " + first + " is still here, making coffee. “" + note + "”"];
     let raf = 0, done = false;
-    const finish = () => { if (done) return; done = true; cancelAnimationFrame(raf); m.className = "modal"; ov.hidden = true; resolve(); if (modalQueue.length) nextModal(); };
+    const finish = () => { if (done) return; done = true; cancelAnimationFrame(raf); m.className = "modal"; ov.hidden = true; resolve(caps[3]); if (modalQueue.length) nextModal(); };
     $("#night-skip").onclick = finish;
     const step = (now) => {
       const e = now - t0, ph = dur === 0 ? 3 : e < 3000 ? 0 : e < 5200 ? 1 : e < 6800 ? 2 : 3;
@@ -2850,6 +2897,7 @@ function renderHud() {
   const lo = RANK_XP[r], hi = RANK_XP[r + 1] ?? RANK_XP[r];
   $("#hud-xp").style.width = (r >= 5 ? 100 : clamp(((L.xp - lo) / (hi - lo)) * 100, 0, 100)) + "%";
   $("#hud-streak").textContent = G.streak.n + "D · x" + streakMult().toFixed(2);
+  $("#hud-rep").textContent = repLabel(repOf()); $("#hud-repbar").style.width = repOf() + "%";
   const hereT = life().here && career() ? career().tiers.find((x) => x.id === life().here) : null;
   $("#hud-life").textContent = (hereT ? "In " + hereT.place + ". " : "") + lifeLine();
   $("#mute").textContent = G.mute ? "SOUND OFF" : "SOUND ON"; $("#mute").setAttribute("aria-pressed", String(G.mute));
@@ -3144,6 +3192,7 @@ function beginMeeting() {
   M.tier = t; M.mode = mode; M.replay = mode === "script" && L.cleared[t.id] != null;
   M.deal = clamp(5 + perks().deal + intelFor(t).reduce((s, x) => s + (x.deal || 0), 0) + (L.sharp ? 1 : 0), 0, 9);
   if (L.sharp) { L.sharp = false; save(); }
+  if (L.heartbreak) { M.deal = clamp(M.deal - 1, 0, 9); L.heartbreak = false; save(); toast("They heard about your breakup: -1 deal meter."); }
   if (L.intros) { M.deal = clamp(M.deal + 1, 0, 9); L.intros--; save(); toast("A contact put in a good word: +1 deal meter."); }
   if (t.secret) award("invite");
   showTab("meeting");
@@ -3164,7 +3213,7 @@ $("#toggle-en").addEventListener("click", () => { G.showEn = !G.showEn; save(); 
 $("#hear").addEventListener("click", () => speak([...M.turns].reverse().find((t) => t.who === "npc")?.text, G.lang));
 $("#walk").addEventListener("click", () => {
   if (!M.tier || M.done) return;
-  ctl?.abort(); award("walkout"); M.deal = Math.min(M.deal, 3); endMeeting("You walked out. The trip money is gone.");
+  ctl?.abort(); award("walkout"); addRep(-5); M.deal = Math.min(M.deal, 3); endMeeting("You walked out. The trip money is gone.");
 });
 function scriptNode() {
   const node = scriptFor(M.tier)[M.node];
@@ -3234,7 +3283,8 @@ function settle() {
   const rv = rivalsFor(), near = rv.slice().sort((a, b) => Math.abs(a.ratio - 1) - Math.abs(b.ratio - 1))[0];
   if (payout === 0) { L.rivalBonus[near.id] = (L.rivalBonus[near.id] || 0) + Math.round(t.stakes * 0.8); save(); setTimeout(() => toast(near.name + " swooped in and closed the deal you lost. +" + money(t.stakes * 0.8) + " to them."), 1600); }
   else if (M.deal >= 9) { const r = rv[Math.floor(Math.random() * rv.length)]; L.rivalBonus[r.id] = Math.max(0, (L.rivalBonus[r.id] || 0) - Math.round(t.stakes * 0.3)); save(); bonus = "You beat " + r.name + " to it"; }
-  if (flawless) { award("flawless"); const s = grantSecret(t.id); if (s) bonus = "Flawless. New file: " + s.title; }
+  addRep(M.deal >= 7 ? 2 : M.deal < 5 ? -1 : 0);
+  if (flawless) { addRep(3); award("flawless"); const s = grantSecret(t.id); if (s) bonus = "Flawless. New file: " + s.title; }
   if (payout > 0) { award("first"); addCash(payout); queueModal(() => envelopeModal(payout)); }
   if (xp) addXp(xp);
   if (firstWin) {
@@ -3571,7 +3621,9 @@ function renderChat() {
   const box = $("#chatbox"), p = circleList().find((x) => x.id === chatWith);
   if (!p) { box.innerHTML = '<h3>Messages</h3><p class="muted">Pick someone on the left.</p>'; return; }
   const L = life(), msgs = L.chats[p.id] || [], ch = L.chem[p.id] || 0, sec = career().secrets.find((s) => s.id === p.secret);
-  box.innerHTML = '<div class="row between"><h3>' + esc(p.name) + '</h3><span class="chip love">' + chemLabel(ch) + " · " + ch + '</span></div><p class="muted small">' + esc(p.role) + ". " + (sec && !L.secrets[sec.id] ? "Knows something. Gets talkative past 50." : sec ? "Already told you their secret." : p.met ? "Met at " + p.met + "." : "") + "</p>" +
+  const isPartner = L.partner === p.id, partnerName = partnerOf()?.name;
+  box.innerHTML = '<div class="row between"><h3>' + esc(p.name) + '</h3><span class="chip love">' + (isPartner ? "Exclusive" : chemLabel(ch)) + " · " + ch + '</span></div>' +
+    (isPartner ? '<div class="row"><span class="small muted">You two are official. Their chemistry gains are boosted, and seeing anyone else will get back to them.</span><button class="btn sm" id="do-breakup">Break up</button></div>' : !L.partner && ch >= 85 ? '<div class="row"><button class="btn sm love" id="go-excl">Ask them to be exclusive</button></div>' : L.partner && partnerName ? '<p class="small muted">You\'re with ' + esc(partnerName) + ". They will hear about this.</p>" : "") + '<p class="muted small">' + esc(p.role) + ". " + (sec && !L.secrets[sec.id] ? "Knows something. Gets talkative past 50." : sec ? "Already told you their secret." : p.met ? "Met at " + p.met + "." : "") + "</p>" +
     '<div class="chat" id="chat">' + (msgs.length ? msgs.map((m) => m.sys ? '<div class="msg sys">' + esc(m.text) + "</div>" : '<div class="msg ' + (m.me ? "me" : "them") + '"><div>' + esc(m.text) + "</div>" + (m.r ? '<div class="rom">' + esc(m.r) + "</div>" : "") + (m.en && G.showEn ? '<div class="rom">' + esc(m.en) + "</div>" : "") + (m.corr ? '<div class="corr">Better: ' + esc(m.corr.better) + " · " + esc(m.corr.why) + "</div>" : "") + "</div>").join("") : '<div class="msg sys">You have their number. Say something in ' + esc(LANGS[G.lang].name) + ".</div>") + "</div>" +
     (sample ? '<form class="compose" id="chat-form"><input type="text" id="chat-in" autocomplete="off" placeholder="Text in ' + esc(LANGS[G.lang].name) + '"><button class="btn love" id="chat-send">Send</button></form>' : '<p class="note">Texting needs Claude. Dates work offline.</p>') +
     '<div class="label">Take them out' + (perks().chem ? " · your toys add +" + Math.round(perks().chem * 100) + "% chemistry" : "") + '</div><div class="row">' + dateOptions().map((d, i) => '<button class="btn sm" data-date="' + i + '"' + (L.cash < d.cost ? " disabled" : "") + ">" + esc(d.name) + (d.cost ? " · " + money(d.cost) : "") + "</button>").join("") + "</div>";
@@ -3580,11 +3632,18 @@ function renderChat() {
   box.querySelectorAll("[data-date]").forEach((b) => b.addEventListener("click", async () => {
     const d = dateOptions()[+b.dataset.date]; if (L.cash < d.cost) return;
     if (!(await sayIt(d.night ? "night" : "date", { who: p.name.split(" ")[0] }, d.night ? d.name : d.name + " · " + money(d.cost))).ok) return;
-    if (d.night) { if (d.cost) { L.cash -= d.cost; pop("-" + money(d.cost), b); } await playNight(p, d.night); pushMsg(p, { sys: true, text: d.name + ". " + nightLine(p) }); bumpChem(p, Math.round(d.chem * (1 + perks().chem))); if (d.night === "jet") award("skyhigh"); if (d.night === "yacht") award("captain"); if (Math.random() < 0.25) { const s = grantSecret(); if (s) toast("Pillow talk. New file: " + s.title, "ach"); } renderHud(); renderCircle(); return; }
+    if (d.night) { if (d.cost) { L.cash -= d.cost; pop("-" + money(d.cost), b); } const cap = await playNight(p, d.night); pushMsg(p, { sys: true, text: d.name + ". " + cap }); bumpChem(p, Math.round(d.chem * (1 + perks().chem))); jealousy(p, 20, "your night with " + p.name.split(" ")[0]); if (d.night === "jet") award("skyhigh"); if (d.night === "yacht") award("captain"); if (Math.random() < 0.25) { const s = grantSecret(); if (s) toast("Pillow talk. New file: " + s.title, "ach"); } renderHud(); renderCircle(); return; }
     if (d.cost) { L.cash -= d.cost; pop("-" + money(d.cost), b); sfx("buy"); }
     pushMsg(p, { sys: true, text: d.night ? nightLine(p) : d.name + " with " + p.name.split(" ")[0] + ". " + dateLine(p, d) });
-    bumpChem(p, Math.round(d.chem * (1 + perks().chem))); renderHud(); renderCircle();
+    bumpChem(p, Math.round(d.chem * (1 + perks().chem))); jealousy(p, 10, "your date with " + p.name.split(" ")[0]); renderHud(); renderCircle();
   }));
+  $("#go-excl")?.addEventListener("click", async () => {
+    const r = await sayIt("exclusive", { who: p.name.split(" ")[0], g: p.g }, "Chemistry " + ch);
+    if (!r.ok) return;
+    L.partner = p.id; save(); addRep(3, "You're off the market"); award("official"); sfx("level");
+    pushMsg(p, { sys: true, text: p.name.split(" ")[0] + " says yes. It's official." }); renderCircle();
+  });
+  $("#do-breakup")?.addEventListener("click", () => { if (!$("#do-breakup").dataset.sure) { $("#do-breakup").dataset.sure = "1"; $("#do-breakup").textContent = "Really end it?"; return; } breakup(p, "You ended it."); renderCircle(); });
 }
 function dateLine(p, d) {
   const lines = ["They laugh at your accent, then at your joke, then at both.", "You stay until the staff start stacking chairs.", "They steal your last bite and don't apologize.", "Someone takes a photo. You both pretend not to notice.", "They correct your grammar twice. It is weirdly flirtatious.", "Nobody checks their phone for three hours."];
@@ -3597,6 +3656,7 @@ function nightLine(p) {
 }
 function pushMsg(p, m) { const L = life(); (L.chats[p.id] ||= []).push(m); L.chats[p.id] = L.chats[p.id].slice(-40); save(); }
 function bumpChem(p, n) {
+  if (n > 0 && life().partner === p.id) n = Math.round(n * 1.25);
   const L = life(), before = L.chem[p.id] || 0, after = clamp(before + n, 0, 100);
   L.chem[p.id] = after; save();
   if (n > 0) sfx("good");
