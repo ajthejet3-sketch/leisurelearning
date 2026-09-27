@@ -38,6 +38,12 @@ superyachts and private jets. It is a single self-contained page:
 - **Relationships**: go exclusive (asked in the language); seeing others
   makes a partner jealous, and a breakup costs reputation and your next deal.
   Overnights play out differently every time and fade to black.
+- **Clients, staff, mentor**: every counterpart you beat becomes a client
+  paying a daily retainer by loyalty (check in, gift, upsell, or lose them to
+  a rival). Hire an assistant, tutor, bodyguard, fixer and publicist, who
+  follow you around the world. A mentor sets escalating quests and a daily
+  proverb.
+- **Globe**: spin the world and jump between both passports' cities.
 - **Circle**: flirty locals you text in the target language (PG-13, fade to
   black). Chemistry unlocks gossip that helps your deals.
 - **Dossier**: leverage on counterparts, from envelopes, flawless meetings,

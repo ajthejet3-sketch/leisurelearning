@@ -322,7 +322,9 @@
   <section id="tab-explore" hidden>
     <div class="grid-2" id="ex-map">
       <div class="stack">
-        <div class="stage"><canvas class="px" id="map-cv" width="192" height="108" data-map="1"></canvas><div class="hud"><div class="place" id="map-title"></div><div class="place" id="map-here"></div></div></div>
+        <div class="row"><button class="citybtn" id="view-map" aria-pressed="true">Region map</button><button class="citybtn" id="view-globe" aria-pressed="false">Globe</button></div>
+        <div class="stage" id="map-stage"><canvas class="px" id="map-cv" width="192" height="108" data-map="1"></canvas><div class="hud"><div class="place" id="map-title"></div><div class="place" id="map-here"></div></div></div>
+        <div class="stage" id="globe-stage" hidden style="background:#070a1c"><canvas id="globe-cv" width="192" height="108" style="display:block;width:100%;aspect-ratio:16/9;image-rendering:pixelated;cursor:grab;touch-action:none"></canvas><div class="hud"><div class="place">THE WORLD · DRAG TO SPIN</div><div class="place" id="globe-legend">● SPANISH ● MANDARIN</div></div></div>
         <p class="muted small">Tap a city on the map or pick one from the list. You can visit anywhere in your current chapter or earlier. Meetings still open in order, but the people, bars and gossip are yours to find.</p>
       </div>
       <div class="box stack">
@@ -423,7 +425,14 @@
   </section>
 
   <section id="tab-circle" hidden>
-    <div class="grid-2">
+    <div class="row" id="circle-tabs" style="margin-bottom:14px">
+      <button class="citybtn" data-ctab="romance">Romance</button>
+      <button class="citybtn" data-ctab="clients">Clients</button>
+      <button class="citybtn" data-ctab="staff">Staff</button>
+      <button class="citybtn" data-ctab="mentor">Mentor</button>
+    </div>
+    <div class="stack" id="circle-biz" hidden></div>
+    <div class="grid-2" id="circle-romance">
       <div class="box stack">
         <div class="row between"><h2>Your circle</h2>
           <div class="field" style="min-width:160px"><label class="label" for="pref">Show me</label>
@@ -1322,6 +1331,8 @@ const ACHS = [
   { id: "walkout", name: "Walked out", hint: "Leave a meeting early." },
   { id: "host", name: "The host", hint: "Throw your own party." },
   { id: "official", name: "Official", hint: "Make it exclusive with someone." },
+  { id: "castaway", name: "Castaway", hint: "A night under the stars on a beach." },
+  { id: "bookofbiz", name: "Book of business", hint: "Have 10 clients at once." },
   { id: "captain", name: "Captain's quarters", hint: "Spend a night on your boat." },
   { id: "skyhigh", name: "Red-eye", hint: "An overnight flight on your own jet." },
 ];
@@ -1476,7 +1487,7 @@ function addCash(n, el) {
 }
 function addXp(n) {
   const L = life(), before = rank();
-  L.xp += Math.round(n * (1 + perks().xp)); save();
+  L.xp += Math.round(n * (1 + perks().xp + (L.staff?.tutor ? 0.1 : 0))); save();
   const after = rank();
   if (after > before) queueModal(() => promoModal(after));
   renderHud();
@@ -1565,6 +1576,8 @@ function phrase(action, a = {}) {
       order: { t: "¿Me da " + a.item + ", por favor?", en: "Order " + a.en + "." },
       treat: { t: "¿Te invito a " + a.item + "?", en: "Offer to buy " + a.who + " " + a.en + "." },
       exclusive: { t: "¿Quieres ser mi pareja?", en: "Ask " + a.who + " to make it official." },
+      checkin: { t: "¿Cómo va todo con el proyecto?", en: "Call " + a.who + " and ask how the project is going." },
+      hire: { t: "Quiero contratar a " + String(a.term).replace(/^(El|La) /i, (m) => m.toLowerCase()) + ".", en: "Tell the agency you want to hire: " + a.en + "." },
     }[action];
   }
   if (lang === "zh") {
@@ -1580,10 +1593,12 @@ function phrase(action, a = {}) {
       fly: { t: "我要一张去" + a.city[0] + "的机票。", r: "Wǒ yào yì zhāng qù " + a.city[1] + " de jīpiào.", en: "Buy a plane ticket to " + a.city[1] + "." },
       order: { t: "我要" + a.item + "。", r: "Wǒ yào " + a.itemR + ".", en: "Order " + a.en + "." },
       treat: { t: "我请你喝" + a.item + "。", r: "Wǒ qǐng nǐ hē " + a.itemR + ".", en: "Offer to buy " + a.who + " " + a.en + "." },
+      checkin: { t: "项目进展怎么样？", r: "Xiàngmù jìnzhǎn zěnmeyàng?", en: "Call " + a.who + " and ask how the project is going." },
+      hire: { t: "我想请一个" + splitTerm(a.term)[0] + "。", r: "Wǒ xiǎng qǐng yí ge " + splitTerm(a.term)[1] + ".", en: "Tell the agency you want to hire: " + a.en + "." },
       exclusive: { t: a.g === "m" ? "你愿意做我的男朋友吗？" : "你愿意做我的女朋友吗？", r: "Nǐ yuànyì zuò wǒ de " + (a.g === "m" ? "nán" : "nǚ") + " péngyou ma?", en: "Ask " + a.who + " to make it official." },
     }[action];
   }
-  const en = { buy: "Tell the seller you want to buy it.", sell: "Tell the broker you want to sell it.", install: "Ask the yard to install: " + a.en + ".", paint: "Ask to change the " + String(a.en).toLowerCase() + ".", name: "Say it's called " + a.name + ".", date: "Ask " + a.who + " out tonight.", night: "Ask " + a.who + " to stay the night.", fly: "Buy a ticket to " + (a.city || "the city") + ".", order: "Order " + a.en + ".", treat: "Offer to buy " + a.who + " " + a.en + ".", exclusive: "Ask " + a.who + " to make it official." }[action];
+  const en = { buy: "Tell the seller you want to buy it.", sell: "Tell the broker you want to sell it.", install: "Ask the yard to install: " + a.en + ".", paint: "Ask to change the " + String(a.en).toLowerCase() + ".", name: "Say it's called " + a.name + ".", date: "Ask " + a.who + " out tonight.", night: "Ask " + a.who + " to stay the night.", fly: "Buy a ticket to " + (a.city || "the city") + ".", order: "Order " + a.en + ".", treat: "Offer to buy " + a.who + " " + a.en + ".", exclusive: "Ask " + a.who + " to make it official.", checkin: "Call " + a.who + " and ask how the project is going.", hire: "Hire: " + a.en + "." }[action];
   return { t: null, en };
 }
 const bare = (s) => norm(String(s).normalize("NFD").replace(/[\u0300-\u036f]/g, ""));
@@ -2086,6 +2101,8 @@ function frame(now) {
     const locked = cv.id === "stage-career" && !!tierLock(tierIdx());
     paintTier(cv.getContext("2d"), tt, t, cv.id === "stage-meet" ? { speaking: M.speaking, thinking: M.thinking } : {}, locked);
   });
+  const gc = $("#globe-cv");
+  if (gc && gc.offsetParent) drawGlobe(gc.getContext("2d"), t);
   const mp = $("#map-cv");
   if (mp && mp.offsetParent) drawMap(mp.getContext("2d"), t);
   const wc = $("#walk-cv");
@@ -2379,11 +2396,15 @@ function drawWorld(c, t) {
   all.forEach((n) => {
     const x = Math.round(n.x - cam) - 5; if (x < -12 || x > 200) return;
     const swimTypes = ["flirt", "local", "circle"];
+    if (n.you) {
+      const st = life().staff || {}, crew = [["bodyguard", { hair: "#101014", skin: "#8d5a3b", jacket: "#101014", shirt: "#101014", glasses: true }], ["assistant", { hair: "#2a1a14", skin: "#f0c8a4", jacket: "#2b3a67", shirt: "#f4f4f4", long: true }], ["publicist", { hair: "#e9d7a5", skin: "#e2b48c", jacket: "#ff6fae", shirt: "#101014", glasses: true }]].filter(([id]) => st[id]);
+      crew.forEach(([, pal], k) => drawPerson(c, x - 13 * (k + 1), 64, pal, t + k * 97, false, 7 + k, W.moving));
+    }
     if (n.you) { const yp = swimScene ? { ...youPal(rank()), swim: "#1e5aa8", glasses: rank() >= 3, chain: rank() >= 4 } : youPal(rank()); drawPerson(c, x, 64, yp, t, W.talkingYou, 1, W.moving); return; }
     const np = swimScene && swimTypes.includes(n.type) ? { ...n.pal, swim: ["#e24b3b", "#ff6fae", "#52c7b8", "#f5c542", "#101014", "#1e5aa8"][hash(n.id + n.name) % 6] } : partyScene && n.type === "flirt" ? { ...n.pal, party: true } : n.pal;
     if (n.type !== "vendor") drawPerson(c, x, 64, np, t, W.talk === n.id, hash(n.id) % 9, false);
     const near = W.near === n.id, iy = (n.type === "vendor" ? 58 : 64) - 8 + (near ? Math.round(Math.sin(t / 200)) : 0);
-    const icol = { vendor: "#f5c542", circle: "#ff6fae", boss: "#ff9a5c", rival: "#ff6f6f", local: "#f1e9d6", flirt: "#b565c9", investor: "#52c7b8" }[n.type];
+    const icol = { vendor: "#f5c542", circle: "#ff6fae", boss: "#ff9a5c", rival: "#ff6f6f", local: "#f1e9d6", flirt: "#b565c9", investor: "#52c7b8", tutor: "#8fd3ff" }[n.type];
     if (near || n.type !== "local") { R(c, x + 3, iy, 4, 4, "#0b0e1a"); R(c, x + 4, iy + 1, 2, 2, icol); if (near) R(c, x + 4, iy - 2, 2, 1, icol); }
   });
   if (night) { c.fillStyle = "rgba(10,10,40,.18)"; c.fillRect(0, 0, 192, 108); }
@@ -2404,6 +2425,7 @@ function buildNpcs(t) {
   list.push(makeFlirt("flirt0", 190 + Math.floor(r() * 40), r));
   contactsHere(t.id).forEach((c, k) => list.push({ id: "c-" + c.id, type: "circle", x: 320 + k * 20, name: c.name, role: c.role, pal: c.pal, person: c }));
   if (r() < 0.45) { const rv = rivalsFor()[Math.floor(r() * 4)]; list.push({ id: "rival", type: "rival", x: 95, name: rv.name, role: "your rival", pal: genNpcPal(hash(rv.id)), rival: rv }); }
+  if (life().staff?.tutor) list.push({ id: "tutor", type: "tutor", x: 60, name: staffName("tutor"), role: "your tutor, on the clock", pal: { hair: "#6b3b1f", skin: "#e2b48c", jacket: "#b565c9", shirt: "#f4f4f4", long: true, glasses: true } });
   list.push({ id: "boss", type: "boss", x: width - 22, name: t.who.name, role: t.who.role, pal: t.npc || genNpcPal(hash(t.id)) });
   return list;
 }
@@ -2462,7 +2484,7 @@ function nearestNpc() {
   return best;
 }
 function renderAround() {
-  $("#around").innerHTML = W.npcs.slice().sort((a, b) => a.x - b.x).map((n) => '<button class="npcrow' + (W.near === n.id ? " near" : "") + '" data-n="' + n.id + '"><span><strong>' + esc(n.name) + '</strong> <span class="muted">' + esc(n.role) + '</span></span><span class="chip ' + ({ vendor: "gold", circle: "love", boss: "info", rival: "major", local: "info", flirt: "love", investor: "good" }[n.type]) + '">' + ({ vendor: "Vendor", circle: "Circle", boss: "Meeting", rival: "Rival", local: "Local", flirt: "Flirt", investor: "Investor" }[n.type]) + "</span></button>").join("");
+  $("#around").innerHTML = W.npcs.slice().sort((a, b) => a.x - b.x).map((n) => '<button class="npcrow' + (W.near === n.id ? " near" : "") + '" data-n="' + n.id + '"><span><strong>' + esc(n.name) + '</strong> <span class="muted">' + esc(n.role) + '</span></span><span class="chip ' + ({ vendor: "gold", circle: "love", boss: "info", rival: "major", local: "info", flirt: "love", investor: "good", tutor: "info" }[n.type]) + '">' + ({ vendor: "Vendor", circle: "Circle", boss: "Meeting", rival: "Rival", local: "Local", flirt: "Flirt", investor: "Investor", tutor: "Tutor" }[n.type]) + "</span></button>").join("");
   $("#around").querySelectorAll("[data-n]").forEach((b) => b.addEventListener("click", () => { const n = W.npcs.find((x) => x.id === b.dataset.n); W.target = n.x - 12; }));
 }
 function renderInteract() {
@@ -2484,8 +2506,10 @@ function renderInteract() {
   if (n.type === "local" || n.type === "vendor") acts.push('<button class="btn sm" data-act="chat"' + (n.talked ? " disabled" : "") + ">" + (n.talked ? "Already chatted" : "Small talk") + "</button>");
   if (n.type === "circle") { acts.push('<button class="btn sm love" data-act="text">Talk</button>'); menuFor(W.tier).slice(0, 2).forEach((m, k) => acts.push('<button class="btn sm" data-treat="' + k + '"' + (life().cash < m.price * 2 ? " disabled" : "") + ">Buy them " + esc(m.en) + " · " + money(m.price * 2) + "</button>")); }
   if (n.type === "rival") acts.push('<button class="btn sm" data-act="rival"' + (n.talked ? " disabled" : "") + ">Talk back</button>");
+  if (n.type === "tutor") acts.push('<button class="btn sm primary" data-act="study"' + (n.talked ? " disabled" : "") + ">" + (n.talked ? "Session done" : "Study session") + "</button>" + (life().coached ? '<span class="chip good">Coached</span>' : ""));
   if (n.type === "flirt") acts.push('<button class="btn sm love" data-act="flirt"' + (n.talked ? " disabled" : "") + ">" + (n.talked ? "You've had your shot" : "Flirt") + "</button>");
   if (n.type === "investor") acts.push('<button class="btn sm primary" data-act="network"' + (n.talked ? " disabled" : "") + ">" + (n.talked ? "Already talked" : "Network") + "</button>");
+  if (n.type === "boss" && life().clients?.[W.tier.id]) { const cl = life().clients[W.tier.id]; acts.push('<button class="btn sm" data-act="checkin"' + (cl.last === today() ? " disabled" : "") + ">" + (cl.last === today() ? "Checked in today" : "Check in · client, loyalty " + cl.loyalty) + "</button>"); }
   if (n.type === "boss") { const i = career().tiers.indexOf(W.tier), lk = tierLock(i); acts.push(lk ? '<span class="chip info">' + esc(lk) + "</span>" : '<button class="btn sm primary" data-act="meet">Start the meeting · ' + money(W.tier.stakes) + " on the table</button>"); }
   box.innerHTML = '<div class="row between"><h3>' + esc(n.name) + '</h3><span class="muted small">' + esc(n.role) + '</span></div><div id="talk-area"></div><div class="row">' + acts.join("") + "</div>";
   box.querySelectorAll("[data-order]").forEach((b) => b.addEventListener("click", () => orderAt(menuFor(W.tier)[+b.dataset.order])));
@@ -2493,8 +2517,10 @@ function renderInteract() {
   box.querySelector('[data-act="chat"]')?.addEventListener("click", () => smallTalk(n));
   box.querySelector('[data-act="rival"]')?.addEventListener("click", () => rivalTalk(n));
   box.querySelector('[data-act="flirt"]')?.addEventListener("click", () => flirtFlow(n));
+  box.querySelector('[data-act="study"]')?.addEventListener("click", () => tutorSession(n));
   box.querySelector('[data-act="network"]')?.addEventListener("click", () => networkFlow(n));
   box.querySelector('[data-act="text"]')?.addEventListener("click", () => { chatWith = n.person.id; showTab("circle"); });
+  box.querySelector('[data-act="checkin"]')?.addEventListener("click", () => checkIn(W.tier.id));
   box.querySelector('[data-act="meet"]')?.addEventListener("click", () => { G.tier[G.lang] = career().tiers.indexOf(W.tier); save(); beginMeeting(); });
 }
 function exchange(n, node, onDone) {
@@ -2591,7 +2617,7 @@ function addRep(n, why) {
   if (after !== before) toast((n > 0 ? "Reputation up: " : "Reputation down: ") + after + (why ? ". " + why : ""), n > 0 ? "ach" : "");
   renderHud();
 }
-function flirtBar() { const r = repOf(); return r >= 60 ? 3 : r >= 15 ? 4 : 5; }
+function flirtBar() { const r = repOf(); return (r >= 60 ? 3 : r >= 15 ? 4 : 5) - (life().coached ? 1 : 0); }
 function partnerOf() { const L = life(); return L.partner ? circleList().concat(career()?.circle || []).find((x) => x.id === L.partner) : null; }
 function jealousy(p, hurt, what) {
   const L = life(), partner = partnerOf();
@@ -2691,6 +2717,7 @@ function eventNpcs(ev, t) {
   for (let k = 0; k < nInv; k++) list.push(makeInvestor("i" + k, pick(), r, used));
   if (!ev.host && r() < 0.6) { const rv = rivalsFor()[Math.floor(r() * 4)]; list.push({ id: "rival", type: "rival", x: pick(), name: rv.name, role: "your rival, also here", pal: genNpcPal(hash(rv.id)), rival: rv }); }
   contactsHere(t.id).forEach((c) => list.push({ id: "c-" + c.id, type: "circle", x: pick(), name: c.name, role: c.role, pal: c.pal, person: c }));
+  if (life().staff?.tutor) list.push({ id: "tutor", type: "tutor", x: 40, name: staffName("tutor"), role: "your tutor", pal: { hair: "#6b3b1f", skin: "#e2b48c", jacket: "#b565c9", shirt: "#f4f4f4", long: true, glasses: true } });
   return list;
 }
 function contactsHere(tid) { return (life().contacts || []).filter((c) => c.home === tid && (G.pref === "everyone" || (G.pref === "women" ? c.g === "w" : c.g === "m"))); }
@@ -2704,7 +2731,7 @@ function flirtFlow(n) {
     addXp(q === "good" ? 3 : 1);
     const area = $("#talk-area");
     if (k < 2) { area.insertAdjacentHTML("beforeend", '<div class="row" style="margin-top:8px"><button class="btn sm love" id="flirt-next">Keep talking</button></div>'); $("#flirt-next").onclick = () => step(k + 1); }
-    else if (n.score >= flirtBar()) { const c = newContact(n); addRep(2); jealousy(c, 8, "you flirting with " + c.name.split(" ")[0]); area.insertAdjacentHTML("beforeend", '<div class="fb good" style="margin-top:8px"><p><strong>' + esc(n.name) + " gives you their number.</strong> Find them in your Circle, or right here next time you're in town.</p></div>"); sfx("level"); }
+    else if (n.score >= flirtBar()) { if (life().coached) { life().coached = false; save(); } const c = newContact(n); addRep(2); jealousy(c, 8, "you flirting with " + c.name.split(" ")[0]); area.insertAdjacentHTML("beforeend", '<div class="fb good" style="margin-top:8px"><p><strong>' + esc(n.name) + " gives you their number.</strong> Find them in your Circle, or right here next time you're in town.</p></div>"); sfx("level"); }
     else area.insertAdjacentHTML("beforeend", '<div class="fb minor" style="margin-top:8px"><p>' + esc(n.name) + " smiles and disappears into the crowd. Smoother " + esc(LANGS[G.lang].name) + " next time.</p></div>");
   });
   step(0);
@@ -2712,7 +2739,7 @@ function flirtFlow(n) {
 function newContact(n) {
   const L = life(); L.contacts ||= [];
   const c = { id: "k" + Date.now().toString(36), name: n.name, g: n.g, role: n.role, rank: 0, home: W.tier.id, met: W.tier.place, pal: n.pal, persona: "playful, flirty " + n.role + " you met at " + (W.event ? W.event.name.toLowerCase() + " in " : "") + W.tier.place + "; teases you, likes confidence and good " + LANGS[G.lang].name };
-  L.contacts.push(c); L.chem[c.id] = 20 + Math.round(repOf() / 5); save();
+  L.contacts.push(c); L.chem[c.id] = 20 + Math.round(repOf() / 5); save(); stat("contacts");
   n.type = "circle"; n.person = c; n.id = "c-" + c.id; W.near = n.id;
   toast("New contact: " + c.name, "ach"); renderAround();
   return c;
@@ -2739,7 +2766,7 @@ async function attendEvent(ev) {
   const L = life(); if (L.cash < ev.cover) return;
   L.events ||= {}; if (L.events[ev.key]) { enterEvent(ev); return; }
   if (ev.cover) { L.cash -= ev.cover; pop("-" + money(ev.cover)); }
-  L.events[ev.key] = true; save(); renderHud(); enterEvent(ev);
+  L.events[ev.key] = true; save(); stat("events"); renderHud(); enterEvent(ev);
 }
 function enterEvent(ev) {
   W.event = ev; W.x = 30; W.cam = 0; W.target = null;
@@ -2774,6 +2801,10 @@ async function throwParty(v) {
 
 /* ---- the night itself: shown up to the door, then fade to black. Every night plays differently. ---- */
 const NIGHT_ACTS = {
+  beach: [["You build a fire and they teach you a song in {lang}.", "notes"], ["You swim at midnight. The water glows with plankton.", "sparkle"], ["You lie on the sand and name the stars badly.", "shoot"], ["You share one towel and argue about the best beach on earth.", "hearts"]],
+  island: [["Your island, your rules. The staff has gone home.", "stars"], ["You name a cove after them. Officially.", "hearts"], ["Dinner on the jetty, lit by torches.", "sparkle"]],
+  charter: [["You dive off the net between the hulls.", "sparkle"], ["The skipper plays old boleros and pretends not to watch.", "notes"], ["You drift under more stars than either of you has seen.", "shoot"]],
+  firstclass: [["You clink champagne across the aisle of two suites.", "sparkle"], ["They pick the in-flight movie and quiz you on it in {lang}.", "notes"], ["You watch the sunrise start over the wing.", "shoot"]],
   yacht: [["You swim off the stern under the stars, then dry off with the same towel.", "stars"], ["You dance barefoot on the sundeck to their playlist.", "notes"], ["They teach you a card game in {lang} and cheat shamelessly.", "hearts"], ["You count shooting stars and lose track at eleven.", "shoot"], ["The crew is asleep. You open the good champagne anyway.", "sparkle"]],
   home: [["You cook pasta at one in the morning and burn the garlic.", "hearts"], ["They pick a film in {lang} and quiz you on every line.", "notes"], ["You talk on the balcony until the city goes quiet.", "stars"], ["They find your photo albums and read every caption out loud.", "hearts"], ["A slow song comes on. Neither of you reaches for the remote.", "notes"]],
   jet: [["You clink champagne at 41,000 feet.", "sparkle"], ["They fall asleep on your shoulder somewhere over the ocean.", "stars"], ["The pilot announces turbulence. Nobody minds.", "hearts"], ["You watch the sunrise start on the wrong side of the plane.", "shoot"]],
@@ -2785,10 +2816,26 @@ const MORNINGS = {
   other: [[true, "Last night was fun."], [true, "Don't get used to it."], [false, "Coffee's ready."], [true, "Call me before Friday."]],
 };
 function drawNightScene(c, venue, t, phase, them) {
-  const you = youPal(rank()), boat = myBoat();
-  const morning = phase >= 3;
+  const you = youPal(rank()), morning = phase >= 3;
+  let boat = myBoat();
+  if (venue === "charter") { boat = { col: "#f4f4f4", name: "Catamaran" }; venue = "yacht"; W._charter = true; } else W._charter = false;
+  if (venue === "firstclass") { venue = "jet"; W._fc = true; } else if (venue === "jet") W._fc = false;
+  if (venue === "beach" || venue === "island") {
+    bands(c, 0, 0, 192, 52, morning ? ["#6fb3e0", "#9fcbe8", "#f5c08a", "#ffd9a0"] : ["#070a1c", "#0b1030", "#101640", "#171d4e"]);
+    if (!morning) { const r = rng(12); for (let i = 0; i < 50; i++) R(c, r() * 192, r() * 44, 1, 1, (Math.floor(t / 400) + i) % 7 ? "#dfe6ff" : "#7a80a0"); for (let dy = -4; dy <= 4; dy++) { const w = Math.floor(Math.sqrt(16 - dy * dy)); R(c, 160 - w, 12 + dy, w * 2 + 1, 1, "#f4f0dc"); } }
+    else for (let dy = -6; dy <= 6; dy++) { const w = Math.floor(Math.sqrt(36 - dy * dy)); if (46 + dy < 52) R(c, 40 - w, 46 + dy, w * 2 + 1, 1, "#ffe08a"); }
+    bands(c, 0, 52, 192, 18, morning ? ["#39d0cf", "#22a9b8", "#1f96ad"] : ["#0c1a3c", "#0a1634", "#08122c"]);
+    for (let y = 54; y < 70; y += 3) for (let x = -((t / 60 + y * 5) % 14); x < 192; x += 14) R(c, x, y, 3, 1, morning ? "#b6f3f0" : "#2a4c7a");
+    R(c, 0, 70, 192, 38, morning ? "#f2dca6" : "#6a5a48"); const r2 = rng(5); for (let i = 0; i < 60; i++) R(c, r2() * 192, 72 + r2() * 36, 1, 1, morning ? "#e0c386" : "#5a4a3a");
+    [[14, 30], [178, 26]].forEach(([x, y]) => { for (let i = 0; i < 40; i++) R(c, x + i * 0.2, 70 - i, 2, 1, morning ? "#6b4a2a" : "#2a1e14"); for (let k = -8; k <= 8; k += 2) R(c, x + 8 + k, y - Math.abs(k) / 2, 3, 1, morning ? "#3f7a4a" : "#1c3020"); });
+    if (venue === "island") { R(c, 128, 40, 44, 30, morning ? "#f4f1ea" : "#2a2438"); R(c, 124, 36, 52, 4, morning ? "#caa15b" : "#3a2a1a"); for (let x = 132; x < 168; x += 10) R(c, x, 46, 6, 6, phase <= 1 ? "#ffd98a" : morning ? "#9fd0f2" : "#141a30"); R(c, 142, 56, 12, 14, phase === 1 ? "#ffd98a" : morning ? "#c9b8a0" : "#141020"); }
+    else { R(c, 130, 46, 2, 26, "#6b4a2a"); R(c, 158, 46, 2, 26, "#6b4a2a"); for (let y = 38; y < 48; y++) R(c, 124 + (y - 38), y, 44 - (y - 38) * 2 + 12, 1, y % 2 ? "#caa15b" : "#a67c3c"); R(c, 134, 52, 22, 20, phase === 1 ? "rgba(255,217,138,.8)" : morning ? "rgba(244,241,234,.7)" : "rgba(20,16,32,.8)"); }
+    if (!morning) { const f = Math.floor(t / 120) % 3; R(c, 58, 76, 12, 2, "#5a3a22"); R(c, 60, 70 - f, 8, 6 + f, "#ff9a5c"); R(c, 62, 66 - f, 4, 5, "#f5c542"); R(c, 63, 64 - f, 2, 2, "#fff4c0"); c.fillStyle = "rgba(255,154,92,.12)"; c.fillRect(44, 56, 40, 30); }
+    else { R(c, 58, 76, 12, 2, "#3a3a3a"); R(c, 62, 72 - ((t / 200) % 6), 1, 1, "rgba(200,200,200,.6)"); }
+  } else
   if (venue === "jet") {
-    R(c, 0, 0, 192, 108, morning ? "#efe6d6" : "#2a2438"); R(c, 0, 0, 192, 10, morning ? "#d8ccb6" : "#1c1828");
+    R(c, 0, 0, 192, 108, W._fc ? (morning ? "#dfe3ea" : "#1c2032") : morning ? "#efe6d6" : "#2a2438"); R(c, 0, 0, 192, 10, morning ? "#d8ccb6" : "#1c1828");
+    if (W._fc) for (let x = 6; x < 150; x += 36) { R(c, x, 50, 30, 34, morning ? "#b8c0cc" : "#2a3048"); R(c, x + 2, 52, 26, 3, morning ? "#9aa3b5" : "#3a4260"); }
     [30, 78, 126, 174].forEach((x) => { R(c, x - 8, 26, 16, 20, morning ? "#c9bca4" : "#3a3450"); R(c, x - 6, 28, 12, 16, morning ? "#9fd0f2" : "#0b1030"); if (!morning) R(c, x - 3 + ((t / 400) % 6), 32, 1, 1, "#dfe6ff"); else R(c, x - 5, 38, 10, 3, "#f4f4f4"); });
     R(c, 0, 84, 192, 24, morning ? "#6b5a4a" : "#3a3030");
     R(c, 150, 40, 30, 44, morning ? "#d8ccb6" : "#1c1828"); R(c, 152, 42, 26, 40, morning ? "#c9bca4" : phase === 1 ? "#ffd98a" : "#141020");
@@ -2799,7 +2846,8 @@ function drawNightScene(c, venue, t, phase, them) {
     bands(c, 0, 56, 192, 52, morning ? ["#2b6e86", "#23627a", "#1d5670"] : ["#0c1a3c", "#0a1634", "#08122c"]);
     for (let y = 58; y < 108; y += 3) for (let x = -((t / 60 + y * 5) % 14); x < 192; x += 14) R(c, x, y, 3, 1, morning ? "#5fb0c0" : "#2a4c7a");
     const hull = boat?.col || "#f4f4f4";
-    R(c, 10, 80, 172, 10, hull); R(c, 14, 90, 164, 3, shade(hull, 0.7)); R(c, 40, 62, 110, 18, "#eef2f5"); R(c, 60, 50, 70, 12, "#e4e8ec");
+    if (W._charter) { R(c, 10, 84, 172, 5, hull); R(c, 14, 89, 40, 4, shade(hull, 0.7)); R(c, 138, 89, 40, 4, shade(hull, 0.7)); R(c, 94, 8, 2, 76, "#c9c9c9"); for (let y = 12; y < 74; y++) R(c, 96, y, Math.round((y - 12) * 0.7), 1, "#f4f4f4"); R(c, 40, 70, 110, 14, "#eef2f5"); }
+    else { R(c, 10, 80, 172, 10, hull); R(c, 14, 90, 164, 3, shade(hull, 0.7)); R(c, 40, 62, 110, 18, "#eef2f5"); R(c, 60, 50, 70, 12, "#e4e8ec"); }
     for (let x = 46; x < 146; x += 12) R(c, x, 68, 6, 4, phase === 1 || phase === 0 ? "#ffd98a" : morning ? "#9fd0f2" : "#141a30");
     R(c, 128, 64, 12, 16, phase === 1 ? "#ffd98a" : morning ? "#c9c9c9" : "#1c2038");
     if (boat?.name) { c.fillStyle = shade(hull === "#f4f4f4" ? "#1c2656" : "#f4f4f4", 1); c.font = "5px monospace"; c.fillText(boat.name.slice(0, 16), 150, 88); }
@@ -2833,15 +2881,15 @@ function drawNightScene(c, venue, t, phase, them) {
 function playNight(p, venue) {
   return new Promise((resolve) => {
     const ov = $("#overlay"), m = $("#modal"); m.className = "modal wide";
-    const where = { home: "your place", yacht: "your boat", jet: "your jet", theirs: "their place" }[venue];
+    const where = { home: "your place", yacht: "your boat", jet: "your jet", theirs: "their place", beach: "the beach", island: "your island", charter: "a chartered catamaran", firstclass: "a first-class suite" }[venue];
     m.innerHTML = '<div class="row between"><span class="label">' + esc(p.name) + " · " + esc(where) + '</span><button class="btn sm" id="night-skip">Skip</button></div><canvas class="ws-cv" id="night-cv" width="192" height="108" style="aspect-ratio:16/9"></canvas><p id="night-cap" class="muted" style="min-height:3em"></p>';
     ov.hidden = false;
-    const cv = $("#night-cv").getContext("2d"), t0 = performance.now(), dur = reduceMotion ? 0 : 9500, doorX = venue === "yacht" ? 128 : venue === "jet" ? 152 : 142;
+    const cv = $("#night-cv").getContext("2d"), t0 = performance.now(), dur = reduceMotion ? 0 : 9500, doorX = venue === "yacht" || venue === "charter" ? 128 : venue === "jet" || venue === "firstclass" ? 152 : 142;
     const L = life(); L.nights ||= {}; const nth = (L.nights[p.id] = (L.nights[p.id] || 0) + 1); save();
     const first = p.name.split(" ")[0], acts = NIGHT_ACTS[venue], act = acts[(hash(p.id) + nth) % acts.length];
     const pool = MORNINGS[G.lang] || MORNINGS.other, [gone, note] = pool[(hash(p.id + venue) + nth * 3) % pool.length];
     W._fx = act[1]; W._stay = !gone;
-    const inside = { yacht: ["You head below deck together.", "You wander down to the cabin, still laughing."], home: ["You head inside together.", "The door clicks shut behind you."], jet: ["The cabin lights dim to night mode.", "The flight attendant draws the curtain and disappears."], theirs: ["They take your hand and lead you inside.", "Up the stairs, trying not to wake the neighbors."] }[venue][nth % 2];
+    const inside = { beach: ["You retreat to the cabana as the fire burns down.", "The waves are the only sound left."], island: ["You walk up to the villa, sand still on your feet.", "The torches go out one by one."], charter: ["The skipper anchors in a quiet bay and disappears.", "You head below deck."], firstclass: ["The suite doors slide shut.", "The crew dims the cabin and pretends not to notice."], yacht: ["You head below deck together.", "You wander down to the cabin, still laughing."], home: ["You head inside together.", "The door clicks shut behind you."], jet: ["The cabin lights dim to night mode.", "The flight attendant draws the curtain and disappears."], theirs: ["They take your hand and lead you inside.", "Up the stairs, trying not to wake the neighbors."] }[venue][nth % 2];
     const caps = [act[0].replace("{lang}", LANGS[G.lang].name), inside, "The lights go out.", gone ? "Morning. " + first + " is gone, with a note: “" + note + "”" : "Morning. " + first + " is still here, making coffee. “" + note + "”"];
     let raf = 0, done = false;
     const finish = () => { if (done) return; done = true; cancelAnimationFrame(raf); m.className = "modal"; ov.hidden = true; resolve(caps[3]); if (modalQueue.length) nextModal(); };
@@ -2858,6 +2906,286 @@ function playNight(p, venue) {
     };
     raf = requestAnimationFrame(step);
   });
+}
+
+
+/* =========================================================
+   CIRCLE: CLIENTS, STAFF, MENTOR
+   ========================================================= */
+const STAFF = [
+  { id: "assistant", es: "Asistente personal", zh: "私人助理 sīrén zhùlǐ", en: "Personal assistant", pay: 150, perk: "Collects retainers for you and halves how fast clients cool off." },
+  { id: "tutor", es: "Profesora particular", zh: "中文家教 Zhōngwén jiājiào", en: "Language tutor", pay: 80, perk: "+10% XP on everything." },
+  { id: "bodyguard", es: "Guardaespaldas", zh: "保镖 bǎobiāo", en: "Bodyguard", pay: 500, perk: "Rivals can't snipe your lost deals or poach your clients." },
+  { id: "fixer", es: "El conseguidor", zh: "中间人 zhōngjiānrén", en: "Fixer", pay: 1000, perk: "Slips you a sealed dossier file every three days." },
+  { id: "publicist", es: "Publicista", zh: "公关 gōngguān", en: "Publicist", pay: 2000, perk: "+1 reputation every day." },
+];
+const MENTORS = {
+  es: { name: "Don Fernando Maduro", role: "retired hotelier, Oranjestad. Built and sold four resorts.", pal: { hair: "#e8e8e8", skin: "#b57d55", jacket: "#f4efe6", shirt: "#8fb8de" } },
+  zh: { name: "吴老 Old Mr. Goh", role: "retired trader, Singapore. Started with a rubber stall in 1961.", pal: { hair: "#e8e8e8", skin: "#e0b089", jacket: "#2c3350", shirt: "#f4f0e6" } },
+  other: { name: "The Old Hand", role: "has done every deal you're about to do", pal: { hair: "#e8e8e8", skin: "#d9a57b", jacket: "#262a33", shirt: "#f4f4f4" } },
+};
+const PROVERBS = {
+  es: [["Camarón que se duerme se lo lleva la corriente.", "The shrimp that falls asleep gets swept away.", "Stay sharp or the deal floats off with someone else."], ["Más vale pájaro en mano que cien volando.", "A bird in the hand beats a hundred flying.", "Take the sure deal over the fantasy one."], ["Dime con quién andas y te diré quién eres.", "Tell me who you walk with and I'll tell you who you are.", "Your circle is your reputation."], ["El que mucho abarca poco aprieta.", "Grab too much and you squeeze little.", "Don't open five markets at once."], ["A buen entendedor, pocas palabras bastan.", "A good listener needs few words.", "Read what they don't say."], ["Poco a poco se va lejos.", "Little by little, you go far.", "Daily practice beats cramming."], ["Cuentas claras, amistades largas.", "Clear accounts, long friendships.", "Put terms in writing, even with friends."], ["No hay mal que por bien no venga.", "No bad without some good.", "A lost deal teaches the next one."]],
+  zh: [["一分钱一分货", "yì fēn qián yì fēn huò", "You get what you pay for.", "Don't race to the bottom on price."], ["和气生财", "hé qì shēng cái", "Harmony brings wealth.", "Keep relationships smooth and the money follows."], ["货比三家", "huò bǐ sān jiā", "Compare three shops.", "Your client is comparing you right now."], ["吃亏是福", "chī kuī shì fú", "Taking a small loss is a blessing.", "A concession today buys loyalty tomorrow."], ["见好就收", "jiàn hǎo jiù shōu", "Stop while it's good.", "Close when the deal is good enough."], ["礼尚往来", "lǐ shàng wǎng lái", "Courtesy demands reciprocity.", "Return every favor and every gift."], ["人脉就是钱脉", "rénmài jiù shì qiánmài", "Your network is your net worth.", "Every contact is an asset."], ["欲速则不达", "yù sù zé bù dá", "More haste, less speed.", "Rushing a partner loses the partner."]],
+};
+const QUESTS = [
+  { id: "q1", text: "Win 2 meetings", stat: "wins", n: 2, cash: 0.5, rep: 2, xp: 30 },
+  { id: "q2", text: "Check in with clients 3 times", stat: "checkins", n: 3, cash: 0.3, rep: 2, xp: 20 },
+  { id: "q3", text: "Clear 5 drills", stat: "drills", n: 5, cash: 0.3, rep: 1, xp: 40 },
+  { id: "q4", text: "Go to 2 events", stat: "events", n: 2, cash: 0.2, rep: 3, xp: 20 },
+  { id: "q5", text: "Win a meeting with no slips", stat: "flawless", n: 1, cash: 1, rep: 4, xp: 40 },
+  { id: "q6", text: "Make 3 new contacts", stat: "contacts", n: 3, cash: 0.3, rep: 3, xp: 30 },
+  { id: "q7", text: "Send 3 gifts that land", stat: "gifts", n: 3, cash: 0.5, rep: 2, xp: 30 },
+  { id: "q8", text: "Upsell 2 clients", stat: "upsells", n: 2, cash: 1, rep: 3, xp: 50 },
+  { id: "q9", text: "Win 8 meetings", stat: "wins", n: 8, cash: 2, rep: 5, xp: 80 },
+  { id: "q10", text: "Clear 25 drills", stat: "drills", n: 25, cash: 2, rep: 4, xp: 120 },
+  { id: "q11", text: "Win 5 meetings with no slips", stat: "flawless", n: 5, cash: 4, rep: 8, xp: 150 },
+  { id: "q12", text: "Check in with clients 30 times", stat: "checkins", n: 30, cash: 3, rep: 6, xp: 120 },
+];
+const GIFTS = {
+  es: [["Una botella de ron añejo", "A bottle of aged rum", 12, "Classic, generous, welcome."], ["Flores para su familia", "Flowers for their family", 10, "Thoughtful: family matters here."], ["Un reloj de lujo", "A luxury watch", 5, "Nice, but it can feel like you're buying them."], ["Una taza con el logo de tu empresa", "A mug with your company logo", -5, "Promo swag reads as cheap."]],
+  zh: [["一盒好茶叶", "A box of fine tea", 12, "Classic and respectful."], ["一篮水果", "A fruit basket", 10, "Warm and safe."], ["一个钟", "A clock", -30, "送钟 sounds like 送终, attending someone's death. Disaster."], ["一顶绿帽子", "A green hat", -25, "戴绿帽子 means your partner is cheating on you. Mortifying."]],
+  other: [["A bottle of fine wine", "A bottle of fine wine", 10, "Safe and generous."], ["A mug with your logo", "A mug with your logo", -5, "Promo swag reads as cheap."]],
+};
+function stat(k, n = 1) { const L = life(); L.stats ||= {}; L.stats[k] = (L.stats[k] || 0) + n; save(); }
+function clientsList() { const L = life(); return Object.keys(L.clients || {}).map((id) => ({ id, t: tierById(id), c: L.clients[id] })).filter((x) => x.t); }
+const retainerOf = (x) => Math.max(1, Math.round(x.t.stakes * 0.004 * (x.c.loyalty / 100)));
+function makeClient(t, deal) {
+  if (Object.keys(life().clients || {}).length >= 9) award("bookofbiz");
+  const L = life(); L.clients ||= {};
+  if (L.clients[t.id]) { L.clients[t.id].loyalty = clamp(L.clients[t.id].loyalty + 10, 0, 100); save(); return false; }
+  L.clients[t.id] = { loyalty: clamp(45 + (deal - 5) * 8, 20, 90), since: today(), last: today() }; save(); return true;
+}
+function dailyTick() {
+  const L = life(), c = career(); if (!c) return;
+  const d = today();
+  if (!L.lastDay) { L.lastDay = d; L.clients ||= {}; c.tiers.forEach((t) => { if ((L.cleared[t.id] ?? -1) >= 5 && !L.clients[t.id]) L.clients[t.id] = { loyalty: 55, since: d, last: d }; }); save(); return; }
+  if (L.lastDay === d) return;
+  const days = clamp(Math.round((Date.parse(d) - Date.parse(L.lastDay)) / 864e5), 1, 14); L.lastDay = d;
+  const st = L.staff || {}, news = [];
+  let pending = 0;
+  clientsList().forEach((x) => {
+    x.c.loyalty = clamp(x.c.loyalty - (st.assistant ? 1 : 2) * days, 0, 100);
+    pending += retainerOf(x) * days;
+    if (x.c.loyalty < 25 && !st.bodyguard && Math.random() < 0.5) {
+      const rv = rivalsFor()[Math.floor(Math.random() * 4)]; delete L.clients[x.id];
+      L.rivalBonus[rv.id] = (L.rivalBonus[rv.id] || 0) + Math.round(x.t.stakes * 0.5);
+      news.push(x.t.who.name + " moved their account to " + rv.name + ". You stopped calling.");
+    }
+  });
+  const wage = STAFF.reduce((s2, x) => s2 + (st[x.id] ? x.pay : 0), 0) * days;
+  if (wage) { if (L.cash >= wage) { L.cash -= wage; news.push("Staff wages: " + money(wage) + "."); } else { L.staff = {}; news.push("You couldn't make payroll. Your staff walked out."); } }
+  if (L.staff?.publicist) { L.rep = clamp((L.rep ?? 10) + days, 0, 100); news.push("Your publicist placed " + days + " story" + (days > 1 ? "s" : "") + " about you."); }
+  if (L.staff?.fixer) { L.fixerDays = (L.fixerDays || 0) + days; while (L.fixerDays >= 3) { L.fixerDays -= 3; const s3 = grantSecret(); if (s3) news.push("Your fixer slid a file under the door: " + s3.title + "."); } }
+  if (pending) { if (L.staff?.assistant) { L.cash += pending; news.push("Your assistant collected " + money(pending) + " in retainers."); } else { L.retainers = (L.retainers || 0) + pending; news.push(money(pending) + " in client retainers waiting to be collected."); } }
+  save();
+  if (news.length) queueModal(() => { $("#modal").innerHTML = '<div class="label">While you were away · ' + days + " day" + (days > 1 ? "s" : "") + '</div><div class="stack" style="gap:8px;text-align:left">' + news.map((n) => "<p>· " + esc(n) + "</p>").join("") + '</div><button class="btn primary" id="news-ok">Back to work</button>'; $("#news-ok").onclick = closeModal; });
+}
+let circleTab = "romance";
+document.querySelectorAll("[data-ctab]").forEach((b) => b.addEventListener("click", () => { circleTab = b.dataset.ctab; renderCircle(); }));
+function renderBiz() {
+  document.querySelectorAll("[data-ctab]").forEach((b) => b.setAttribute("aria-pressed", String(b.dataset.ctab === circleTab)));
+  const romance = circleTab === "romance";
+  $("#circle-romance").hidden = !romance; $("#circle-biz").hidden = romance;
+  if (romance) return false;
+  if (!career()) { $("#circle-biz").innerHTML = '<div class="box"><p class="muted">Write a career for this language first.</p></div>'; return true; }
+  ({ clients: renderClients, staff: renderStaff, mentor: renderMentor })[circleTab]();
+  return true;
+}
+function renderClients() {
+  const L = life(), list = clientsList().sort((a, b) => b.t.stakes - a.t.stakes), perDay = list.reduce((s2, x) => s2 + retainerOf(x), 0);
+  const el = $("#circle-biz");
+  el.innerHTML = '<div class="box stack"><div class="row between"><h2>Clients</h2><span class="chip gold">' + money(perDay) + " / day in retainers</span></div>" +
+    '<p class="muted small">Everyone you beat in a meeting becomes a client. They pay a daily retainer based on how loyal they are. Loyalty drops every day you ignore them, and under 25 a rival can steal the account.</p>' +
+    '<div class="row"><button class="btn gold" id="collect"' + (L.retainers ? "" : " disabled") + ">Collect " + money(L.retainers || 0) + "</button>" + (L.staff?.assistant ? '<span class="muted small">Your assistant collects automatically.</span>' : "") + "</div></div>" +
+    (list.length ? '<div class="people" style="grid-template-columns:repeat(auto-fill,minmax(260px,1fr))">' + list.map((x) => {
+      const checked = x.c.last === today(), gifted = x.c.gift === today(), up = x.c.upsold && (Date.parse(today()) - Date.parse(x.c.upsold)) / 864e5 < 3;
+      return '<div class="card" data-client="' + x.id + '"><div class="row" style="gap:10px"><canvas width="20" height="20" style="width:48px;image-rendering:pixelated;background:#2b2140"></canvas><div><strong>' + esc(x.t.who.name) + '</strong><div class="small muted">' + esc(x.t.title) + " · " + esc(x.t.place) + '</div></div></div>' +
+        '<div class="row between small"><span>Loyalty ' + x.c.loyalty + '</span><span class="muted">' + money(retainerOf(x)) + ' / day</span></div><div class="chem"><i style="width:' + x.c.loyalty + '%;background:' + (x.c.loyalty < 30 ? "var(--major)" : x.c.loyalty < 60 ? "var(--minor)" : "var(--good)") + '"></i></div>' +
+        '<div class="row"><button class="btn sm" data-check="' + x.id + '"' + (checked ? " disabled" : "") + ">" + (checked ? "Checked in today" : "Check in") + '</button><button class="btn sm" data-gift="' + x.id + '"' + (gifted ? " disabled" : "") + ">" + (gifted ? "Gift sent" : "Send a gift") + '</button><button class="btn sm primary" data-upsell="' + x.id + '"' + (x.c.loyalty < 60 || up ? " disabled" : "") + ">" + (up ? "Upsold recently" : x.c.loyalty < 60 ? "Upsell at 60" : "Upsell") + '</button></div><div class="client-area"></div></div>';
+    }).join("") + "</div>" : '<div class="box"><p class="muted">No clients yet. Win a meeting and the person across the table becomes your first one.</p></div>');
+  el.querySelectorAll("[data-client]").forEach((card) => { const x = list.find((y) => y.id === card.dataset.client), cv = card.querySelector("canvas").getContext("2d"); R(cv, 0, 0, 20, 20, "#2b2140"); drawPerson(cv, 5, 3, x.t.npc || genNpcPal(hash(x.t.id)), 0, false, 2); });
+  $("#collect").onclick = () => { const n = L.retainers || 0; L.retainers = 0; save(); addCash(n, $("#collect")); renderClients(); };
+  el.querySelectorAll("[data-check]").forEach((b) => b.addEventListener("click", () => checkIn(b.dataset.check)));
+  el.querySelectorAll("[data-gift]").forEach((b) => b.addEventListener("click", () => giftMenu(b.dataset.gift, b.closest(".card").querySelector(".client-area"))));
+  el.querySelectorAll("[data-upsell]").forEach((b) => b.addEventListener("click", () => upsell(b.dataset.upsell, b.closest(".card").querySelector(".client-area"))));
+}
+async function checkIn(id) {
+  const L = life(), c = L.clients[id], t = tierById(id); if (!c || c.last === today()) return;
+  if (!(await sayIt("checkin", { who: t.who.name }, t.who.name)).ok) return;
+  c.last = today(); c.loyalty = clamp(c.loyalty + 8, 0, 100); save(); stat("checkins"); addXp(3);
+  if (c.loyalty >= 80 && Math.random() < 0.35) { L.intros = Math.min(3, (L.intros || 0) + 1); save(); toast(t.who.name + " refers you to a friend: +1 deal meter next meeting.", "ach"); }
+  else toast(t.who.name + " appreciates the call.");
+  renderCircle(); if (current === "explore") renderInteract();
+}
+function giftMenu(id, area) {
+  const L = life(), t = tierById(id), cost = Math.max(50, Math.round(t.stakes * 0.01)), gifts = GIFTS[G.lang] || GIFTS.other;
+  area.innerHTML = '<div class="label" style="margin-top:8px">Pick a gift · ' + money(cost) + '</div><div class="stack" style="gap:6px">' + shuffle(gifts.map((g, k) => [g, k])).map(([g, k]) => '<button class="answer" data-g="' + k + '"' + (L.cash < cost ? " disabled" : "") + '><span class="t" style="font-size:15px">' + esc(g[0]) + '</span><span class="rom">' + esc(g[1]) + "</span></button>").join("") + "</div>";
+  area.querySelectorAll("[data-g]").forEach((b) => b.addEventListener("click", () => {
+    const g = gifts[+b.dataset.g], c = L.clients[id]; if (L.cash < cost) return;
+    L.cash -= cost; c.gift = today(); c.loyalty = clamp(c.loyalty + g[2], 0, 100); save(); pop("-" + money(cost), b);
+    if (g[2] > 0) { stat("gifts"); sfx("good"); } else sfx("bad");
+    renderCircle();
+    const a2 = document.querySelector('[data-client="' + id + '"] .client-area');
+    if (a2) a2.innerHTML = '<div class="fb ' + (g[2] >= 10 ? "good" : g[2] > 0 ? "minor" : "major") + '" style="margin-top:8px"><p><strong>' + esc(g[1]) + ": " + (g[2] > 0 ? "+" : "") + g[2] + " loyalty.</strong> " + esc(g[3]) + "</p></div>";
+  }));
+}
+function quickExchange(area, who, node, onDone) {
+  const ch = shuffle(node.choices.map((c, k) => [c, k]));
+  area.innerHTML = '<div class="dialog" style="margin-top:14px"><div class="who">' + esc(who.toUpperCase()) + '</div><div class="line" style="font-size:17px">' + esc(node.npc) + "</div>" + (node.r ? '<div class="rom">' + esc(node.r) + "</div>" : "") + (G.showEn ? '<div class="en">' + esc(node.en) + "</div>" : "") + '</div><div class="answers">' + ch.map(([c, k]) => '<button class="answer" data-k="' + k + '"><span class="t" style="font-size:15px">' + esc(c.t) + "</span>" + (c.r ? '<span class="rom">' + esc(c.r) + "</span>" : "") + "</button>").join("") + "</div>";
+  area.querySelectorAll(".answer").forEach((b) => b.addEventListener("click", () => {
+    const c = node.choices[+b.dataset.k]; area.querySelectorAll("button").forEach((x) => (x.disabled = true));
+    sfx(c.q === "good" ? "good" : c.q === "major" ? "bad" : "coin");
+    if (c.q !== "good" && c.better) { const L = life(); if (!L.deck.some((d) => d.said === c.t)) { L.deck.push({ said: c.t, better: c.better, why: c.why }); L.deck = L.deck.slice(-80); save(); } }
+    area.insertAdjacentHTML("beforeend", '<div class="fb ' + c.q + '" style="margin-top:8px"><span class="chip ' + c.q + '">' + VERDICT[c.q] + "</span><p>" + esc(c.why) + "</p>" + (c.q !== "good" && c.better ? '<p class="fix">Say: <b>' + esc(c.better) + "</b></p>" : "") + "</div>");
+    onDone(c.q);
+  }));
+}
+function upsell(id, area) {
+  const L = life(), c = L.clients[id], t = tierById(id), bank = BANK[G.lang];
+  if (!bank) { toast("Upsells in this language need a written career pack."); return; }
+  const node = [bank[3], bank[2], bank[4]][hash(id + today()) % 3];
+  quickExchange(area, t.who.name, node, (q) => {
+    c.upsold = today();
+    if (q === "good") { const n = Math.round(t.stakes * 0.25 * (c.loyalty / 100)); c.loyalty = clamp(c.loyalty + 5, 0, 100); stat("upsells"); addCash(n); addXp(10); area.insertAdjacentHTML("beforeend", '<p class="t" style="color:var(--gold)">They sign the expansion: +' + money(n) + "</p>"); }
+    else if (q === "minor") { const n = Math.round(t.stakes * 0.1 * (c.loyalty / 100)); addCash(n); addXp(4); area.insertAdjacentHTML("beforeend", "<p>A smaller add-on: +" + money(n) + "</p>"); }
+    else { c.loyalty = clamp(c.loyalty - 12, 0, 100); area.insertAdjacentHTML("beforeend", '<p style="color:var(--major)">They feel pushed. -12 loyalty.</p>'); }
+    save();
+  });
+}
+function renderStaff() {
+  const L = life(), st = L.staff || {}, wage = STAFF.reduce((a, x) => a + (st[x.id] ? x.pay : 0), 0);
+  $("#circle-biz").innerHTML = '<div class="box stack"><div class="row between"><h2>Staff</h2><span class="chip gold">Payroll ' + money(wage) + ' / day</span></div><p class="muted small">Wages come out every day. Miss payroll and everyone walks.</p></div>' +
+    '<div class="items">' + STAFF.map((x) => { const on = !!st[x.id], tm = termOf(x); return '<div class="item' + (on ? " owned" : "") + '"><canvas width="20" height="20" style="width:64px;image-rendering:pixelated;background:#2b2140"></canvas><div class="nm">' + esc(tm || x.en) + "</div>" + (tm ? '<div class="small muted">' + esc(x.en) + "</div>" : "") + '<div class="perk">' + esc(x.perk) + '</div><div class="pr">' + money(x.pay) + ' / day</div><div class="row">' + (on ? '<span class="chip gold">On payroll</span><button class="btn sm" data-fire="' + x.id + '">Let go</button>' : '<button class="btn sm gold" data-hire="' + x.id + '"' + (L.cash < x.pay ? " disabled" : "") + ">Hire</button>") + "</div></div>"; }).join("") + "</div>";
+  document.querySelectorAll("#circle-biz .item canvas").forEach((cv, k) => { const c = cv.getContext("2d"); R(c, 0, 0, 20, 20, "#2b2140"); drawPerson(c, 5, 3, genNpcPal(hash(STAFF[k].id + G.lang)), 0, false, 3); });
+  document.querySelectorAll("[data-hire]").forEach((b) => b.addEventListener("click", async () => {
+    const x = STAFF.find((y) => y.id === b.dataset.hire); if (L.cash < x.pay) return;
+    if (!(await sayIt("hire", { term: termOf(x) || x.en, en: x.en }, money(x.pay) + " / day")).ok) return;
+    L.cash -= x.pay; L.staff = { ...(L.staff || {}), [x.id]: today() }; save(); pop("-" + money(x.pay), b); sfx("buy"); renderHud(); renderStaff();
+  }));
+  document.querySelectorAll("[data-fire]").forEach((b) => b.addEventListener("click", () => { delete L.staff[b.dataset.fire]; save(); renderStaff(); }));
+}
+function renderMentor() {
+  const L = life(), m = MENTORS[G.lang] || MENTORS.other, st = L.stats || {}, claimed = L.quests || {};
+  const open = QUESTS.filter((q) => !claimed[q.id]).slice(0, 3), base = career().tiers.find((t) => t.ch === rank())?.stakes || 600;
+  const pv = PROVERBS[G.lang], pr = pv ? pv[Math.floor(Date.parse(today()) / 864e5) % pv.length] : null, learned = L.proverb === today();
+  $("#circle-biz").innerHTML = '<div class="grid-2"><div class="box stack"><div class="row" style="gap:12px"><canvas id="mentor-cv" width="20" height="20" style="width:72px;image-rendering:pixelated;background:#2b2140"></canvas><div><h2>' + esc(m.name) + '</h2><p class="muted small">' + esc(m.role) + "</p></div></div>" +
+    (pr ? '<div class="card"><div class="label">Today\'s saying</div><div class="t">' + esc(pr[0]) + "</div>" + (pr.length === 4 ? '<div class="rom">' + esc(pr[1]) + "</div>" : "") + '<div>' + esc(pr.length === 4 ? pr[2] : pr[1]) + '</div><div class="tip">' + esc(pr[pr.length - 1]) + '</div><div class="row">' + (canSpeak ? '<button class="btn sm" id="pv-hear">Hear it</button>' : "") + '<button class="btn sm primary" id="pv-learn"' + (learned ? " disabled" : "") + ">" + (learned ? "Learned today" : "Got it · +5 XP") + "</button></div></div>" : "") +
+    '</div><div class="box stack"><h3>What I want from you</h3>' + (open.length ? open.map((q) => { const have = Math.min(q.n, st[q.stat] || 0), done = have >= q.n, cash = Math.round(base * q.cash); return '<div class="card"><div class="row between"><strong>' + esc(q.text) + '</strong><span class="label">' + have + " / " + q.n + '</span></div><div class="xpbar"><i style="width:' + (have / q.n) * 100 + '%"></i></div><div class="small muted">Reward: ' + money(cash) + ", +" + q.rep + " rep, +" + q.xp + ' XP</div><div class="row"><button class="btn sm gold" data-quest="' + q.id + '"' + (done ? "" : " disabled") + ">" + (done ? "Claim" : "In progress") + "</button></div></div>"; }).join("") : '<p class="muted">You\'ve done everything I asked. Now go teach someone else.</p>') + "</div></div>";
+  const cv = $("#mentor-cv").getContext("2d"); R(cv, 0, 0, 20, 20, "#2b2140"); drawPerson(cv, 5, 3, m.pal, 0, false, 5);
+  $("#pv-hear")?.addEventListener("click", () => speak(pr[0], G.lang));
+  $("#pv-learn")?.addEventListener("click", () => { L.proverb = today(); save(); addXp(5); renderMentor(); });
+  document.querySelectorAll("[data-quest]").forEach((b) => b.addEventListener("click", () => {
+    const q = QUESTS.find((x) => x.id === b.dataset.quest); L.quests = { ...(L.quests || {}), [q.id]: today() }; save();
+    addCash(Math.round(base * q.cash), b); addRep(q.rep); addXp(q.xp); sfx("level"); toast(m.name.split(" ")[0] + ": “Not bad. Next.”", "ach"); renderMentor();
+  }));
+}
+
+
+/* =========================================================
+   GLOBE
+   ========================================================= */
+const GEO = {
+  aruba: [12.52, -69.97], curacao: [12.11, -68.93], roques: [11.85, -66.75], panama: [8.98, -79.52], cartagena: [10.39, -75.51], medellin: [6.24, -75.58], salento: [4.64, -75.57], cdmx: [19.43, -99.13], madrid: [40.42, -3.7], marbella: [36.51, -4.88], ibiza: [38.91, 1.43], bsas: [-34.6, -58.38], punta: [-34.96, -54.95],
+  sg: [1.35, 103.82], taipei: [25.03, 121.56], hangzhou: [30.27, 120.15], shanghai: [31.23, 121.47], shenzhen: [22.54, 114.06], hk: [22.32, 114.17], macau: [22.2, 113.54], beijing: [39.9, 116.4], sanya: [18.25, 109.51], lijiang: [26.87, 100.23], air: [15, 115], monaco: [43.73, 7.42],
+};
+const BLOBS = [[50, -100, 15, 30], [40, -95, 10, 20], [60, -120, 10, 25], [65, -150, 6, 15], [25, -103, 8, 10], [15, -90, 5, 8], [70, -80, 8, 25], [48, -75, 8, 12], [72, -42, 8, 14], [-5, -60, 12, 15], [-20, -55, 10, 12], [-35, -65, 8, 6], [-45, -70, 6, 4], [5, -70, 6, 8], [-10, -75, 8, 5], [50, 10, 8, 15], [60, 20, 8, 15], [41, -4, 4, 6], [44, 12, 3, 5], [54, -2, 4, 3], [63, 12, 5, 8], [10, 20, 12, 25], [-5, 22, 12, 14], [-20, 25, 10, 10], [-30, 23, 6, 8], [28, 10, 8, 20], [8, -8, 5, 8], [25, 45, 8, 10], [55, 90, 12, 40], [40, 90, 10, 25], [30, 105, 10, 15], [35, 115, 8, 8], [20, 80, 8, 8], [15, 102, 6, 5], [5, 102, 4, 3], [60, 140, 10, 20], [45, 130, 6, 8], [36, 138, 5, 3], [0, 114, 4, 5], [0, 101, 5, 3], [12, 122, 5, 2], [-7, 110, 2, 8], [-25, 134, 10, 17], [-42, 172, 5, 3], [-19, 46, 6, 2], [65, -18, 2, 4], [24, 121, 1.5, 1], [19, 110, 1, 1.3], [21.5, -79, 1.2, 5], [19, -71, 1, 3], [-80, 0, 8, 180]];
+let LANDMASK = null;
+function landAt(lat, lon) {
+  if (!LANDMASK) {
+    LANDMASK = new Uint8Array(90 * 180);
+    for (let i = 0; i < 90; i++) for (let j = 0; j < 180; j++) {
+      const la = -89 + i * 2, lo = -179 + j * 2;
+      LANDMASK[i * 180 + j] = BLOBS.some(([a, b, ra, rb]) => { let d = lo - b; if (d > 180) d -= 360; if (d < -180) d += 360; return ((la - a) / ra) ** 2 + (d / rb) ** 2 < 1; }) ? 1 : 0;
+    }
+  }
+  const i = clamp(Math.floor((lat + 90) / 2), 0, 89), j = ((Math.floor((lon + 180) / 2) % 180) + 180) % 180;
+  return LANDMASK[i * 180 + j];
+}
+const GL = { rot: -60, tilt: 12, drag: null, auto: true, sel: null };
+function globeCities() {
+  const out = [];
+  ["es", "zh"].forEach((lang) => (CITIES[lang] || []).forEach((ct) => { const g = GEO[ct.k]; if (g) out.push({ lang, k: ct.k, name: ct.name, lat: g[0], lon: g[1] }); }));
+  return out;
+}
+function projectG(lat, lon) {
+  const R0 = 46, cx = 96, cy = 54, la = (lat * Math.PI) / 180, lo = ((lon + GL.rot) * Math.PI) / 180, tl = (GL.tilt * Math.PI) / 180;
+  let x = Math.cos(la) * Math.sin(lo), y = Math.sin(la), z = Math.cos(la) * Math.cos(lo);
+  const y2 = y * Math.cos(tl) - z * Math.sin(tl), z2 = y * Math.sin(tl) + z * Math.cos(tl);
+  return { x: cx + x * R0, y: cy - y2 * R0, vis: z2 > 0 };
+}
+function drawGlobe(c, t) {
+  if (GL.auto && !GL.drag) GL.rot = (GL.rot + 0.25) % 360;
+  R(c, 0, 0, 192, 108, "#070a1c");
+  const r = rng(17); for (let i = 0; i < 60; i++) R(c, r() * 192, r() * 108, 1, 1, (Math.floor(t / 500) + i) % 5 ? "#3a4070" : "#dfe6ff");
+  const R0 = 46, cx = 96, cy = 54, tl = (GL.tilt * Math.PI) / 180;
+  for (let py = -R0; py <= R0; py++) for (let px = -R0; px <= R0; px++) {
+    const nx = px / R0, ny = -py / R0, d2 = nx * nx + ny * ny; if (d2 > 1) continue;
+    const nz = Math.sqrt(1 - d2);
+    const y = ny * Math.cos(tl) + nz * Math.sin(tl), z = -ny * Math.sin(tl) + nz * Math.cos(tl);
+    const lat = (Math.asin(clamp(y, -1, 1)) * 180) / Math.PI, lon = (Math.atan2(nx, z) * 180) / Math.PI - GL.rot;
+    const lonN = ((lon + 540) % 360) - 180, land = landAt(lat, lonN), shadeK = 0.55 + 0.45 * nz;
+    const col = land ? (Math.abs(lat) > 66 ? [230, 236, 240] : [63, 122, 74]) : [22, 64, 126];
+    R(c, cx + px, cy + py, 1, 1, "rgb(" + Math.round(col[0] * shadeK) + "," + Math.round(col[1] * shadeK) + "," + Math.round(col[2] * shadeK) + ")");
+  }
+  for (let a = 0; a < 6.29; a += 0.02) R(c, cx + Math.cos(a) * (R0 + 1), cy + Math.sin(a) * (R0 + 1), 1, 1, "#4f7fae");
+  const hereK = life().here ? cityOfTier(life().here)?.k : null;
+  globeCities().forEach((ct) => {
+    const q = projectG(ct.lat, ct.lon); if (!q.vis) return;
+    const mine = ct.lang === G.lang && ct.k === hereK, col = ct.lang === "es" ? "#ff9a5c" : "#ff6f6f";
+    R(c, q.x - 1, q.y - 1, 3, 3, "#0b0e1a"); R(c, q.x, q.y, 1, 1, col);
+    if (mine || GL.sel === ct.lang + ":" + ct.k) { const b = Math.floor(t / 300) % 2; R(c, q.x - 2, q.y - 2, 5, 1, b ? "#f5c542" : col); R(c, q.x - 2, q.y + 2, 5, 1, b ? "#f5c542" : col); R(c, q.x - 2, q.y - 2, 1, 5, b ? "#f5c542" : col); R(c, q.x + 2, q.y - 2, 1, 5, b ? "#f5c542" : col); }
+  });
+  if (GL.sel) { const ct = globeCities().find((x) => x.lang + ":" + x.k === GL.sel); if (ct) { c.fillStyle = "#f1e9d6"; c.font = "6px monospace"; c.fillText(ct.name.split(" ")[0], 4, 104); } }
+}
+function setMapView(globe) {
+  $("#globe-stage").hidden = !globe; $("#map-stage").hidden = globe;
+  $("#view-globe").setAttribute("aria-pressed", String(globe)); $("#view-map").setAttribute("aria-pressed", String(!globe));
+}
+$("#view-globe").addEventListener("click", () => setMapView(true));
+$("#view-map").addEventListener("click", () => setMapView(false));
+(() => {
+  const cv = $("#globe-cv"); let moved = 0;
+  cv.addEventListener("pointerdown", (e) => { GL.drag = { x: e.clientX, rot: GL.rot }; moved = 0; cv.setPointerCapture(e.pointerId); cv.style.cursor = "grabbing"; });
+  cv.addEventListener("pointermove", (e) => { if (!GL.drag) return; const r = cv.getBoundingClientRect(), dx = ((e.clientX - GL.drag.x) / r.width) * 192; moved = Math.max(moved, Math.abs(dx)); GL.rot = GL.drag.rot + dx * 1.6; GL.auto = false; });
+  cv.addEventListener("pointerup", (e) => {
+    GL.drag = null; cv.style.cursor = "grab";
+    if (moved > 3) return;
+    const r = cv.getBoundingClientRect(), x = ((e.clientX - r.left) / r.width) * 192, y = ((e.clientY - r.top) / r.height) * 108;
+    let best = null, bd = 8; globeCities().forEach((ct) => { const q = projectG(ct.lat, ct.lon); if (!q.vis) return; const d = Math.hypot(q.x - x, q.y - y); if (d < bd) { bd = d; best = ct; } });
+    if (!best) return;
+    GL.sel = best.lang + ":" + best.k;
+    if (best.lang !== G.lang) { switchLang(best.lang); showTab("explore"); exploreMapOpen = true; }
+    mapSel = best.k; exploreMapOpen = true; renderExplore(); setMapView(true);
+  });
+})();
+
+/* ---- your people in the world: tutor, entourage ---- */
+function staffName(id) { const x = STAFF.find((y) => y.id === id); return termOf(x) ? splitTerm(termOf(x))[0] : x.en; }
+function tutorSession(n) {
+  const L = life(), gp = generalPack(), deck = L.deck || [];
+  const items = [];
+  deck.slice(-6).forEach((d) => items.push({ en: d.why || "Fix this: " + d.said, t: d.better }));
+  (gp?.phrases || []).forEach((ph) => items.push({ en: ph.en, t: ph.t }));
+  const r = rng(hash(today() + W.tier.id + (L.stats?.drills || 0)));
+  const pool = items.filter((x) => x.t && !/^…/.test(x.t)), pick = pool.sort(() => r() - 0.5).slice(0, 3);
+  if (pick.length < 2) { toast("Your tutor needs a phrasebook for this language first."); return; }
+  n.talked = true; renderInteract();
+  let score = 0, k = 0;
+  const area = $("#talk-area");
+  const ask = () => {
+    const it = pick[k], wrong = pool.filter((x) => x.t !== it.t).sort(() => r() - 0.5).slice(0, 2);
+    const opts = shuffle([it, ...wrong]);
+    area.innerHTML = '<div class="dialog" style="margin-top:6px"><div class="who">' + esc(n.name.toUpperCase()) + '</div><div class="line" style="font-size:16px">' + esc(it.en) + '</div><div class="en">How do you say it? (' + (k + 1) + '/' + pick.length + ')</div></div><div class="answers">' + opts.map((o, j) => '<button class="answer" data-j="' + j + '"><span class="t" style="font-size:15px">' + esc(o.t) + "</span></button>").join("") + "</div>";
+    area.querySelectorAll(".answer").forEach((b) => b.addEventListener("click", () => {
+      const ok = opts[+b.dataset.j] === it; if (ok) { score++; sfx("good"); addXp(3); } else sfx("bad");
+      if (canSpeak) speak(it.t, G.lang);
+      k++;
+      if (k < pick.length) setTimeout(ask, 500);
+      else { L.coached = score >= 2; save(); area.innerHTML = '<div class="fb ' + (L.coached ? "good" : "minor") + '" style="margin-top:6px"><p><strong>' + score + " of " + pick.length + ".</strong> " + (L.coached ? esc(n.name) + " nods at someone down the beach: “Go on. Your next flirt needs one less point.”" : "“Again tomorrow.”") + "</p></div>"; renderAround(); }
+    }));
+  };
+  ask();
 }
 
 /* =========================================================
@@ -2920,7 +3248,7 @@ function renderPassports() {
 }
 function switchLang(k) {
   if (M.busy) return;
-  G.lang = k; life(k); save(); shownCash = null; resetMeeting(); chatWith = null; renderHud();
+  G.lang = k; life(k); save(); dailyTick(); shownCash = null; resetMeeting(); chatWith = null; renderHud();
   showTab(!career(k) || current === "meeting" || current === "review" ? "career" : current);
 }
 $("#mute").addEventListener("click", () => { G.mute = !G.mute; save(); renderHud(); });
@@ -3127,7 +3455,7 @@ function renderDeck() {
     const target = norm(String(d.better).replace(/^…|…$/g, ""));
     if (v && (v === target || (target.length > 6 && v.includes(target)))) {
       const pay = drillReward();
-      deck.splice(i, 1); save(); addCash(pay, f); addXp(8); toast("Cleared. " + money(pay) + " and 8 XP."); renderDeck();
+      deck.splice(i, 1); save(); stat("drills"); addCash(pay, f); addXp(8); toast("Cleared. " + money(pay) + " and 8 XP."); renderDeck();
     } else { sfx("bad"); $("#dans-" + i).hidden = false; toast("Not quite. Compare with the answer and try again."); }
   }));
 }
@@ -3276,12 +3604,16 @@ function settle() {
   const xp = c.good * 10 + c.minor * 3 + (flawless ? 25 : 0) + (firstWin ? 30 + 10 * t.ch : 0);
   const payout = Math.round(t.stakes * clamp((M.deal - 4) / 6, 0, 1) * (1 + pk.pay) * streakMult() * (M.replay ? 0.35 : 1));
   L.cleared[t.id] = Math.max(L.cleared[t.id] ?? -1, M.deal); L.meetings++;
+  let newClient = false;
+  if (M.deal >= 5) { stat("wins"); newClient = makeClient(t, M.deal); }
+  if (you.length >= 4 && c.good === you.length) stat("flawless");
   const slips = you.filter((x) => x.fb.verdict !== "good" && x.fb.better).map((x) => ({ said: x.text, better: x.fb.better, why: x.fb.why }));
   slips.forEach((s) => { if (!L.deck.some((d) => d.said === s.said)) L.deck.push(s); }); L.deck = L.deck.slice(-80);
   save();
   let bonus = "";
   const rv = rivalsFor(), near = rv.slice().sort((a, b) => Math.abs(a.ratio - 1) - Math.abs(b.ratio - 1))[0];
-  if (payout === 0) { L.rivalBonus[near.id] = (L.rivalBonus[near.id] || 0) + Math.round(t.stakes * 0.8); save(); setTimeout(() => toast(near.name + " swooped in and closed the deal you lost. +" + money(t.stakes * 0.8) + " to them."), 1600); }
+  if (payout === 0 && L.staff?.bodyguard) { bonus = "Your bodyguard kept " + near.name + " out of the room"; }
+  else if (payout === 0) { L.rivalBonus[near.id] = (L.rivalBonus[near.id] || 0) + Math.round(t.stakes * 0.8); save(); setTimeout(() => toast(near.name + " swooped in and closed the deal you lost. +" + money(t.stakes * 0.8) + " to them."), 1600); }
   else if (M.deal >= 9) { const r = rv[Math.floor(Math.random() * rv.length)]; L.rivalBonus[r.id] = Math.max(0, (L.rivalBonus[r.id] || 0) - Math.round(t.stakes * 0.3)); save(); bonus = "You beat " + r.name + " to it"; }
   addRep(M.deal >= 7 ? 2 : M.deal < 5 ? -1 : 0);
   if (flawless) { addRep(3); award("flawless"); const s = grantSecret(t.id); if (s) bonus = "Flawless. New file: " + s.title; }
@@ -3292,6 +3624,7 @@ function settle() {
     const nl = next ? tierLock(career().tiers.indexOf(next)) : "";
     bonus = [bonus, next ? (nl ? "Next: " + next.title + " (" + nl.toLowerCase() + ")" : "Unlocked: " + (next.secret && !secretUnlocked() ? "a classified meeting" : next.title)) : ""].filter(Boolean).join(" · ");
   }
+  if (newClient) bonus = [bonus, t.who.name + " is now your client"].filter(Boolean).join(" · ");
   M.result = { payout, xp, bonus: bonus || (slips.length ? slips.length + " slips added to drills" : "") };
   return M.result;
 }
@@ -3582,6 +3915,7 @@ function circleList() {
 }
 function chemLabel(n) { return n >= 90 ? "Obsessed" : n >= 60 ? "Seeing each other" : n >= 35 ? "Flirting" : n >= 15 ? "Texting" : "Just met"; }
 function renderCircle() {
+  if (renderBiz()) return;
   const L = life(), r = rank();
   $("#pref").value = G.pref;
   const list = circleList();
@@ -3614,6 +3948,11 @@ function dateOptions() {
     const bt = myBoat(); if (bt) out.push({ name: "Night on “" + bt.name + "”", cost: 0, chem: 12, night: "yacht" });
     if (L.owned.sky1) out.push({ name: "Overnight flight on your jet", cost: 25000, chem: 16, night: "jet" });
     out.push({ name: "Night at their place", cost: 0, chem: 8, night: "theirs" });
+    const hereT = tierById(L.here);
+    if (hereT && ["shack", "villa", "deck", "boat"].includes(hereT.kind)) out.push({ name: "Bonfire night on the beach", cost: 0, chem: 10, night: "beach" });
+    if (L.owned.flex2) out.push({ name: "Night on your island", cost: 0, chem: 18, night: "island" });
+    if (!bt) out.push({ name: "Charter a catamaran for the night", cost: 6000, chem: 12, night: "charter" });
+    out.push({ name: "First-class suite on a long-haul flight", cost: 12000, chem: 12, night: "firstclass" });
   }
   return out;
 }
@@ -3632,7 +3971,7 @@ function renderChat() {
   box.querySelectorAll("[data-date]").forEach((b) => b.addEventListener("click", async () => {
     const d = dateOptions()[+b.dataset.date]; if (L.cash < d.cost) return;
     if (!(await sayIt(d.night ? "night" : "date", { who: p.name.split(" ")[0] }, d.night ? d.name : d.name + " · " + money(d.cost))).ok) return;
-    if (d.night) { if (d.cost) { L.cash -= d.cost; pop("-" + money(d.cost), b); } const cap = await playNight(p, d.night); pushMsg(p, { sys: true, text: d.name + ". " + cap }); bumpChem(p, Math.round(d.chem * (1 + perks().chem))); jealousy(p, 20, "your night with " + p.name.split(" ")[0]); if (d.night === "jet") award("skyhigh"); if (d.night === "yacht") award("captain"); if (Math.random() < 0.25) { const s = grantSecret(); if (s) toast("Pillow talk. New file: " + s.title, "ach"); } renderHud(); renderCircle(); return; }
+    if (d.night) { if (d.cost) { L.cash -= d.cost; pop("-" + money(d.cost), b); } const cap = await playNight(p, d.night); pushMsg(p, { sys: true, text: d.name + ". " + cap }); bumpChem(p, Math.round(d.chem * (1 + perks().chem))); jealousy(p, 20, "your night with " + p.name.split(" ")[0]); if (d.night === "jet" || d.night === "firstclass") award("skyhigh"); if (d.night === "beach" || d.night === "island") award("castaway"); if (d.night === "yacht") award("captain"); if (Math.random() < 0.25) { const s = grantSecret(); if (s) toast("Pillow talk. New file: " + s.title, "ach"); } renderHud(); renderCircle(); return; }
     if (d.cost) { L.cash -= d.cost; pop("-" + money(d.cost), b); sfx("buy"); }
     pushMsg(p, { sys: true, text: d.night ? nightLine(p) : d.name + " with " + p.name.split(" ")[0] + ". " + dateLine(p, d) });
     bumpChem(p, Math.round(d.chem * (1 + perks().chem))); jealousy(p, 10, "your date with " + p.name.split(" ")[0]); renderHud(); renderCircle();
@@ -3806,7 +4145,7 @@ $("#tr-lang").innerHTML = Object.entries(LANGS).map(([k, v]) => '<option value="
 $("#tr-lang").value = "es";
 $("#tr-text").value = SAMPLE_TRANSCRIPT; refreshSpeakers(); $("#tr-speaker").value = "Alex";
 renderAnalysis(parseTranscript(SAMPLE_TRANSCRIPT), "Alex", SAMPLE_ANALYSIS, "es", true);
-life(); renderHud(); renderMeter(); renderLog(); showTab("career");
+life(); dailyTick(); renderHud(); renderMeter(); renderLog(); showTab("career");
 requestAnimationFrame(frame);
 
 (async () => {
