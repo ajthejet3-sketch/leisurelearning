@@ -6,7 +6,7 @@ Open `index.html` in a browser to play. It has no dependencies or build step. Th
 
 ## What's in it
 
-- **62 playable states** at their 200 BC positions, from Rome, Carthage, Macedon, Epirus, Athens, the Seleucids and the Ptolemies to Gauls, Iberians, Britons, Germans, Thracians and Scythians. The Second Macedonian War, the Fifth Syrian War and the Gallic revolt in the Po valley are all under way.
+- **63 playable states** at their 200 BC positions, from Rome, Carthage, Macedon, Epirus, Athens, the Seleucids and the Ptolemies to Gauls, Iberians, Britons, Germans, Thracians and Scythians. The Second Macedonian War, the Fifth Syrian War and the Gallic revolt in the Po valley are all under way.
 - **A 327×252 pixel map** built from coastline polygons, with mountains, rivers, deserts, steppe and forest. Cities claim territory by travel cost.
 - **24 goods** with prices that follow world supply and demand. Each culture wants different things: Gauls want wine, Greeks want oil and papyrus, and forges want iron, copper and tin.
 - **Trade routes** that merchants open automatically between a city with a surplus and one with a need, if both are at peace and have trade rights. Click any route to see cargo in each direction, value, tariffs, journey time and pirate risk. You can open, keep or close routes. Winter closes the sea (*mare clausum*).
