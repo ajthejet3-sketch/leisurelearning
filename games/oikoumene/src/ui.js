@@ -39,6 +39,7 @@ function renderPanel() {
   else if (s.type === 'route') { const r = G.routes.find((x) => x.id === s.id); if (!r) { UI.sel = null; el.hidden = true; return; } h = routePanel(r); }
   else if (s.type === 'realm') h = realmPanel();
   else if (s.type === 'dip') h = dipPanel();
+  else if (s.type === 'armies') h = armiesPanel();
   else if (s.type === 'ledger') h = ledgerPanel();
   else if (s.type === 'market') h = marketPanel();
   else if (s.type === 'land') h = landPanel(s.x, s.y);
@@ -241,6 +242,47 @@ function landPanel(x, y) {
 }
 const stars = (n) => '★'.repeat(n) + '☆'.repeat(5 - n);
 const statline = (U0) => '<span class="stats">' + [['Atk', U0.M, 'Melee attack'], ['Def', U0.D, 'Defence and armour'], ['Rng', U0.R, 'Missile power'], ['Chg', U0.C, 'Charge'], ['Mor', U0.Mo, 'Morale']].map(([k, v, t]) => '<span title="' + t + '">' + k + ' <b>' + v + '</b></span>').join('') + '</span>';
+function armyPos(a) {
+  if (a.mv) { const f = C(a.mv.from), t = C(a.mv.to), p = pointAt(pathBetween(f, t, a.mv.k), (a.mv.done + 0.5) / a.mv.turns); return [p[0], p[1]]; }
+  const c = C(a.at); return [c.x + 0.5, c.y + 0.5];
+}
+function armyStatus(a) {
+  const full = a.units.reduce((s, u) => s + UNITS[u.t].men, 0) || 1, fill = armyMen(a) / full;
+  if (a.mv) return a.mv.order === 'attack' ? ['atk', 'Attacking ' + C(a.mv.to).name] : a.mv.order === 'raid' ? ['atk', 'Raiding ' + C(a.mv.to).name] : ['go', 'Moving to ' + C(a.mv.to).name];
+  if (fill < 0.7) return ['hurt', 'Under strength ' + Math.round(fill * 100) + '%'];
+  return ['idle', 'Awaiting orders'];
+}
+function armiesPanel() {
+  const p = G.player, mine = G.armies.filter((a) => a.f === p).sort((x, y) => (x.mv ? 1 : 0) - (y.mv ? 1 : 0) || y.str - x.str);
+  const men = mine.reduce((s, a) => s + armyMen(a), 0), pow = mine.reduce((s, a) => s + a.str, 0), pay = mine.reduce((s, a) => s + armyUpkeep(a), 0);
+  let h = head('Armies of ' + FAC[p].short, mine.length + ' armies in the field', FAC[p].col);
+  h += '<div class="kv"><div><span>Armies</span><b>' + mine.length + '</b><small>' + mine.filter((a) => !a.mv).length + ' in camp</small></div><div><span>Soldiers</span><b>' + men.toLocaleString('en') + '</b><small>strength ' + fmt(pow) + '</small></div><div><span>Pay</span><b>' + fmt(pay) + '</b><small>per season</small></div></div>';
+  // threats: hostile armies marching on or camped near our cities
+  const threats = [];
+  for (const a of G.armies) {
+    if (a.f === p || !atWar(p, a.f)) continue;
+    if (a.mv && C(a.mv.to).owner === p) threats.push([0, a, (a.mv.order === 'raid' ? 'raiding' : 'marching on') + ' <b>' + esc(C(a.mv.to).name) + '</b>, arrives in ' + (a.mv.turns - a.mv.done) + ' season(s)']);
+    else if (!a.mv && a.at != null) { const c = C(a.at); const near = citiesOf(p).filter((o) => Math.hypot(o.x - c.x, o.y - c.y) < 26).sort((x, y) => Math.hypot(x.x - c.x, x.y - c.y) - Math.hypot(y.x - c.x, y.y - c.y))[0]; if (near) threats.push([1, a, 'camped at ' + esc(c.name) + ', near <b>' + esc(near.name) + '</b>']); }
+  }
+  threats.sort((x, y) => x[0] - y[0] || y[1].str - x[1].str);
+  h += '<h3>Threats <small>' + (threats.length ? threats.length + ' enemy forces' : 'none in sight') + '</small></h3>';
+  for (const [, a, txt] of threats.slice(0, 8)) h += '<div class="threat" data-a="goarmy" data-v="' + a.id + '">' + chip(a.f) + ' <b>' + esc(a.name) + '</b> (' + fmt(a.str) + ', ' + esc(a.gen.name) + ') ' + txt + '</div>';
+  h += '<h3>Your forces <small>click an army to take command</small></h3>';
+  if (!mine.length) h += '<p class="muted">You have no armies. Recruit units in a city\'s Army tab.</p>';
+  for (const a of mine) {
+    const [k, txt] = armyStatus(a), where = a.mv ? 'from ' + esc(C(a.mv.from).name) + (a.mv.k === 'sea' ? ' by sea' : ' overland') + ' · ' + (a.mv.turns - a.mv.done) + ' season(s) left' : 'at ' + esc(C(a.at).name);
+    h += '<div class="acard ' + (k === 'atk' ? 'go' : k) + '"><div class="ahead" data-a="goarmy" data-v="' + a.id + '"><b>' + esc(a.name) + '</b><span class="tag ' + k + '">' + esc(txt) + '</span><span class="val">' + fmt(a.str) + '</span></div>';
+    h += '<div class="small muted">' + esc(a.gen.name) + ' <span class="gold">' + stars(a.gen.skill) + '</span> · ' + where + ' · ' + armyMen(a).toLocaleString('en') + ' men</div>';
+    h += '<div class="aunits">' + a.units.map((u) => '<img src="' + unitIcon(u.t, FAC[a.f].col) + '" alt="' + esc(UNITS[u.t].n) + '" title="' + esc(UNITS[u.t].n) + ' ' + Math.round(u.men) + '/' + UNITS[u.t].men + '"' + (u.men < UNITS[u.t].men * 0.5 ? ' style="opacity:.55"' : '') + '>').join('') + '</div>';
+    if (!a.mv) h += '<div class="row wrap"><button class="sm" data-a="aorder" data-v="attack" data-id="' + a.id + '">Attack…</button><button class="sm" data-a="aorder" data-v="raid" data-id="' + a.id + '">Raid…</button><button class="sm" data-a="aorder" data-v="move" data-id="' + a.id + '">Move…</button>' + (C(a.at).owner === p && replenishCost(a) ? '<button class="sm" data-a="areplenish" data-v="' + a.id + '">Replenish · ' + replenishCost(a) + '</button>' : '') + '<button class="sm" data-a="goarmy" data-v="' + a.id + '">Command</button></div>';
+    h += '</div>';
+  }
+  const bare = citiesOf(p).filter((c) => !G.armies.some((a) => a.f === p && a.at === c.id) && G.armies.some((a) => a.f !== p && atWar(p, a.f) && (a.mv ? a.mv.to === c.id : a.at != null && Math.hypot(C(a.at).x - c.x, C(a.at).y - c.y) < 26)));
+  if (bare.length) h += '<h3>Exposed cities <small>enemies near, no army</small></h3><p class="chips">' + bare.map((c) => '<a href="#" class="gchip" style="--c:var(--bad)" data-a="selcity" data-v="' + c.id + '">' + esc(c.name) + ' <b>' + fmt(c.gar) + '</b></a>').join('') + '</p>';
+  h += '<p class="muted small">Keys: <kbd>A</kbd> opens this list, <kbd>N</kbd> jumps to the next army awaiting orders.</p>';
+  return h;
+}
+function lookAtArmy(a) { const [x, y] = armyPos(a); cam.x = x + (VW > 760 ? 190 / cam.z : 0); cam.y = y + (VW <= 760 ? VH * 0.22 / cam.z : 0); if (cam.z < 5) cam.z = 5; clampCam(); }
 function recruitBlock(c, army) {
   const ro = rosterFor(c.owner);
   let h = '<h3>Recruit in ' + esc(c.name) + ' <small>' + (army ? 'joins ' + esc(army.name) : 'joins the army here, or forms a new one') + '</small></h3><div class="ulist">';
@@ -256,6 +298,7 @@ function armyPanel(a) {
   const mine = a.f === G.player, g = a.gen || { name: 'No general', skill: 1 };
   if (UI.unitArmy !== a.id) { UI.unitArmy = a.id; UI.unitSel = new Set(); }
   let h = head(a.name, chip(a.f) + ' · ' + a.units.length + ' units · ' + armyMen(a).toLocaleString('en') + ' men', FAC[a.f].col);
+  if (mine) h += '<p class="small"><a href="#" data-a="allarmies">← All armies</a></p>';
   h += '<div class="kv"><div><span>General</span><b class="gname">' + esc(g.name) + '</b><small class="gold">' + stars(g.skill) + '</small></div><div><span>Strength</span><b>' + fmt(a.str) + '</b><small>' + (g.wins || 0) + ' recent wins</small></div><div><span>Pay</span><b>' + fmt(armyUpkeep(a)) + '</b><small>per season</small></div></div>';
   if (a.mv) h += '<p>' + (a.mv.order === 'attack' ? 'Marching to assault ' : a.mv.order === 'raid' ? 'Riding to raid ' : 'Moving to ') + '<b>' + esc(C(a.mv.to).name) + '</b> ' + (a.mv.k === 'sea' ? 'by sea' : 'overland') + '. Arrives in ' + (a.mv.turns - a.mv.done) + ' season(s).</p>';
   else { const c = C(a.at); h += '<p>Stationed at <a href="#" data-a="selcity" data-v="' + c.id + '">' + esc(c.name) + '</a> (' + esc(TNAME[terr[c.y * W + c.x]]) + ').</p>'; }
@@ -296,6 +339,7 @@ function helpPanel() {
 <p><b>Trade routes</b> form when one city has a surplus another lacks, and both sides are at peace with trade rights. Click any route line (or a ship) to see cargo in each direction, value, tariffs and risk. Winter closes the sea (mare clausum) and cuts cargoes.</p>
 <p><b>Colonies</b>: from a harbour city, choose <i>Army &amp; colonies → Choose a colony site</i>, or simply click unclaimed land. Green squares show where your ships can reach.</p>
 <p><b>Armies</b> are built from your people's own units: legions of hastati, principes and triarii; Macedonian phalanxes and Companions; Carthage's Libyans, Sacred Band, Numidian horse and Balearic slingers; Seleucid cataphracts, scythed chariots and elephants; Gaulish warbands and Gaesatae; steppe horse archers. Recruit them in a city's Army tab. Elite units need barracks or the capital, cavalry needs horses, and mercenaries hire in ports and markets.</p>
+<p><b>The Armies tab</b> (key <kbd>A</kbd>) lists every one of your forces with its general, location, units and orders, plus enemy armies marching on your cities. Click an army to fly to it and take command; <kbd>N</kbd> jumps to the next army awaiting orders.</p>
 <p><b>Battles</b> are fought in phases: missiles, the cavalry fight on the wings, the charge, melee rounds with morale and rout, then pursuit. Terrain matters: pikes rule flat ground and falter on hills and in forest. Every battle has a report and a replay; click the crossed swords on the map or View battle in the chronicle.</p>
 <p><b>Map modes</b>: Political, Trade (every route in the world), Goods (each city's main products), Terrain.</p>
 <p><b>Music</b> is composed live in the ancient modes: Dorian lyre and aulos for Greeks and Romans, Phrygian harp and frame drum for the Levant and Carthage, Lydian harp and sistrum on the Nile, pentatonic pipes and carnyx in the north and west, and fiddle and horse drum on the steppe. It follows the people of the town you open.</p>
@@ -311,6 +355,10 @@ const ACT = {
   selroute: (v) => select({ type: 'route', id: +v }),
   selcity: (v) => { select({ type: 'city', id: +v }); lookAtCity(C(+v)); },
   selarmy: (v) => select({ type: 'army', id: +v }),
+  goarmy: (v) => { const a = G.armies.find((x) => x.id === +v); if (!a) return; lookAtArmy(a); select({ type: 'army', id: a.id }); },
+  aorder: (v, el) => { const a = G.armies.find((x) => x.id === +el.dataset.id); if (!a) return; lookAtArmy(a); select({ type: 'army', id: a.id }); ACT.march(v); },
+  areplenish: (v) => { const a = G.armies.find((x) => x.id === +v), e = replenish(a); toast(e || 'The ranks of ' + a.name + ' are filled', e ? 'bad' : 'good'); renderAll(); },
+  allarmies: () => select({ type: 'armies' }),
   newroute: () => { const c = C(UI.sel.id); const targets = c.cand.map((n) => n.id).filter((id) => { const o = C(id); return o.owner && access(c.owner, o.owner) && !G.routes.some((r) => dk(r.a, r.b) === dk(c.id, id)); }); UI.mode = { type: 'route', from: c.id, targets, msg: 'Pick a partner for ' + c.name + ' (ringed cities have trade access)' }; renderMode(); },
   pinr: (v) => { const r = G.routes.find((x) => x.id === +v); if (r) r.pin = !r.pin; renderPanel(); },
   closer: (v) => { const r = G.routes.find((x) => x.id === +v); if (!r) return; G.routes = G.routes.filter((x) => x !== r); G.black[dk(r.a, r.b)] = G.turn + 8; toast('Route closed. Merchants will stay away for two years.'); renderAll(); },
@@ -393,7 +441,9 @@ function setupInput() {
   document.addEventListener('click', (e) => { const el = e.target.closest('[data-a]'); if (!el || el.tagName === 'INPUT') return; e.preventDefault(); const f = ACT[el.dataset.a]; if (f) f(el.dataset.v, el); });
   document.addEventListener('input', (e) => { const a = e.target.dataset && e.target.dataset.a; if (a === 'tax' || a === 'tariff') { G.fac[G.player][a] = +e.target.value / 100; e.target.previousSibling.textContent = Math.round(+e.target.value) + '%'; } if (e.target.id === 'colname') UI.colName = e.target.value; });
   document.addEventListener('change', (e) => { const a = e.target.dataset && e.target.dataset.a; if (a === 'tax' || a === 'tariff') renderPanel(); });
-  document.addEventListener('keydown', (e) => { if (e.target.tagName === 'INPUT') return; if (e.key === 'Escape') { if (UI.mode) { UI.mode = null; renderMode(); } else { UI.sel = null; renderPanel(); } } if (e.key === 'Enter' && G && $('#start').hidden) doEndTurn(); if (e.key === '+' || e.key === '=') zoomAt(1, VW / 2, VH / 2); if (e.key === '-') zoomAt(-1, VW / 2, VH / 2); });
+  document.addEventListener('keydown', (e) => { if (e.target.tagName === 'INPUT') return; if (e.key === 'Escape') { if (UI.mode) { UI.mode = null; renderMode(); } else { UI.sel = null; renderPanel(); } } if (e.key === 'Enter' && G && $('#start').hidden) doEndTurn();
+    if (G && $('#start').hidden && (e.key === 'a' || e.key === 'A')) select(UI.sel && UI.sel.type === 'armies' ? null : { type: 'armies' });
+    if (G && $('#start').hidden && (e.key === 'n' || e.key === 'N')) { const idle = G.armies.filter((a) => a.f === G.player && !a.mv); if (idle.length) { const cur = UI.sel && UI.sel.type === 'army' ? idle.findIndex((a) => a.id === UI.sel.id) : -1; ACT.goarmy(idle[(cur + 1) % idle.length].id); } } if (e.key === '+' || e.key === '=') zoomAt(1, VW / 2, VH / 2); if (e.key === '-') zoomAt(-1, VW / 2, VH / 2); });
   $('#endturn').addEventListener('click', doEndTurn);
   $('#musicbtn').addEventListener('click', () => { Music.toggle(); if (Music.on) Music.refresh(); renderMusic(); });
   $('#modecancel').addEventListener('click', () => { UI.mode = null; renderMode(); });

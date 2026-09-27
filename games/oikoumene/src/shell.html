@@ -148,6 +148,15 @@ ul.dip li.open{border-color:var(--bronze)}
 .gname{font:600 15px var(--disp)!important}
 #chron li button{margin-left:4px}
 .battlecv{aspect-ratio:2/1}
+.acard{background:var(--panel2);border:1px solid var(--line);padding:7px 9px;margin:0 0 6px;display:flex;flex-direction:column;gap:4px}
+.acard:hover{border-color:var(--line2)}.acard.idle{border-left:3px solid var(--bronze)}.acard.hurt{border-left:3px solid var(--bad)}.acard.go{border-left:3px solid #7fb3d8}
+.ahead{display:flex;gap:8px;align-items:baseline;flex-wrap:wrap;cursor:pointer}
+.ahead b{font:600 14px var(--disp)}.ahead .val{margin-left:auto;font:22px var(--num);color:var(--bronze)}
+.aunits{display:flex;flex-wrap:wrap;gap:2px}.aunits img{width:20px;height:20px;image-rendering:pixelated;background:#0b151b}
+.threat{background:#2a1512;border:1px solid #7a2f22;padding:6px 9px;margin:0 0 4px;font-size:13px;cursor:pointer}
+.threat:hover{border-color:var(--bad)}
+.tag{font:11px var(--disp);padding:1px 5px;border:1px solid var(--line2);color:var(--mute)}
+.tag.idle{color:var(--bronze);border-color:var(--bronze2)}.tag.go{color:#9fd0ff;border-color:#3f6a8a}.tag.atk{color:var(--bad);border-color:#7a2f22}.tag.hurt{color:var(--bad);border-color:#7a2f22}
 /* chronicle */
 #chron{position:absolute;left:12px;bottom:12px;width:min(430px,calc(100% - 24px));background:rgba(14,26,33,.9);border:2px solid var(--line);padding:6px 10px;z-index:3;cursor:pointer;max-height:40%;overflow:auto}
 #chron h5{margin:0 0 3px;font:600 11px var(--disp);text-transform:uppercase;letter-spacing:.12em;color:var(--bronze);display:flex;justify-content:space-between}
@@ -204,7 +213,7 @@ ul.dip li.open{border-color:var(--bronze)}
   <div id="top">
     <div class="tb tb-realm" data-open="realm" role="button" tabindex="0" title="Your realm: treasury, policy, ambitions"><span id="tb-crest" class="crest"></span><span id="tb-name">Oikoumene</span></div>
     <div class="tb tb-stats"><span id="tb-date"></span><span id="tb-sea" hidden>Mare clausum</span><b id="tb-gold"></b><span id="tb-inc"></span><span id="tb-pop"></span></div>
-    <div class="tb tb-btns"><button data-open="dip">Diplomacy</button><button data-open="ledger">Trade</button><button data-open="market">Market</button><button data-open="help">?</button><button id="musicbtn" aria-pressed="false" title="Music in the ancient modes">Music: off</button></div>
+    <div class="tb tb-btns"><button data-open="armies">Armies</button><button data-open="dip">Diplomacy</button><button data-open="ledger">Trade</button><button data-open="market">Market</button><button data-open="help">?</button><button id="musicbtn" aria-pressed="false" title="Music in the ancient modes">Music: off</button></div>
     <div class="tb tb-btns modes" aria-label="Map mode"><button data-mapmode="political">Political</button><button data-mapmode="trade">Routes</button><button data-mapmode="goods">Goods</button><button data-mapmode="terrain">Terrain</button></div>
     <button id="endturn" class="primary">End season</button>
   </div>

@@ -152,6 +152,13 @@ function drawMap(t) {
     for (let k = -2; k <= 2; k++) { ctx.fillStyle = fl ? '#ffe08a' : '#e8e0c8'; ctx.fillRect(x + k * u, y + k * u, u, u); ctx.fillRect(x - k * u, y + k * u, u, u); }
     ctx.fillStyle = FAC[b.sides[b.winner].f].col; ctx.fillRect(x - 3 * u, y + 3 * u, 7 * u, u);
   }
+  // highlight the player's forces while the armies list is open
+  if (UI.sel && (UI.sel.type === 'armies' || UI.sel.type === 'army')) for (const a of G.armies) {
+    if (a.f !== G.player || (UI.sel.type === 'army' && UI.sel.id !== a.id)) continue; let x, y;
+    if (a.mv) { const f = C(a.mv.from), to = C(a.mv.to), pp = pointAt(pathBetween(f, to, a.mv.k), (a.mv.done + creep(a.mv.ts)) / a.mv.turns); [x, y] = w2s(pp[0], pp[1]); } else { const c = C(a.at); [x, y] = w2s(c.x + 0.5, c.y + 0.5); x += 6 * u; y -= 2 * u; }
+    ctx.strokeStyle = 'rgba(255,224,138,' + (0.55 + 0.45 * Math.sin(t / 220)) + ')'; ctx.lineWidth = 2; ctx.beginPath(); ctx.arc(x + 3 * u, y - 5 * u, 7 * u + 3, 0, 7); ctx.stroke();
+    if (a.mv) { const to = C(a.mv.to), [tx, ty] = w2s(to.x + 0.5, to.y + 0.5); ctx.setLineDash([4, 4]); ctx.lineDashOffset = -t / 60; ctx.strokeStyle = a.mv.order === 'move' ? 'rgba(159,208,255,0.8)' : 'rgba(255,110,80,0.85)'; ctx.beginPath(); ctx.moveTo(x, y); ctx.lineTo(tx, ty); ctx.stroke(); ctx.setLineDash([]); }
+  }
   // mode targets
   if (UI.mode && (UI.mode.type === 'march' || UI.mode.type === 'route')) {
     for (const id of UI.mode.targets || []) { const c = C(id), [sx, sy] = w2s(c.x + 0.5, c.y + 0.5); ctx.strokeStyle = UI.mode.type === 'march' ? (UI.mode.order === 'move' ? '#9fd0ff' : '#ff8a6a') : '#ffe08a'; ctx.lineWidth = 2; const r = 7 * u + 3 + Math.sin(t / 200) * 2; ctx.beginPath(); ctx.arc(sx, sy, r, 0, 7); ctx.stroke(); }
