@@ -1319,6 +1319,9 @@ const ACHS = [
   { id: "golden", name: "Golden envelope", hint: "Very lucky." },
   { id: "heart", name: "Heartbreaker", hint: "Max out chemistry with someone." },
   { id: "walkout", name: "Walked out", hint: "Leave a meeting early." },
+  { id: "host", name: "The host", hint: "Throw your own party." },
+  { id: "captain", name: "Captain's quarters", hint: "Spend a night on your boat." },
+  { id: "skyhigh", name: "Red-eye", hint: "An overnight flight on your own jet." },
 ];
 
 /* Rivals: other players climbing the same ladder. Their fortunes track yours, so someone is always just ahead. */
@@ -2370,10 +2373,14 @@ function drawWorld(c, t) {
     if (n.you) { drawPerson(c, x, 64, youPal(rank()), t, W.talkingYou, 1, W.moving); return; }
     if (n.type !== "vendor") drawPerson(c, x, 64, n.pal, t, W.talk === n.id, hash(n.id) % 9, false);
     const near = W.near === n.id, iy = (n.type === "vendor" ? 58 : 64) - 8 + (near ? Math.round(Math.sin(t / 200)) : 0);
-    const icol = { vendor: "#f5c542", circle: "#ff6fae", boss: "#ff9a5c", rival: "#ff6f6f", local: "#f1e9d6" }[n.type];
+    const icol = { vendor: "#f5c542", circle: "#ff6fae", boss: "#ff9a5c", rival: "#ff6f6f", local: "#f1e9d6", flirt: "#b565c9", investor: "#52c7b8" }[n.type];
     if (near || n.type !== "local") { R(c, x + 3, iy, 4, 4, "#0b0e1a"); R(c, x + 4, iy + 1, 2, 2, icol); if (near) R(c, x + 4, iy - 2, 2, 1, icol); }
   });
   if (night) { c.fillStyle = "rgba(10,10,40,.18)"; c.fillRect(0, 0, 192, 108); }
+  if (W.event?.type === "party") {
+    for (let i = 0; i < 4; i++) { const a = Math.sin(t / 600 + i * 1.7) * 0.7; for (let k = 0; k < 70; k += 2) R(c, 96 + i * 20 - 30 + Math.sin(a) * k, k, 1, 1, ["rgba(255,95,162,.55)", "rgba(82,199,184,.55)", "rgba(245,197,66,.55)", "rgba(181,101,201,.55)"][i]); }
+    const r = rng(Math.floor(t / 120)); for (let i = 0; i < 18; i++) R(c, r() * 192, r() * 84, 1, 1, ["#ff6fae", "#f5c542", "#52c7b8", "#f4f4f4"][i % 4]);
+  }
 }
 const LOCAL_NAMES = { es: ["Luis", "Carmen", "Andrés", "Paola", "Jorge", "Valeria", "Nando", "Lupita"], zh: ["小王", "李姐", "阿强", "张先生", "陈小姐", "老周", "小美", "阿杰"], other: ["Sam", "Alex", "Robin", "Kim", "Jo", "Pat"] };
 const LOCAL_ROLES = { shack: ["surfer", "tourist", "fisherman"], street: ["office worker", "student", "taxi driver"], rooftop: ["street artist", "tour guide", "musician"], office: ["banker", "courier", "consultant"], deck: ["deckhand", "yacht broker", "sailor"], villa: ["DJ", "influencer", "promoter"], farm: ["picker", "agronomist", "caddie"], stadium: ["season-ticket holder", "scout", "journalist"], teahouse: ["calligrapher", "tea master", "retired official"], jet: ["flight attendant", "bodyguard", "pilot"], boat: ["deckhand", "broker", "sailor"] };
@@ -2384,6 +2391,8 @@ function buildNpcs(t) {
   for (let k = 0; k < 2; k++) list.push({ id: "local" + k, type: "local", x: 230 + k * 110 + Math.floor(r() * 30), name: names[Math.floor(r() * names.length)], role: roles[k % roles.length], pal: genNpcPal(hash(t.id + today() + k)) });
   const r0 = rank();
   (career().circle || []).forEach((p) => { const home = CIRCLE_HOME[p.id] || career().tiers.find((x) => x.ch === p.rank)?.id; if (home === t.id && p.rank <= r0 && (G.pref === "everyone" || (G.pref === "women" ? p.g === "w" : p.g === "m"))) list.push({ id: "c-" + p.id, type: "circle", x: 290, name: p.name, role: p.role, pal: p.pal || genNpcPal(hash(p.name)), person: p }); });
+  list.push(makeFlirt("flirt0", 190 + Math.floor(r() * 40), r));
+  contactsHere(t.id).forEach((c, k) => list.push({ id: "c-" + c.id, type: "circle", x: 320 + k * 20, name: c.name, role: c.role, pal: c.pal, person: c }));
   if (r() < 0.45) { const rv = rivalsFor()[Math.floor(r() * 4)]; list.push({ id: "rival", type: "rival", x: 95, name: rv.name, role: "your rival", pal: genNpcPal(hash(rv.id)), rival: rv }); }
   list.push({ id: "boss", type: "boss", x: width - 22, name: t.who.name, role: t.who.role, pal: t.npc || genNpcPal(hash(t.id)) });
   return list;
@@ -2432,7 +2441,7 @@ function openWalk(id) {
   const t = tierById(id); if (!t) return;
   const th = themeFor(t);
   if (W.tier?.id !== id) { W.x = 40; W.target = null; W.cam = 0; W.talk = null; }
-  W.tier = t; W.theme = th; W.width = th.width || 480; W.npcs = buildNpcs(t); W.near = null;
+  W.event = null; W.tier = t; W.theme = th; W.width = th.width || 480; W.npcs = buildNpcs(t); W.near = null;
   $("#ex-map").hidden = true; $("#ex-walk").hidden = false;
   $("#walk-place").textContent = t.place.toUpperCase() + " · " + t.clock;
   renderAround(); renderInteract();
@@ -2443,24 +2452,38 @@ function nearestNpc() {
   return best;
 }
 function renderAround() {
-  $("#around").innerHTML = W.npcs.slice().sort((a, b) => a.x - b.x).map((n) => '<button class="npcrow' + (W.near === n.id ? " near" : "") + '" data-n="' + n.id + '"><span><strong>' + esc(n.name) + '</strong> <span class="muted">' + esc(n.role) + '</span></span><span class="chip ' + ({ vendor: "gold", circle: "love", boss: "info", rival: "major", local: "info" }[n.type]) + '">' + ({ vendor: "Vendor", circle: "Circle", boss: "Meeting", rival: "Rival", local: "Local" }[n.type]) + "</span></button>").join("");
+  $("#around").innerHTML = W.npcs.slice().sort((a, b) => a.x - b.x).map((n) => '<button class="npcrow' + (W.near === n.id ? " near" : "") + '" data-n="' + n.id + '"><span><strong>' + esc(n.name) + '</strong> <span class="muted">' + esc(n.role) + '</span></span><span class="chip ' + ({ vendor: "gold", circle: "love", boss: "info", rival: "major", local: "info", flirt: "love", investor: "good" }[n.type]) + '">' + ({ vendor: "Vendor", circle: "Circle", boss: "Meeting", rival: "Rival", local: "Local", flirt: "Flirt", investor: "Investor" }[n.type]) + "</span></button>").join("");
   $("#around").querySelectorAll("[data-n]").forEach((b) => b.addEventListener("click", () => { const n = W.npcs.find((x) => x.id === b.dataset.n); W.target = n.x - 12; }));
 }
 function renderInteract() {
   const box = $("#interact"), n = W.npcs.find((x) => x.id === W.near);
   $("#walk-talk").disabled = !n;
-  if (!n) { box.innerHTML = '<div class="label">' + esc(W.tier.title) + '</div><p class="muted">Walk up to someone to talk. The gold icon is a vendor, pink is your circle, orange is ' + esc(W.tier.who.name) + ", red is a rival.</p>"; return; }
+  if (!n) {
+    if (W.event) { box.innerHTML = '<div class="row between"><h3>' + esc(W.event.name) + '</h3><button class="btn sm" id="leave-ev">Leave</button></div><p class="muted">' + (W.event.type === "party" ? "Music's loud. Purple markers are people worth flirting with, teal are investors." : "Teal markers are investors. Every card you collect adds +1 to a future deal meter.") + "</p>"; $("#leave-ev").onclick = leaveEvent; return; }
+    const ev = eventFor(W.tier), L = life(), went = (L.events || {})[ev.key];
+    const hosts = hostVenues();
+    box.innerHTML = '<div class="label">' + esc(W.tier.title) + '</div><p class="muted">Walk up to someone. Gold is a vendor, purple someone to flirt with, pink your circle, orange ' + esc(W.tier.who.name) + ", red a rival.</p>" +
+      '<div class="card"><div class="label">Tonight here</div><div class="t">' + esc(ev.name) + '</div><div class="muted small">' + (ev.type === "party" ? "Music, drinks, people to flirt with, maybe an investor." : "Investors and decision-makers. Bring your best " + esc(LANGS[G.lang].name) + ".") + '</div><div class="row"><button class="btn sm ' + (ev.type === "party" ? "love" : "primary") + '" id="go-ev"' + (!went && L.cash < ev.cover ? " disabled" : "") + ">" + (went ? "Go back in" : "Go · " + money(ev.cover) + " cover") + "</button></div></div>" +
+      (hosts.length ? '<div class="card"><div class="label">Or throw your own</div><div class="row">' + hosts.map((v, k) => '<button class="btn sm gold" data-host="' + k + '"' + (L.cash < v.cost ? " disabled" : "") + ">Party on " + esc(v.label) + " · " + money(v.cost) + "</button>").join("") + "</div></div>" : "");
+    $("#go-ev").onclick = () => attendEvent(ev);
+    box.querySelectorAll("[data-host]").forEach((b) => b.addEventListener("click", () => throwParty(hosts[+b.dataset.host])));
+    return;
+  }
   const acts = [];
   if (n.type === "vendor") menuFor(W.tier).forEach((m, k) => acts.push('<button class="btn sm gold" data-order="' + k + '"' + (life().cash < m.price ? " disabled" : "") + ">" + esc(m.t ? m.t + " · " : "") + esc(m.en) + " · " + money(m.price) + "</button>"));
   if (n.type === "local" || n.type === "vendor") acts.push('<button class="btn sm" data-act="chat"' + (n.talked ? " disabled" : "") + ">" + (n.talked ? "Already chatted" : "Small talk") + "</button>");
   if (n.type === "circle") { acts.push('<button class="btn sm love" data-act="text">Talk</button>'); menuFor(W.tier).slice(0, 2).forEach((m, k) => acts.push('<button class="btn sm" data-treat="' + k + '"' + (life().cash < m.price * 2 ? " disabled" : "") + ">Buy them " + esc(m.en) + " · " + money(m.price * 2) + "</button>")); }
   if (n.type === "rival") acts.push('<button class="btn sm" data-act="rival"' + (n.talked ? " disabled" : "") + ">Talk back</button>");
+  if (n.type === "flirt") acts.push('<button class="btn sm love" data-act="flirt"' + (n.talked ? " disabled" : "") + ">" + (n.talked ? "You've had your shot" : "Flirt") + "</button>");
+  if (n.type === "investor") acts.push('<button class="btn sm primary" data-act="network"' + (n.talked ? " disabled" : "") + ">" + (n.talked ? "Already talked" : "Network") + "</button>");
   if (n.type === "boss") { const i = career().tiers.indexOf(W.tier), lk = tierLock(i); acts.push(lk ? '<span class="chip info">' + esc(lk) + "</span>" : '<button class="btn sm primary" data-act="meet">Start the meeting · ' + money(W.tier.stakes) + " on the table</button>"); }
   box.innerHTML = '<div class="row between"><h3>' + esc(n.name) + '</h3><span class="muted small">' + esc(n.role) + '</span></div><div id="talk-area"></div><div class="row">' + acts.join("") + "</div>";
   box.querySelectorAll("[data-order]").forEach((b) => b.addEventListener("click", () => orderAt(menuFor(W.tier)[+b.dataset.order])));
   box.querySelectorAll("[data-treat]").forEach((b) => b.addEventListener("click", () => treat(n, menuFor(W.tier)[+b.dataset.treat])));
   box.querySelector('[data-act="chat"]')?.addEventListener("click", () => smallTalk(n));
   box.querySelector('[data-act="rival"]')?.addEventListener("click", () => rivalTalk(n));
+  box.querySelector('[data-act="flirt"]')?.addEventListener("click", () => flirtFlow(n));
+  box.querySelector('[data-act="network"]')?.addEventListener("click", () => networkFlow(n));
   box.querySelector('[data-act="text"]')?.addEventListener("click", () => { chatWith = n.person.id; showTab("circle"); });
   box.querySelector('[data-act="meet"]')?.addEventListener("click", () => { G.tier[G.lang] = career().tiers.indexOf(W.tier); save(); beginMeeting(); });
 }
@@ -2545,6 +2568,250 @@ document.addEventListener("keyup", (e) => { if (keyMap[e.key]) W.keys[keyMap[e.k
 });
 $("#walk-talk").addEventListener("click", () => { $("#interact button:not([disabled])")?.focus(); $("#interact").scrollIntoView({ behavior: "smooth", block: "nearest" }); });
 $("#walk-cv").addEventListener("click", (e) => { const r = e.target.getBoundingClientRect(); W.target = clamp(W.cam + ((e.clientX - r.left) / r.width) * 192, 8, W.width - 8); });
+
+
+/* =========================================================
+   NIGHTLIFE: flirting, parties, networking, overnights
+   ========================================================= */
+const FLIRT = {
+  es: [
+    ["¿Estás perdido o solo buscabas a alguien como yo?", "Are you lost, or were you just looking for someone like me?", ["Creo que acabo de encontrar lo que buscaba.", "I think I just found what I was looking for.", "Smooth, and grammatically clean."], ["Creo que acabo de encontrar que buscaba.", "grammar", "…lo que buscaba.", "As a relative, 'what' is lo que."], ["No, tengo GPS.", "register", "Technically correct. Romantically dead."]],
+    ["Me gusta tu estilo. ¿De dónde eres?", "I like your style. Where are you from?", ["Gracias, tú tampoco estás nada mal. Soy de Estados Unidos.", "Thanks, you're not bad yourself. I'm from the US.", "Compliment returned, question answered."], ["Gracias, tú también no estás mal.", "grammar", "Tú tampoco estás mal.", "Negative 'either' is tampoco."], ["Lo sé.", "register", "That's arrogance, not confidence."]],
+    ["¿Bailas?", "Do you dance?", ["Mal, pero contigo me arriesgo.", "Badly, but with you I'll risk it.", "Self-deprecating and flirty."], ["Mal, pero con tú me arriesgo.", "grammar", "…contigo me arriesgo.", "Con + tú becomes contigo."], ["No, bailar es para turistas.", "culture", "You just insulted the whole dance floor."]],
+    ["Esta canción me encanta.", "I love this song.", ["A mí también. ¿Me enseñas a bailarla?", "Me too. Will you teach me to dance to it?", "An invitation disguised as a question."], ["Yo también.", "grammar", "A mí también.", "With encantar, agree with a mí también."], ["¿En serio? Es horrible.", "register", "Never trash their song."]],
+    ["¿Y qué haces por aquí?", "So what are you doing around here?", ["Negocios de día, y de noche… busco buena compañía.", "Business by day, and by night… looking for good company.", "Mysterious in exactly the right amount."], ["Negocios de día, y de noche busco buena compañero.", "vocabulary", "…busco buena compañía.", "Company (the feeling) is compañía."], ["Busco a alguien con dinero.", "register", "Honest, maybe. Charming, no."]],
+    ["Bueno… ya me tengo que ir.", "Well… I have to go now.", ["Qué pena. ¿Me das tu número para seguir la conversación?", "Too bad. Will you give me your number so we can keep talking?", "The close. Clean."], ["Qué pena. ¿Me das tu número por seguir la conversación?", "grammar", "…para seguir la conversación.", "Purpose takes para."], ["Vale, adiós.", "culture", "You let them walk away."]],
+  ],
+  zh: [
+    ["你一个人吗？", "Are you here alone?", ["现在不是了。", "Not anymore.", "Short, confident, and a perfect 了 of change."], ["现在不是一个人了吗。", "grammar", "现在不是了。", "Don't turn your answer into a question."], ["对，我的朋友都比较丑。", "register", "Insulting your friends isn't charming."], "Nǐ yí ge rén ma?", { g: "Xiànzài bú shì le.", mi: "Xiànzài bú shì yí ge rén le ma.", ma: "Duì, wǒ de péngyou dōu bǐjiào chǒu." }],
+    ["你的衣服很好看。", "Your outfit looks great.", ["谢谢，不过没有你好看。", "Thanks, but not as good-looking as you.", "没有…好看: the classic compliment structure."], ["谢谢，不过比你不好看。", "grammar", "没有你好看", "Negative comparisons use 没有, not 比…不."], ["我知道，很贵的。", "register", "Bragging about the price tag."], "Nǐ de yīfu hěn hǎokàn.", { g: "Xièxie, búguò méiyǒu nǐ hǎokàn.", mi: "Xièxie, búguò bǐ nǐ bù hǎokàn.", ma: "Wǒ zhīdào, hěn guì de." }],
+    ["你会跳舞吗？", "Can you dance?", ["跳得不好，但是可以跟你学。", "Not well, but I could learn from you.", "Humble and flirty."], ["跳不好得。", "grammar", "跳得不好", "得 comes right after the verb."], ["跳舞很无聊。", "culture", "You just insulted the dance floor."], "Nǐ huì tiàowǔ ma?", { g: "Tiào de bù hǎo, dànshì kěyǐ gēn nǐ xué.", mi: "Tiào bù hǎo de.", ma: "Tiàowǔ hěn wúliáo." }],
+    ["这首歌我很喜欢。", "I love this song.", ["我也是。要不要一起跳？", "Me too. Want to dance?", "An invitation, instantly."], ["我也喜欢是。", "grammar", "我也是。", "Just 我也是."], ["太吵了。", "register", "Never trash their song."], "Zhè shǒu gē wǒ hěn xǐhuan.", { g: "Wǒ yě shì. Yào bu yào yìqǐ tiào?", mi: "Wǒ yě xǐhuan shì.", ma: "Tài chǎo le." }],
+    ["你来这里做什么？", "What brings you here?", ["白天谈生意，晚上认识有意思的人，比如你。", "Business by day, interesting people by night. Like you.", "Smooth, with a compliment at the end."], ["白天谈生意，晚上认识有意思人。", "grammar", "有意思的人", "You need 的 before the noun."], ["找有钱的人。", "register", "Honest, maybe. Charming, no."], "Nǐ lái zhèlǐ zuò shénme?", { g: "Báitiān tán shēngyì, wǎnshang rènshi yǒu yìsi de rén, bǐrú nǐ.", mi: "…rènshi yǒu yìsi rén.", ma: "Zhǎo yǒu qián de rén." }],
+    ["我得走了……", "I have to go…", ["那可以加个微信吗？", "Then can I add you on WeChat?", "Adding WeChat is how numbers get swapped."], ["那可以加个微信吗了？", "grammar", "可以加个微信吗？", "No 了 in this question."], ["好，拜拜。", "culture", "You let them walk away."], "Wǒ děi zǒu le…", { g: "Nà kěyǐ jiā ge Wēixìn ma?", mi: "Nà kěyǐ jiā ge Wēixìn ma le?", ma: "Hǎo, bàibai." }],
+  ],
+};
+const NETWORK = {
+  es: [
+    ["¿Y usted a qué se dedica?", "And what do you do?", ["Ayudo a hoteles a vender directo. Crecemos un 30 % al año.", "I help hotels sell direct. We grow 30% a year.", "A 30-second pitch with a number."], ["Ayudo a hoteles de vender directo.", "grammar", "Ayudo a hoteles a vender directo.", "Ayudar a + infinitive."], ["Es complicado de explicar.", "clarity", "If you can't explain it, they won't invest."]],
+    ["Interesante. ¿Tiene una tarjeta?", "Interesting. Do you have a card?", ["Claro, aquí tiene. Me encantaría tomar un café esta semana.", "Of course, here you go. I'd love to grab coffee this week.", "Card plus a concrete next step."], ["Claro, aquí tienes.", "register", "Aquí tiene.", "They used usted. Match it."], ["No uso tarjetas, búsqueme en internet.", "register", "Making them do the work."]],
+    ["¿Quién más invierte con ustedes?", "Who else is investing with you?", ["Hay un fondo de Madrid en conversaciones, pero aún no hay nada firmado.", "A Madrid fund is in talks, but nothing is signed yet.", "Honest, and it creates urgency."], ["…pero aún no hay nada firmada.", "grammar", "…nada firmado.", "Nada takes the masculine."], ["Todo el mundo. Somos lo más de lo más.", "clarity", "Hype makes investors reach for their coats."]],
+  ],
+  zh: [
+    ["请问您是做哪一行的？", "May I ask what line you're in?", ["我做酒店直销平台，每年增长百分之三十。", "I run a direct-booking platform for hotels, growing 30% a year.", "A 30-second pitch with a number."], ["我做酒店直销平台，每年增长三十百分。", "grammar", "百分之三十", "百分之 comes first."], ["说起来很复杂。", "clarity", "If you can't explain it, they won't invest."], "Qǐngwèn nín shì zuò nǎ yì háng de?", { g: "Wǒ zuò jiǔdiàn zhíxiāo píngtái, měi nián zēngzhǎng bǎi fēn zhī sānshí.", mi: "…měi nián zēngzhǎng sānshí bǎi fēn.", ma: "Shuō qǐlái hěn fùzá." }],
+    ["有名片吗？", "Do you have a business card?", ["有，请多指教。（双手递上）", "Yes, I look forward to your guidance. (offers it with both hands)", "Both hands, the right phrase."], ["有，给你。（单手递过去）", "culture", "有，请多指教。（双手递上）", "Business cards go with both hands."], ["没有，名片太老土了。", "register", "Mocking their custom."], "Yǒu míngpiàn ma?", { g: "Yǒu, qǐng duō zhǐjiào. (both hands)", mi: "Yǒu, gěi nǐ. (one hand)", ma: "Méiyǒu, míngpiàn tài lǎotǔ le." }],
+    ["你们现在有哪些投资人？", "Who are your investors right now?", ["有一家上海基金在谈，不过还没签。", "A Shanghai fund is in talks, but nothing's signed yet.", "Honest, and it creates urgency."], ["有一家上海基金在谈，不过还不签。", "grammar", "还没签", "Not yet (for something that could happen) is 还没."], ["所有人都想投我们。", "clarity", "Hype makes investors reach for their coats."], "Nǐmen xiànzài yǒu nǎxiē tóuzīrén?", { g: "Yǒu yì jiā Shànghǎi jījīn zài tán, búguò hái méi qiān.", mi: "…búguò hái bù qiān.", ma: "Suǒyǒu rén dōu xiǎng tóu wǒmen." }],
+  ],
+};
+const CONTACT_NAMES = {
+  es: { w: ["Valeria", "Daniela", "Isabella", "Luciana", "Mariana", "Sofía", "Gabriela", "Renata"], m: ["Mateo", "Diego", "Sebastián", "Andrés", "Nicolás", "Tomás", "Emilio", "Joaquín"] },
+  zh: { w: ["林晓雨", "王思思", "陈可欣", "张婷", "李佳怡", "刘梦", "周雨桐", "何雪"], m: ["王浩", "李俊", "张伟", "陈子轩", "刘洋", "赵磊"] },
+  other: { w: ["Maya", "Lea", "Nina", "Ines", "Alba"], m: ["Leo", "Marco", "Julien", "Adam", "Theo"] },
+};
+const CONTACT_ROLES = ["dancer", "architect", "model", "sommelier", "photographer", "chef", "pilot", "surf instructor", "DJ", "fashion buyer", "gallerist", "tennis pro"];
+const EVENTS = {
+  shack: [["Beach party", "party"], ["Sunset catamaran", "party"]], deck: [["Yacht party", "party"], ["Owners' cocktail", "network"]], villa: [["Pool party", "party"], ["Villa after-party", "party"]],
+  street: [["Night market crawl", "party"], ["Traders' breakfast", "network"]], rooftop: [["Rooftop party", "party"], ["Gallery opening", "network"]], office: [["Investor mixer", "network"], ["Launch party", "party"]],
+  farm: [["Harvest fiesta", "party"], ["Golf and cigars", "network"]], stadium: [["VIP after-party", "party"], ["Owners' box drinks", "network"]], teahouse: [["Tea ceremony", "network"], ["Lantern evening", "party"]], jet: [["Charter lounge", "network"], ["Charter lounge", "network"]],
+};
+function eventFor(t) {
+  const list = EVENTS[t.kind] || EVENTS.office, e = list[hash(t.id + today()) % list.length];
+  return { name: e[0], type: e[1], cover: Math.max(10, Math.round(t.stakes * 0.02)), key: t.id + ":" + today() };
+}
+function prefGender(r) { return G.pref === "women" ? "w" : G.pref === "men" ? "m" : r() < 0.5 ? "w" : "m"; }
+function makeFlirt(id, x, r, used = new Set()) {
+  const g = prefGender(r), names = (CONTACT_NAMES[G.lang] || CONTACT_NAMES.other)[g], L = life();
+  const taken = new Set([...(L.contacts || []).map((c) => c.name), ...used]);
+  const pool = names.filter((n) => !taken.has(n)), name = (pool.length ? pool : names)[Math.floor(r() * (pool.length || names.length))];
+  used.add(name);
+  const pal = genNpcPal(Math.floor(r() * 1e9)); pal.long = g === "w"; pal.hair = ["#101014", "#2a1a14", "#6b3b1f", "#e9d7a5", "#b8432a"][Math.floor(r() * 5)]; if (g === "w") pal.jacket = ["#ff6fae", "#b565c9", "#e24b3b", "#f5c542", "#52c7b8", "#f4f4f4"][Math.floor(r() * 6)];
+  return { id, type: "flirt", x, name, g, role: CONTACT_ROLES[Math.floor(r() * CONTACT_ROLES.length)], pal };
+}
+function makeInvestor(id, x, r, used = new Set()) {
+  const g = r() < 0.5 ? "w" : "m", all = (CONTACT_NAMES[G.lang] || CONTACT_NAMES.other)[g], names = all.filter((n) => !used.has(n)).length ? all.filter((n) => !used.has(n)) : all;
+  const pal = genNpcPal(Math.floor(r() * 1e9)); pal.jacket = ["#1c1f2b", "#262a33", "#2b3a67"][Math.floor(r() * 3)]; pal.long = g === "w";
+  const nm = names[Math.floor(r() * names.length)]; used.add(nm);
+  return { id, type: "investor", x, name: nm, role: ["angel investor", "fund partner", "family-office director", "hotel group CFO"][Math.floor(r() * 4)], pal };
+}
+function eventNpcs(ev, t) {
+  const r = rng(hash(ev.key)), list = [], width = W.width;
+  list.push({ id: "vendor", type: "vendor", x: 150, name: ev.host ? "Your bartender" : vendorTitle(t), role: ev.host ? "on your payroll tonight" : "pours the drinks", pal: genNpcPal(hash(t.id + "v")) });
+  const nFlirt = ev.type === "party" ? (ev.host ? 5 : 4) : 1, nInv = ev.type === "network" ? 4 : ev.host ? 2 : 1;
+  const slots = []; for (let x = 70; x < width - 30; x += 34) if (Math.abs(x - 150) > 22) slots.push(x);
+  const pick = () => slots.splice(Math.floor(r() * slots.length), 1)[0] ?? 200;
+  const used = new Set(contactsHere(t.id).map((c) => c.name));
+  for (let k = 0; k < nFlirt; k++) list.push(makeFlirt("f" + k, pick(), r, used));
+  for (let k = 0; k < nInv; k++) list.push(makeInvestor("i" + k, pick(), r, used));
+  if (!ev.host && r() < 0.6) { const rv = rivalsFor()[Math.floor(r() * 4)]; list.push({ id: "rival", type: "rival", x: pick(), name: rv.name, role: "your rival, also here", pal: genNpcPal(hash(rv.id)), rival: rv }); }
+  contactsHere(t.id).forEach((c) => list.push({ id: "c-" + c.id, type: "circle", x: pick(), name: c.name, role: c.role, pal: c.pal, person: c }));
+  return list;
+}
+function contactsHere(tid) { return (life().contacts || []).filter((c) => c.home === tid && (G.pref === "everyone" || (G.pref === "women" ? c.g === "w" : c.g === "m"))); }
+function flirtFlow(n) {
+  const bank = FLIRT[G.lang];
+  if (!bank) { toast(sample ? "Flirting in this language happens in Circle chats for now." : "Flirting here needs Claude."); return; }
+  const r = rng(hash(n.id + n.name + today())), seq = [0, 1, 2, 3, 4].sort(() => r() - 0.5).slice(0, 2).concat(5);
+  n.talked = true; n.score = 0; renderInteract();
+  const step = (k) => exchange(n, toNode(bank[seq[k]]), (q) => {
+    n.score += q === "good" ? 2 : q === "minor" ? 1 : 0;
+    addXp(q === "good" ? 3 : 1);
+    const area = $("#talk-area");
+    if (k < 2) { area.insertAdjacentHTML("beforeend", '<div class="row" style="margin-top:8px"><button class="btn sm love" id="flirt-next">Keep talking</button></div>'); $("#flirt-next").onclick = () => step(k + 1); }
+    else if (n.score >= 4) { const c = newContact(n); area.insertAdjacentHTML("beforeend", '<div class="fb good" style="margin-top:8px"><p><strong>' + esc(n.name) + " gives you their number.</strong> Find them in your Circle, or right here next time you're in town.</p></div>"); sfx("level"); }
+    else area.insertAdjacentHTML("beforeend", '<div class="fb minor" style="margin-top:8px"><p>' + esc(n.name) + " smiles and disappears into the crowd. Smoother " + esc(LANGS[G.lang].name) + " next time.</p></div>");
+  });
+  step(0);
+}
+function newContact(n) {
+  const L = life(); L.contacts ||= [];
+  const c = { id: "k" + Date.now().toString(36), name: n.name, g: n.g, role: n.role, rank: 0, home: W.tier.id, met: W.tier.place, pal: n.pal, persona: "playful, flirty " + n.role + " you met at " + (W.event ? W.event.name.toLowerCase() + " in " : "") + W.tier.place + "; teases you, likes confidence and good " + LANGS[G.lang].name };
+  L.contacts.push(c); L.chem[c.id] = 20; save();
+  n.type = "circle"; n.person = c; n.id = "c-" + c.id; W.near = n.id;
+  toast("New contact: " + c.name, "ach"); renderAround();
+  return c;
+}
+function networkFlow(n) {
+  const bank = NETWORK[G.lang];
+  if (!bank) { toast("Networking in this language needs a written career pack."); return; }
+  const r = rng(hash(n.id + n.name + today())), seq = [0, 1, 2].sort(() => r() - 0.5).slice(0, 2);
+  n.talked = true; n.score = 0; renderInteract();
+  const step = (k) => exchange(n, toNode(bank[seq[k]]), (q) => {
+    n.score += q === "good" ? 2 : q === "minor" ? 1 : 0; addXp(q === "good" ? 4 : 1);
+    const area = $("#talk-area"), L = life();
+    if (k < 1) { area.insertAdjacentHTML("beforeend", '<div class="row" style="margin-top:8px"><button class="btn sm" id="net-next">Continue</button></div>'); $("#net-next").onclick = () => step(k + 1); }
+    else if (n.score >= 3) {
+      L.intros = Math.min(3, (L.intros || 0) + 1); save();
+      const ref = Math.random() < 0.3 ? Math.max(50, Math.round(W.tier.stakes * 0.08)) : 0; if (ref) addCash(ref);
+      area.insertAdjacentHTML("beforeend", '<div class="fb good" style="margin-top:8px"><p><strong>Business card from ' + esc(n.name) + ".</strong> +1 on the deal meter in your next meeting (" + L.intros + " banked)." + (ref ? " They also send a referral worth " + money(ref) + "." : "") + "</p></div>");
+      sfx("level");
+    } else area.insertAdjacentHTML("beforeend", '<div class="fb minor" style="margin-top:8px"><p>' + esc(n.name) + " checks their phone and drifts off.</p></div>");
+  });
+  step(0);
+}
+async function attendEvent(ev) {
+  const L = life(); if (L.cash < ev.cover) return;
+  L.events ||= {}; if (L.events[ev.key]) { enterEvent(ev); return; }
+  if (ev.cover) { L.cash -= ev.cover; pop("-" + money(ev.cover)); }
+  L.events[ev.key] = true; save(); renderHud(); enterEvent(ev);
+}
+function enterEvent(ev) {
+  W.event = ev; W.x = 30; W.cam = 0; W.target = null;
+  W.theme = { ...W.theme, night: true, sky: "night", props: "lights" };
+  if (ev.venue === "yacht") Object.assign(W.theme, { far: "harbor", ground: "teak" });
+  if (ev.venue === "jet") Object.assign(W.theme, { far: "cabin", ground: "carpet", night: false, props: "none" });
+  if (ev.venue === "home") Object.assign(W.theme, { far: "city", ground: "pooldeck" });
+  W.width = ev.venue === "jet" ? 300 : 420;
+  W.npcs = eventNpcs(ev, W.tier); W.near = null;
+  $("#walk-place").textContent = ev.name.toUpperCase() + " · " + (ev.where || W.tier.place.toUpperCase());
+  sfx("env"); renderAround(); renderInteract();
+}
+function leaveEvent() { const id = W.tier.id; W.event = null; W.tier = null; openWalk(id); }
+function hostVenues() {
+  const L = life(), out = [];
+  const boat = myBoat(); if (boat && boat.lvl >= 3) out.push({ venue: "yacht", label: "your boat “" + boat.name + "”", cost: Math.max(2000, Math.round(boat.it.price * 0.02)) });
+  if (L.owned.sky1) out.push({ venue: "jet", label: "your jet", cost: 120000 });
+  const crib = SHOP_BASE.filter((x) => x.cat === "crib" && L.owned[x.id] && lvlOf(x.id) >= 3).pop();
+  if (crib) out.push({ venue: "home", label: ownedLabel(crib), cost: Math.max(3000, Math.round(crib.price * 0.01)) });
+  return out;
+}
+async function throwParty(v) {
+  const L = life(); if (L.cash < v.cost) return;
+  if (!L.here || !tierById(L.here)) { toast("Fly somewhere first. The party happens where you are."); return; }
+  L.cash -= v.cost; pop("-" + money(v.cost)); save(); renderHud();
+  rivalsFor().forEach((rv) => { L.rivalBonus[rv.id] = Math.max(0, (L.rivalBonus[rv.id] || 0) - Math.round(v.cost * 0.5)); });
+  award("host");
+  showTab("explore"); exploreMapOpen = false; openWalk(L.here);
+  enterEvent({ name: "Your party", type: "party", host: true, venue: v.venue, where: v.label.toUpperCase(), key: "host:" + Date.now() });
+  toast("Word gets around. Your rivals are furious they weren't invited.", "ach");
+}
+
+/* ---- the night itself: shown up to the door, then fade to black. Every night plays differently. ---- */
+const NIGHT_ACTS = {
+  yacht: [["You swim off the stern under the stars, then dry off with the same towel.", "stars"], ["You dance barefoot on the sundeck to their playlist.", "notes"], ["They teach you a card game in {lang} and cheat shamelessly.", "hearts"], ["You count shooting stars and lose track at eleven.", "shoot"], ["The crew is asleep. You open the good champagne anyway.", "sparkle"]],
+  home: [["You cook pasta at one in the morning and burn the garlic.", "hearts"], ["They pick a film in {lang} and quiz you on every line.", "notes"], ["You talk on the balcony until the city goes quiet.", "stars"], ["They find your photo albums and read every caption out loud.", "hearts"], ["A slow song comes on. Neither of you reaches for the remote.", "notes"]],
+  jet: [["You clink champagne at 41,000 feet.", "sparkle"], ["They fall asleep on your shoulder somewhere over the ocean.", "stars"], ["The pilot announces turbulence. Nobody minds.", "hearts"], ["You watch the sunrise start on the wrong side of the plane.", "shoot"]],
+  theirs: [["Their place is full of plants and old records. They put one on.", "notes"], ["They show you the view from their roof. It's better than yours.", "stars"], ["They make you tea and tell you about their family in {lang}.", "hearts"], ["You get a tour of their bookshelf and a lecture on every book.", "hearts"]],
+};
+const MORNINGS = {
+  es: [[true, "Anoche fue increíble. Te debo un café."], [true, "No te acostumbres. (Pero vuelve.)"], [true, "Tu español mejora de noche."], [false, "¿Café o más sueño? Yo ya elegí: café."], [false, "Buenos días, dormilón. El desayuno no se hace solo."], [true, "Me llevé tu camisa. Considéralo un préstamo."], [false, "Hoy no tengo prisa. ¿Y tú?"], [true, "Llámame antes del viernes. O no. (Sí.)"]],
+  zh: [[true, "昨晚很开心。下次你请我吃早餐。"], [true, "别太得意哦。"], [true, "你的中文晚上说得更好。"], [false, "早！咖啡还是茶？我已经泡好了。"], [false, "今天我不着急，你呢？"], [true, "你的衬衫我借走了。"], [false, "早安，懒虫。"], [true, "周五前给我打电话。"]],
+  other: [[true, "Last night was fun."], [true, "Don't get used to it."], [false, "Coffee's ready."], [true, "Call me before Friday."]],
+};
+function drawNightScene(c, venue, t, phase, them) {
+  const you = youPal(rank()), boat = myBoat();
+  const morning = phase >= 3;
+  if (venue === "jet") {
+    R(c, 0, 0, 192, 108, morning ? "#efe6d6" : "#2a2438"); R(c, 0, 0, 192, 10, morning ? "#d8ccb6" : "#1c1828");
+    [30, 78, 126, 174].forEach((x) => { R(c, x - 8, 26, 16, 20, morning ? "#c9bca4" : "#3a3450"); R(c, x - 6, 28, 12, 16, morning ? "#9fd0f2" : "#0b1030"); if (!morning) R(c, x - 3 + ((t / 400) % 6), 32, 1, 1, "#dfe6ff"); else R(c, x - 5, 38, 10, 3, "#f4f4f4"); });
+    R(c, 0, 84, 192, 24, morning ? "#6b5a4a" : "#3a3030");
+    R(c, 150, 40, 30, 44, morning ? "#d8ccb6" : "#1c1828"); R(c, 152, 42, 26, 40, morning ? "#c9bca4" : phase === 1 ? "#ffd98a" : "#141020");
+  } else if (venue === "yacht") {
+    bands(c, 0, 0, 192, 56, morning ? ["#6fb3e0", "#9fcbe8", "#f5c08a", "#ffd9a0"] : ["#070a1c", "#0b1030", "#101640", "#171d4e"]);
+    if (!morning) { const r = rng(9); for (let i = 0; i < 40; i++) R(c, r() * 192, r() * 40, 1, 1, (Math.floor(t / 400) + i) % 7 ? "#dfe6ff" : "#7a80a0"); for (let dy = -4; dy <= 4; dy++) { const w = Math.floor(Math.sqrt(16 - dy * dy)); R(c, 30 - w, 12 + dy, w * 2 + 1, 1, "#f4f0dc"); } }
+    else for (let dy = -6; dy <= 6; dy++) { const w = Math.floor(Math.sqrt(36 - dy * dy)); if (50 + dy < 56) R(c, 150 - w, 50 + dy, w * 2 + 1, 1, "#ffe08a"); }
+    bands(c, 0, 56, 192, 52, morning ? ["#2b6e86", "#23627a", "#1d5670"] : ["#0c1a3c", "#0a1634", "#08122c"]);
+    for (let y = 58; y < 108; y += 3) for (let x = -((t / 60 + y * 5) % 14); x < 192; x += 14) R(c, x, y, 3, 1, morning ? "#5fb0c0" : "#2a4c7a");
+    const hull = boat?.col || "#f4f4f4";
+    R(c, 10, 80, 172, 10, hull); R(c, 14, 90, 164, 3, shade(hull, 0.7)); R(c, 40, 62, 110, 18, "#eef2f5"); R(c, 60, 50, 70, 12, "#e4e8ec");
+    for (let x = 46; x < 146; x += 12) R(c, x, 68, 6, 4, phase === 1 || phase === 0 ? "#ffd98a" : morning ? "#9fd0f2" : "#141a30");
+    R(c, 128, 64, 12, 16, phase === 1 ? "#ffd98a" : morning ? "#c9c9c9" : "#1c2038");
+    if (boat?.name) { c.fillStyle = shade(hull === "#f4f4f4" ? "#1c2656" : "#f4f4f4", 1); c.font = "5px monospace"; c.fillText(boat.name.slice(0, 16), 150, 88); }
+  } else {
+    R(c, 0, 0, 192, 108, morning ? "#e8dcc8" : "#1c1a28");
+    R(c, 20, 10, 110, 64, morning ? "#9fcbe8" : "#0b1030");
+    const b = rng(33); for (let x = 20; x < 130;) { const w = 6 + Math.floor(b() * 10), h = 14 + Math.floor(b() * 30); R(c, x, 74 - h, w, h, morning ? "#8a9bb0" : "#141b44"); for (let yy = 76 - h; yy < 72; yy += 3) for (let xx = x + 1; xx < x + w - 1; xx += 2) if (b() > 0.5) R(c, xx, yy, 1, 1, morning ? "#c8dcea" : "#ffd98a"); x += w + 1; }
+    for (let x = 20; x < 130; x += 22) R(c, x, 10, 2, 64, morning ? "#c9b8a0" : "#2c2a3a");
+    if (phase === 2) { R(c, 20, 10, 55, 64, "#5a2a3a"); R(c, 75, 10, 55, 64, "#5a2a3a"); }
+    R(c, 0, 84, 192, 24, morning ? "#b89a7a" : "#2a2230");
+    R(c, 140, 40, 36, 44, morning ? "#c9b8a0" : "#241e30"); R(c, 142, 42, 32, 42, phase === 1 ? "#ffd98a" : morning ? "#d8ccb6" : "#141020");
+  }
+  const pal = them.pal || genNpcPal(hash(them.name));
+  if (phase === 0) {
+    drawPerson(c, 80, 68, you, t, false, 1, false); drawPerson(c, 94, 68, pal, t, true, 2, false);
+    const fx = W._fx || "hearts";
+    if (fx === "hearts") for (let k = 0; k < 3; k++) { const hy = 60 - ((t / 40 + k * 12) % 30), hx = 92 + Math.sin(t / 300 + k) * 6; R(c, hx, hy, 1, 1, "#ff6fae"); R(c, hx + 2, hy, 1, 1, "#ff6fae"); R(c, hx, hy + 1, 3, 1, "#ff6fae"); R(c, hx + 1, hy + 2, 1, 1, "#ff6fae"); }
+    if (fx === "notes") for (let k = 0; k < 4; k++) { const hy = 62 - ((t / 35 + k * 9) % 34), hx = 70 + k * 14 + Math.sin(t / 250 + k) * 4; R(c, hx, hy, 2, 2, "#f5c542"); R(c, hx + 1, hy - 4, 1, 4, "#f5c542"); R(c, hx + 2, hy - 4, 2, 1, "#f5c542"); }
+    if (fx === "sparkle") for (let k = 0; k < 8; k++) { const r = rng(Math.floor(t / 150) + k); R(c, 84 + r() * 30, 52 + r() * 16, 1, 1, ["#fff4c0", "#f5c542"][k % 2]); }
+    if (fx === "stars" || fx === "shoot") { const r = rng(Math.floor(t / 300)); for (let k = 0; k < 6; k++) R(c, r() * 192, r() * 40, 1, 1, "#ffffff"); }
+    if (fx === "shoot") { const sx = 180 - ((t / 6) % 240), sy = 6 + ((t / 6) % 240) * 0.25; for (let k = 0; k < 8; k++) R(c, sx + k, sy - k * 0.25, 1, 1, k < 2 ? "#ffffff" : "rgba(255,255,255,.4)"); }
+  } else if (phase === 1) {
+    drawPerson(c, W._nx || 110, 68, you, t, false, 1, true); drawPerson(c, (W._nx || 110) + 12, 68, pal, t, false, 2, true);
+  } else if (phase >= 3) {
+    drawPerson(c, 70, 68, you, t, false, 1, false);
+    if (W._stay) drawPerson(c, 118, 68, pal, t, true, 2, false);
+    R(c, 90, 78, 24, 3, "#f4f4f4"); R(c, 100, 81, 4, 7, "#c9c9c9"); R(c, 93, 74, 3, 4, "#f4f4f4"); R(c, 94, 75, 1, 2, "#5a3322"); R(c, 106, 74, 3, 4, "#f4f4f4"); R(c, 107, 75, 1, 2, "#5a3322");
+    R(c, 98, 76, 5, 2, "#fff4c0"); R(c, 99, 75, 3, 1, "#ff6fae");
+  }
+}
+function playNight(p, venue) {
+  return new Promise((resolve) => {
+    const ov = $("#overlay"), m = $("#modal"); m.className = "modal wide";
+    const where = { home: "your place", yacht: "your boat", jet: "your jet", theirs: "their place" }[venue];
+    m.innerHTML = '<div class="row between"><span class="label">' + esc(p.name) + " · " + esc(where) + '</span><button class="btn sm" id="night-skip">Skip</button></div><canvas class="ws-cv" id="night-cv" width="192" height="108" style="aspect-ratio:16/9"></canvas><p id="night-cap" class="muted" style="min-height:3em"></p>';
+    ov.hidden = false;
+    const cv = $("#night-cv").getContext("2d"), t0 = performance.now(), dur = reduceMotion ? 0 : 9500, doorX = venue === "yacht" ? 128 : venue === "jet" ? 152 : 142;
+    const L = life(); L.nights ||= {}; const nth = (L.nights[p.id] = (L.nights[p.id] || 0) + 1); save();
+    const first = p.name.split(" ")[0], acts = NIGHT_ACTS[venue], act = acts[(hash(p.id) + nth) % acts.length];
+    const pool = MORNINGS[G.lang] || MORNINGS.other, [gone, note] = pool[(hash(p.id + venue) + nth * 3) % pool.length];
+    W._fx = act[1]; W._stay = !gone;
+    const inside = { yacht: ["You head below deck together.", "You wander down to the cabin, still laughing."], home: ["You head inside together.", "The door clicks shut behind you."], jet: ["The cabin lights dim to night mode.", "The flight attendant draws the curtain and disappears."], theirs: ["They take your hand and lead you inside.", "Up the stairs, trying not to wake the neighbors."] }[venue][nth % 2];
+    const caps = [act[0].replace("{lang}", LANGS[G.lang].name), inside, "The lights go out.", gone ? "Morning. " + first + " is gone, with a note: “" + note + "”" : "Morning. " + first + " is still here, making coffee. “" + note + "”"];
+    let raf = 0, done = false;
+    const finish = () => { if (done) return; done = true; cancelAnimationFrame(raf); m.className = "modal"; ov.hidden = true; resolve(); if (modalQueue.length) nextModal(); };
+    $("#night-skip").onclick = finish;
+    const step = (now) => {
+      const e = now - t0, ph = dur === 0 ? 3 : e < 3000 ? 0 : e < 5200 ? 1 : e < 6800 ? 2 : 3;
+      if (ph === 1) W._nx = 80 + ((e - 3000) / 2200) * (doorX - 86);
+      if (ph === 2) { drawNightScene(cv, venue, now, 2, p); const a = Math.min(1, (e - 5200) / 900); cv.fillStyle = "rgba(0,0,0," + a + ")"; cv.fillRect(0, 0, 192, 108); }
+      else drawNightScene(cv, venue, now, ph, p);
+      if (ph === 3 && e < 7600 && dur) { cv.fillStyle = "rgba(0,0,0," + Math.max(0, 1 - (e - 6800) / 800) + ")"; cv.fillRect(0, 0, 192, 108); }
+      $("#night-cap").textContent = caps[ph];
+      if (e < dur + 2500 && !done) raf = requestAnimationFrame(step);
+      else if (!done) { $("#night-skip").textContent = "Done"; }
+    };
+    raf = requestAnimationFrame(step);
+  });
+}
 
 /* =========================================================
    TABS
@@ -2877,6 +3144,7 @@ function beginMeeting() {
   M.tier = t; M.mode = mode; M.replay = mode === "script" && L.cleared[t.id] != null;
   M.deal = clamp(5 + perks().deal + intelFor(t).reduce((s, x) => s + (x.deal || 0), 0) + (L.sharp ? 1 : 0), 0, 9);
   if (L.sharp) { L.sharp = false; save(); }
+  if (L.intros) { M.deal = clamp(M.deal + 1, 0, 9); L.intros--; save(); toast("A contact put in a good word: +1 deal meter."); }
   if (t.secret) award("invite");
   showTab("meeting");
   $("#hud-meet").textContent = t.place.toUpperCase() + " · " + t.clock;
@@ -3260,7 +3528,7 @@ function renderMarina() {
 let chatWith = null;
 function circleList() {
   const c = career(); if (!c) return [];
-  return (c.circle || []).filter((p) => G.pref === "everyone" || (G.pref === "women" ? p.g === "w" : p.g === "m"));
+  return [...(c.circle || []), ...(life().contacts || [])].filter((p) => G.pref === "everyone" || (G.pref === "women" ? p.g === "w" : p.g === "m"));
 }
 function chemLabel(n) { return n >= 90 ? "Obsessed" : n >= 60 ? "Seeing each other" : n >= 35 ? "Flirting" : n >= 15 ? "Texting" : "Just met"; }
 function renderCircle() {
@@ -3285,19 +3553,25 @@ function dateOptions() {
   const L = life(), boat = SHOP_BASE.filter((x) => x.cat === "water" && L.owned[x.id] && lvlOf(x.id) >= 2).pop();
   const k = Math.pow(rank() + 1, 3);
   const base = G.lang === "zh"
-    ? [["Kaya toast breakfast", 25 * k, 4], ["Bar at the top of a tower", 400, 9], ["Omakase for two", 12000, 16], ["Jet to Kyoto for the weekend", 250000, 30]]
-    : [["Street arepas at 2am", 25 * k, 4], ["Rooftop cocktails", 400, 9], ["Private chef dinner", 12000, 16], ["Fly to Paris for dinner", 250000, 30]];
+    ? [["Kaya toast breakfast", 25 * (rank() + 1), 4], ["Bar at the top of a tower", 400, 9], ["Omakase for two", 12000, 16], ["Jet to Kyoto for the weekend", 250000, 30]]
+    : [["Street arepas at 2am", 25 * (rank() + 1), 4], ["Rooftop cocktails", 400, 9], ["Private chef dinner", 12000, 16], ["Fly to Paris for dinner", 250000, 30]];
   if (boat) base.splice(2, 0, ["Sunset on " + ownedLabel(boat), Math.round(boat.price * 0.002) + 200, 14]);
   const out = base.map(([name, cost, chem]) => ({ name, cost: Math.round(cost), chem }));
   const p = circleList().find((x) => x.id === chatWith);
-  if (p && (L.chem[p.id] || 0) >= 70) out.push({ name: "Invite them to stay the night", cost: 0, chem: 8, night: true });
+  if (p && (L.chem[p.id] || 0) >= 70) {
+    const crib = SHOP_BASE.filter((x) => x.cat === "crib" && L.owned[x.id]).pop();
+    out.push({ name: "Night at " + (crib ? ownedLabel(crib) : "your hostel (bold)"), cost: 0, chem: crib ? 8 : 3, night: "home" });
+    const bt = myBoat(); if (bt) out.push({ name: "Night on “" + bt.name + "”", cost: 0, chem: 12, night: "yacht" });
+    if (L.owned.sky1) out.push({ name: "Overnight flight on your jet", cost: 25000, chem: 16, night: "jet" });
+    out.push({ name: "Night at their place", cost: 0, chem: 8, night: "theirs" });
+  }
   return out;
 }
 function renderChat() {
   const box = $("#chatbox"), p = circleList().find((x) => x.id === chatWith);
   if (!p) { box.innerHTML = '<h3>Messages</h3><p class="muted">Pick someone on the left.</p>'; return; }
   const L = life(), msgs = L.chats[p.id] || [], ch = L.chem[p.id] || 0, sec = career().secrets.find((s) => s.id === p.secret);
-  box.innerHTML = '<div class="row between"><h3>' + esc(p.name) + '</h3><span class="chip love">' + chemLabel(ch) + " · " + ch + '</span></div><p class="muted small">' + esc(p.role) + ". " + (sec && !L.secrets[sec.id] ? "Knows something. Gets talkative past 50." : sec ? "Already told you their secret." : "") + "</p>" +
+  box.innerHTML = '<div class="row between"><h3>' + esc(p.name) + '</h3><span class="chip love">' + chemLabel(ch) + " · " + ch + '</span></div><p class="muted small">' + esc(p.role) + ". " + (sec && !L.secrets[sec.id] ? "Knows something. Gets talkative past 50." : sec ? "Already told you their secret." : p.met ? "Met at " + p.met + "." : "") + "</p>" +
     '<div class="chat" id="chat">' + (msgs.length ? msgs.map((m) => m.sys ? '<div class="msg sys">' + esc(m.text) + "</div>" : '<div class="msg ' + (m.me ? "me" : "them") + '"><div>' + esc(m.text) + "</div>" + (m.r ? '<div class="rom">' + esc(m.r) + "</div>" : "") + (m.en && G.showEn ? '<div class="rom">' + esc(m.en) + "</div>" : "") + (m.corr ? '<div class="corr">Better: ' + esc(m.corr.better) + " · " + esc(m.corr.why) + "</div>" : "") + "</div>").join("") : '<div class="msg sys">You have their number. Say something in ' + esc(LANGS[G.lang].name) + ".</div>") + "</div>" +
     (sample ? '<form class="compose" id="chat-form"><input type="text" id="chat-in" autocomplete="off" placeholder="Text in ' + esc(LANGS[G.lang].name) + '"><button class="btn love" id="chat-send">Send</button></form>' : '<p class="note">Texting needs Claude. Dates work offline.</p>') +
     '<div class="label">Take them out' + (perks().chem ? " · your toys add +" + Math.round(perks().chem * 100) + "% chemistry" : "") + '</div><div class="row">' + dateOptions().map((d, i) => '<button class="btn sm" data-date="' + i + '"' + (L.cash < d.cost ? " disabled" : "") + ">" + esc(d.name) + (d.cost ? " · " + money(d.cost) : "") + "</button>").join("") + "</div>";
@@ -3305,7 +3579,8 @@ function renderChat() {
   $("#chat-form")?.addEventListener("submit", (e) => { e.preventDefault(); sendChat(p); });
   box.querySelectorAll("[data-date]").forEach((b) => b.addEventListener("click", async () => {
     const d = dateOptions()[+b.dataset.date]; if (L.cash < d.cost) return;
-    if (!(await sayIt(d.night ? "night" : "date", { who: p.name.split(" ")[0] }, d.night ? "" : d.name + " · " + money(d.cost))).ok) return;
+    if (!(await sayIt(d.night ? "night" : "date", { who: p.name.split(" ")[0] }, d.night ? d.name : d.name + " · " + money(d.cost))).ok) return;
+    if (d.night) { if (d.cost) { L.cash -= d.cost; pop("-" + money(d.cost), b); } await playNight(p, d.night); pushMsg(p, { sys: true, text: d.name + ". " + nightLine(p) }); bumpChem(p, Math.round(d.chem * (1 + perks().chem))); if (d.night === "jet") award("skyhigh"); if (d.night === "yacht") award("captain"); if (Math.random() < 0.25) { const s = grantSecret(); if (s) toast("Pillow talk. New file: " + s.title, "ach"); } renderHud(); renderCircle(); return; }
     if (d.cost) { L.cash -= d.cost; pop("-" + money(d.cost), b); sfx("buy"); }
     pushMsg(p, { sys: true, text: d.night ? nightLine(p) : d.name + " with " + p.name.split(" ")[0] + ". " + dateLine(p, d) });
     bumpChem(p, Math.round(d.chem * (1 + perks().chem))); renderHud(); renderCircle();
@@ -3325,6 +3600,7 @@ function bumpChem(p, n) {
   const L = life(), before = L.chem[p.id] || 0, after = clamp(before + n, 0, 100);
   L.chem[p.id] = after; save();
   if (n > 0) sfx("good");
+  if (before < 50 && after >= 50 && !p.secret && !(L.gossiped ||= {})[p.id]) { L.gossiped[p.id] = true; const s = grantSecret(); if (s) { pushMsg(p, { sys: true, text: p.name.split(" ")[0] + " knows a lot of people. New file: " + s.title }); toast("New dossier file: " + s.title, "ach"); } save(); }
   if (before < 50 && after >= 50 && p.secret && !L.secrets[p.secret]) {
     L.secrets[p.secret] = today(); save();
     const s = career().secrets.find((x) => x.id === p.secret);
