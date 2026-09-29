@@ -1161,6 +1161,236 @@ const CAREERS = {
   },
 };
 
+/* =========================================================
+   ITALIAN: La Dolce Vita. Amalfi beach clubs to a Lugano vault.
+   ========================================================= */
+BANK.it = [
+  { npc: "Mi racconti, di cosa si occupa esattamente la sua azienda?", en: "Tell me, what exactly does your company do?", choices: [
+    { t: "Colleghiamo i clienti a esperienze esclusive e guadagniamo solo quando c'è una vendita.", en: "We connect clients with exclusive experiences and only earn when there's a sale.", q: "good", why: "Clear model, aligned incentives." },
+    { t: "Colleghiamo i clienti a esperienze esclusive e guadagniamo solo quando c'è un vendita.", q: "minor", cat: "grammar", better: "…quando c'è una vendita.", why: "Vendita is feminine: una vendita." },
+    { t: "Siamo tipo Uber, ma per tutto.", q: "major", cat: "clarity", better: "Colleghiamo i clienti a esperienze esclusive.", why: "Vague comparisons make serious people tune out." } ] },
+  { npc: "I numeri sono interessanti, ma perché proprio adesso?", en: "The numbers are interesting, but why now?", choices: [
+    { t: "Perché il mercato sta crescendo e chi arriva per primo si prende i partner migliori.", en: "Because the market is growing, and whoever gets there first takes the best partners.", q: "good", why: "Urgency without desperation." },
+    { t: "Perché il mercato sta crescendo e chi arriva per primo si prende i migliori partners.", q: "minor", cat: "grammar", better: "…i partner migliori.", why: "Borrowed English words don't take a plural -s in Italian: i partner." },
+    { t: "Perché abbiamo bisogno di soldi subito.", q: "major", cat: "culture", better: "Perché il mercato sta crescendo.", why: "Desperation lowers your price instantly." } ] },
+  { npc: "Mi preoccupa il rischio. Che garanzie mi dà?", en: "I'm worried about the risk. What guarantees do you give me?", choices: [
+    { t: "Le propongo una fase di prova con obiettivi chiari. Se non li raggiungiamo, non paga.", en: "I propose a trial phase with clear targets. If we miss them, you don't pay.", q: "good", why: "Risk moved onto you, where it earns trust." },
+    { t: "Le propongo una fase di prova. Se non raggiungeremmo gli obiettivi, non paga.", q: "minor", cat: "grammar", better: "Se non raggiungiamo gli obiettivi…", why: "A real condition takes the present indicative after se, never the conditional." },
+    { t: "Si fidi di me, non abbiamo mai sbagliato.", q: "major", cat: "clarity", better: "Le propongo una fase di prova con obiettivi chiari.", why: "Blind trust is not a guarantee." } ] },
+  { npc: "Il prezzo mi sembra alto.", en: "The price seems high to me.", choices: [
+    { t: "Capisco. Se firmiamo per due anni, possiamo scendere del dieci per cento.", en: "I understand. If we sign for two years, we can come down ten percent.", q: "good", why: "A concession with a price tag." },
+    { t: "Capisco. Se firmiamo per due anni, possiamo scendere di dieci per cento.", q: "minor", cat: "grammar", better: "…scendere del dieci per cento.", why: "Percentages take the article: del dieci per cento." },
+    { t: "Il prezzo è questo. Prendere o lasciare.", q: "major", cat: "culture", better: "Se firmiamo per due anni, possiamo scendere del 10 %.", why: "Ultimatums end relationships before they start." } ] },
+  { npc: "Dovrei parlarne con il consiglio di amministrazione.", en: "I'd need to discuss it with the board.", choices: [
+    { t: "Certo. Vuole che le prepari una sintesi di una pagina?", en: "Of course. Would you like me to prepare a one-page summary for you?", q: "good", why: "You made their yes easier." },
+    { t: "Certo. Vuole che le preparo una sintesi?", q: "minor", cat: "grammar", better: "Vuole che le prepari una sintesi?", why: "Volere che takes the subjunctive: prepari." },
+    { t: "Non può decidere da solo?", q: "major", cat: "culture", better: "Vuole che le prepari una sintesi?", why: "Questioning their authority is an insult." } ] },
+  { npc: "Bene, credo che possiamo andare avanti.", en: "Good, I think we can move forward.", choices: [
+    { t: "Ottimo. Le mando la bozza del contratto oggi stesso. È stato un piacere.", en: "Excellent. I'll send you the draft contract today. It's been a pleasure.", q: "good", why: "Momentum and manners." },
+    { t: "Ottimo. Le mando la bozza domani. È stata un piacere.", q: "minor", cat: "grammar", better: "È stato un piacere.", why: "Piacere is masculine: è stato un piacere." },
+    { t: "Finalmente! Pensavo che non avrebbe mai detto di sì.", q: "major", cat: "register", better: "Ottimo. È stato un piacere.", why: "Relief sounds like you doubted your own offer." } ] },
+];
+const S_IT0 = [
+  { npc: "Uè, benvenuto! Accomodati. Un caffè o preferisci qualcosa di fresco?", en: "Hey, welcome! Sit down. A coffee, or would you rather have something cold?", choices: [
+    { t: "Un caffè, grazie. Qui fa già un caldo pazzesco!", en: "A coffee, thanks. It's already crazy hot here!", q: "good", why: "Hospitality first, business second. That's the South." },
+    { t: "Un caffè, grazie. Qui fa già una calda pazzesca!", q: "minor", cat: "grammar", better: "…fa già un caldo pazzesco!", why: "Weather caldo is a masculine noun: un caldo pazzesco." },
+    { t: "No grazie, andiamo subito al punto: ho una proposta.", q: "major", cat: "culture", better: "Un caffè, grazie!", why: "Refusing the coffee and jumping to business kills the vibe." } ] },
+  { npc: "Allora, che mi racconti? Sei in vacanza?", en: "So, what's new? Are you on holiday?", choices: [
+    { t: "Magari! No, lavoro: aiuto i lidi come il tuo a riempire gli ombrelloni.", en: "I wish! No, I'm working: I help beach clubs like yours fill their umbrellas.", q: "good", why: "Magari! is the perfect wistful Italian 'I wish', and you matched his tu." },
+    { t: "Magari! No, lavoro: aiuto i lidi come il tuo di riempire gli ombrelloni.", q: "minor", cat: "grammar", better: "…aiuto i lidi a riempire…", why: "Aiutare a + infinitive." },
+    { t: "Sono qui per farti diventare ricco.", q: "major", cat: "register", better: "Aiuto i lidi a riempire gli ombrelloni.", why: "That's how scams start." } ] },
+  { npc: "Gli ombrelloni? Ad agosto è tutto pieno. È a giugno che mi piange il cuore.", en: "The umbrellas? In August it's all full. It's June that breaks my heart.", choices: [
+    { t: "Appunto. Con la nostra app i turisti prenotano già a giugno, anche dall'estero.", en: "Exactly. With our app tourists book as early as June, even from abroad.", q: "good", why: "You answered his real pain, not your pitch." },
+    { t: "Appunto. Con la nostra app i turisti prenotano a giugno, anche da estero.", q: "minor", cat: "grammar", better: "…anche dall'estero.", why: "Da + l'estero contracts to dall'estero." },
+    { t: "Allora abbassa i prezzi, no?", q: "major", cat: "culture", better: "Con la nostra app i turisti prenotano a giugno.", why: "Telling him how to run his own lido." } ] },
+  { npc: "E quanto mi costa 'sta cosa?", en: "And how much does this thing cost me?", choices: [
+    { t: "Niente all'inizio. Prendiamo il dieci per cento solo sulle prenotazioni che ti portiamo.", en: "Nothing upfront. We take ten percent only on the bookings we bring you.", q: "good", why: "Your money depends on his. Small owners love that." },
+    { t: "Niente all'inizio. Prendiamo dieci per cento solo sulle prenotazioni.", q: "minor", cat: "grammar", better: "Prendiamo il dieci per cento…", why: "Percentages take the article: il dieci per cento." },
+    { t: "Mille euro al mese, più IVA.", q: "major", cat: "clarity", better: "Niente all'inizio. Prendiamo il dieci per cento.", why: "A fixed fee to a man worried about empty umbrellas." } ] },
+  { npc: "Mah… mio cugino dice che queste app si rubano i clienti.", en: "Hmm… my cousin says these apps steal your customers.", choices: [
+    { t: "Tuo cugino fa bene a stare attento. Facciamo un mese di prova: se non ti convince, chiudiamo e amici come prima.", en: "Your cousin is right to be careful. Let's do a one-month trial: if you're not convinced, we stop, and we're friends like before.", q: "good", why: "You respected the family and removed the risk." },
+    { t: "Tuo cugino fa bene a stare attento. Facciamo una mese di prova.", q: "minor", cat: "grammar", better: "Facciamo un mese di prova.", why: "Mese is masculine: un mese." },
+    { t: "Tuo cugino non capisce niente di tecnologia.", q: "major", cat: "culture", better: "Tuo cugino fa bene a stare attento.", why: "Never insult the family. Never." } ] },
+  { npc: "Va bene, dai. Un mese. Ma se va male, il caffè lo paghi tu!", en: "Alright, go on. One month. But if it goes badly, you're paying for the coffee!", choices: [
+    { t: "Affare fatto! E se va bene, lo offro io lo stesso.", en: "Deal! And if it goes well, I'll still buy it.", q: "good", why: "Warm, funny, and generous. He'll tell the whole beach." },
+    { t: "Affare fatto! E se va bene, lo offro io la stessa.", q: "minor", cat: "grammar", better: "…lo offro io lo stesso.", why: "Lo stesso ('anyway') doesn't change." },
+    { t: "Il caffè costa un euro, non esagerare.", q: "major", cat: "register", better: "Affare fatto!", why: "Petty. You just lost the warmth." } ] },
+];
+const S_IT1 = [
+  { npc: "Buongiorno. Benvenuto a bordo. Ha fatto buon viaggio?", en: "Good morning. Welcome aboard. Did you have a good trip?", choices: [
+    { t: "Buongiorno, signora Ruocco. Ottimo, grazie. Che vista meravigliosa sui Faraglioni.", en: "Good morning, Mrs Ruocco. Excellent, thanks. What a wonderful view of the Faraglioni.", q: "good", why: "Formal greeting and a genuine compliment about her island." },
+    { t: "Buongiorno, signora Ruocco. Ottimo, grazie. Che vista meraviglioso.", q: "minor", cat: "grammar", better: "Che vista meravigliosa.", why: "Vista is feminine." },
+    { t: "Ciao Chiara! Tutto bene, dai.", q: "major", cat: "register", better: "Buongiorno, signora Ruocco.", why: "Tu and her first name, after she used Lei. Too familiar." } ] },
+  { npc: "Mi hanno detto che lei lavora con i lidi di Positano.", en: "I'm told you work with the beach clubs in Positano.", choices: [
+    { t: "Esatto. In due mesi abbiamo aumentato le loro prenotazioni del quaranta per cento.", en: "That's right. In two months we raised their bookings by forty percent.", q: "good", why: "A result, a number, no fluff." },
+    { t: "Esatto. In due mesi abbiamo aumentato le loro prenotazioni di quaranta per cento.", q: "minor", cat: "grammar", better: "…del quaranta per cento.", why: "Percentages take the article: del." },
+    { t: "Sì, ma quelli sono piccoli. Lei è molto più importante.", q: "major", cat: "culture", better: "Abbiamo aumentato le loro prenotazioni del 40 %.", why: "Belittling your other clients makes her wonder what you'll say about her." } ] },
+  { npc: "I miei clienti sono esigenti. Non voglio che la tecnologia rovini il servizio.", en: "My clients are demanding. I don't want technology to spoil the service.", choices: [
+    { t: "La capisco. La tecnologia resta dietro le quinte: i suoi skipper restano il volto dell'azienda.", en: "I understand. The technology stays behind the scenes: your skippers remain the face of the company.", q: "good", why: "You protected what she's proud of." },
+    { t: "La capisco. La tecnologia resta dietro le quinte e i suoi skipper restano il volto delle azienda.", q: "minor", cat: "grammar", better: "…il volto dell'azienda.", why: "Azienda is singular here: dell'azienda." },
+    { t: "Oggi tutti usano le app, deve adeguarsi.", q: "major", cat: "register", better: "La tecnologia resta dietro le quinte.", why: "Telling a proud owner she's behind the times." } ] },
+  { npc: "E i costi?", en: "And the costs?", choices: [
+    { t: "Proporrei tre mesi di prova su due barche, senza costi fissi. Paga solo sulle prenotazioni.", en: "I'd propose a three-month trial on two boats, with no fixed costs. You only pay on bookings.", q: "good", why: "Small, concrete, low risk. The conditional softens it." },
+    { t: "Proporrei tre mesi di prova su due barche, senza costi fissi. Paghi solo sulle prenotazioni.", q: "minor", cat: "register", better: "Paga solo sulle prenotazioni.", why: "Paghi is the tu form. With Lei it's paga." },
+    { t: "Il prezzo lo decidiamo dopo, si fidi.", q: "major", cat: "clarity", better: "Paga solo sulle prenotazioni.", why: "Vague about money with a businesswoman. Red flag." } ] },
+  { npc: "Dovrei parlarne con mio marito. È lui che porta il gozzo più vecchio.", en: "I'd need to talk to my husband. He's the one who skippers the oldest gozzo.", choices: [
+    { t: "Naturalmente. Sarei felice di conoscerlo. Possiamo fissare un incontro la settimana prossima?", en: "Of course. I'd be glad to meet him. Can we set a meeting for next week?", q: "good", why: "Respect for the family business, and a concrete next step." },
+    { t: "Naturalmente. Sarei felice di conoscerlo. Possiamo fissare una incontro?", q: "minor", cat: "grammar", better: "…fissare un incontro?", why: "Incontro is masculine: un incontro." },
+    { t: "Ma l'azienda non è sua?", q: "major", cat: "culture", better: "Naturalmente, sarei felice di conoscerlo.", why: "Questioning her authority in front of her crew." } ] },
+  { npc: "Va bene. Tre mesi su due barche. Ci vediamo giovedì al porto.", en: "Alright. Three months on two boats. See you Thursday at the harbour.", choices: [
+    { t: "Perfetto. Le mando la proposta stasera. È stato un vero piacere.", en: "Perfect. I'll send you the proposal tonight. It's been a real pleasure.", q: "good", why: "Momentum and manners." },
+    { t: "Perfetto. Ti mando la proposta stasera.", q: "minor", cat: "register", better: "Le mando la proposta stasera.", why: "Stay in Lei until she offers tu." },
+    { t: "Finalmente! Pensavo di aver perso la giornata.", q: "major", cat: "register", better: "Perfetto. È stato un vero piacere.", why: "Relief sounds like you doubted your own offer." } ] },
+];
+CAREERS.it = {
+  title: "La Dolce Vita",
+  ranks: ["Turista", "Stagista", "Imprenditore", "Commendatore", "Magnate", "Leggenda"],
+  tiers: [
+    { id: "it0", ch: 0, title: "The lido", place: "Spiaggia Grande, Positano", clock: "12:40 CEST", kind: "shack", npc: { hair: "#2a1a14", skin: "#c68a5e", jacket: "#1e5aa8", shirt: "#f4f4f4" }, script: S_IT0,
+      who: { name: "Gennaro Cuomo", role: "owner of Lido Gennaro, Positano", persona: "Neapolitan joker. Tu straight away, talks with his hands, hates being pitched like a suit." },
+      deal: "Get sunbed bookings for his lido on your app.", goal: "Get a one-month trial." },
+    { id: "it0b", ch: 0, city: "Napoli", title: "The pizzeria", place: "Spaccanapoli, Naples", clock: "13:30 CEST", kind: "street", npc: { hair: "#101014", skin: "#d9a57b", jacket: "#f4f4f4", shirt: "#f4f4f4" },
+      opener: () => op("Guagliò! Hai mai mangiato una vera pizza napoletana?", "Hey, kid! Have you ever eaten a real Neapolitan pizza?",
+        ["Mai come questa, maestro. Qual è il segreto?", "Never like this one, maestro. What's the secret?", "Maestro flatters a pizzaiolo exactly right."],
+        ["Mai come questo, maestro.", "grammar", "Mai come questa.", "Pizza is feminine: questa."],
+        ["Sì, a New York è più buona.", "culture", "Saying New York pizza is better, in Naples. You'll be escorted out."]),
+      who: { name: "Ciro Esposito", role: "third-generation pizzaiolo, Spaccanapoli", persona: "Loud, proud, tu with everyone, tests you with food before he tests your offer." },
+      deal: "Put his pizzeria on your food-tour routes.", goal: "A trial month and a table for your guests." },
+    { id: "it0c", ch: 0, city: "Amalfi", title: "The limoncello shop", place: "Amalfi", clock: "09:15 CEST", kind: "street", opts: { morning: true }, npc: { hair: "#e8e8e8", skin: "#e2b48c", jacket: "#f2c14e", shirt: "#f4f0e6", long: true },
+      opener: () => op("Assaggia, figlio mio. Il limoncello lo faccio io, con i limoni del giardino.", "Taste this, my son. I make the limoncello myself, with lemons from the garden.",
+        ["Grazie, signora Assunta. È squisito, si sente il sole.", "Thank you, Signora Assunta. It's exquisite, you can taste the sun.", "Signora plus first name: warm and respectful."],
+        ["Grazie, Assunta. È squisito.", "register", "Grazie, signora Assunta.", "Without signora it's too familiar for a nonna who just fed you."],
+        ["È un po' troppo dolce per me.", "culture", "Criticizing a nonna's limoncello. There's no coming back."]),
+      who: { name: "Nonna Assunta", role: "makes the coast's most famous limoncello", persona: "Calls everyone figlio mio. Feeds you first, talks second, and remembers who refused." },
+      deal: "Sell her limoncello to your hotel partners.", goal: "Her blessing and a crate on account." },
+    { id: "it1", ch: 1, city: "Capri", title: "The gozzo", place: "Off the Faraglioni, Capri", clock: "10:40 CEST", kind: "deck", opts: { sky: "day", shore: "faraglioni", deck: "teak" }, npc: { hair: "#101014", skin: "#d9a57b", jacket: "#f4f4f4", shirt: "#1e5aa8", long: true }, script: S_IT1,
+      who: { name: "Chiara Ruocco", role: "owner, Ruocco Boat Tours, Capri", persona: "Warm but formal. Lei until she offers tu. Proud of her family's boats and sharp on money." },
+      deal: "Put your platform across her twelve boats.", goal: "A 3-month pilot and a follow-up date." },
+    { id: "it1b", ch: 1, city: "Sorrento", title: "The grand hotel", place: "Sorrento", clock: "18:20 CEST", kind: "villa", opts: { sky: "day", shore: "amalfi" }, npc: { hair: "#6b3b1f", skin: "#e2b48c", jacket: "#1c2656", shirt: "#f4f4f4" },
+      opener: () => op("Buonasera. Si accomodi pure. Posso offrirle qualcosa?", "Good evening. Please, have a seat. May I offer you something?",
+        ["Buonasera, direttore. Un bicchiere d'acqua, grazie, è molto gentile.", "Good evening, director. A glass of water, thanks, that's very kind.", "Direttore as a title, and polite acceptance."],
+        ["Buonasera, direttore. Un bicchiere d'acqua, grazie, sei molto gentile.", "register", "…è molto gentile.", "Sei is tu. Stay in Lei with a hotel director."],
+        ["Uno spritz, e me lo metta sul conto della camera.", "register", "Treating the general manager like room service."]),
+      who: { name: "Marco Ferraro", role: "general manager, a grand hotel in Sorrento", persona: "Polished, formal Lei, protective of his guests and his staff." },
+      deal: "Your concierge booking system in his hotel.", goal: "A low-season trial with a start date." },
+    { id: "it1c", ch: 1, city: "Capri", title: "The Piazzetta", place: "Piazza Umberto I, Capri", clock: "11:00 CEST", kind: "rooftop", opts: { day: true }, npc: { hair: "#2a1a14", skin: "#e8c09b", jacket: "#262a33", shirt: "#f4f4f4", long: true },
+      opener: () => op("Buongiorno. Ho dieci minuti prima della giunta. Mi dica.", "Good morning. I have ten minutes before the council meeting. Go ahead.",
+        ["Buongiorno, dottoressa. Sarò breve: vogliamo portare a Capri turisti di qualità, fuori stagione.", "Good morning, Doctor. I'll be brief: we want to bring quality tourists to Capri, off-season.", "Her title, brevity, and exactly what a tourism councillor wants."],
+        ["Buongiorno, dottore. Sarò breve.", "grammar", "Buongiorno, dottoressa.", "For a woman the title is dottoressa."],
+        ["Salve! Allora, le racconto tutta la storia della nostra azienda…", "culture", "She said ten minutes. You opened with your life story."]),
+      who: { name: "Dott.ssa Elena Vitale", role: "tourism councillor, Capri", persona: "Formal, proud of her island, allergic to anything that looks like a favor." },
+      deal: "Promote off-season Capri to your users.", goal: "She takes your proposal to the mayor." },
+    { id: "it2", ch: 2, city: "Roma", title: "The terrace", place: "Trastevere, Rome", clock: "20:45 CEST", kind: "rooftop", opts: { night: true }, npc: { hair: "#c9c9c9", skin: "#e8c09b", jacket: "#262a33", shirt: "#f4f4f4" },
+      opener: () => op("Buonasera. Prima si cena, poi, forse, si parla di affari. D'accordo?", "Good evening. First we dine, then, perhaps, we talk business. Agreed?",
+        ["Con piacere, signor conte. A Roma si fa così, e si fa bene.", "With pleasure, Count. That's how it's done in Rome, and rightly so.", "Signor conte, and you accepted his rhythm."],
+        ["Con piacere, conte Ludovico.", "register", "Con piacere, signor conte.", "Signor conte is how you address him until he says otherwise."],
+        ["Preferirei vedere subito i numeri, se non le dispiace.", "culture", "Rushing a Roman aristocrat past dinner."]),
+      who: { name: "Conte Ludovico Serravalle", role: "chairman, Serravalle Hotels, twelve palazzo hotels", persona: "Old Roman nobility. Titles matter, dinners matter more, and price never comes up before dessert." },
+      deal: "Roll your platform out across his twelve hotels.", goal: "A two-hotel pilot and a dinner invitation." },
+    { id: "it2b", ch: 2, city: "Montalcino", title: "The vineyard", place: "Montalcino, Tuscany", clock: "16:30 CEST", kind: "farm", npc: { hair: "#5a5a60", skin: "#e2b48c", jacket: "#7a1f2b", shirt: "#f4f0e6", long: true },
+      opener: () => op("Benvenuto in cantina. Vuole assaggiare il Brunello dell'ultima annata?", "Welcome to the cellar. Would you like to taste the latest vintage of Brunello?",
+        ["Molto volentieri, signora Biondi. Che profumo.", "Very gladly, Signora Biondi. What a bouquet.", "Volentieri, her name, and a compliment to the wine."],
+        ["Molto volentieri. Che buono profumo.", "grammar", "Che buon profumo.", "Buono drops to buon before a masculine noun."],
+        ["Per me un bianco, il rosso mi fa venire mal di testa.", "culture", "Refusing the Brunello at the Brunello estate."]),
+      who: { name: "Giovanna Biondi", role: "fourth-generation winemaker, Montalcino", persona: "Patient, Lei, suspicious of city people who promise too much." },
+      deal: "Sell her wine directly to your hotel partners.", goal: "An exclusive first allocation." },
+    { id: "it2c", ch: 2, city: "Firenze", title: "The co-working", place: "Oltrarno, Florence", clock: "10:10 CEST", kind: "office", opts: { sky: "day", hills: true }, npc: { hair: "#6b3b1f", skin: "#e8c09b", jacket: "#3f7a4a", shirt: "#101014" },
+      opener: () => op("Oh, ciao! Dammi del tu, eh. Qui siamo tutti startupper.", "Oh, hi! Use tu with me, OK? We're all startup people here.",
+        ["Ciao Lorenzo! Perfetto, allora andiamo dritti al punto.", "Hi Lorenzo! Perfect, then let's get straight to the point.", "He offered tu; you took it and matched his speed."],
+        ["Ciao Lorenzo, perfetto. Lei cosa ne pensa del progetto?", "register", "Tu cosa ne pensi?", "He just asked for tu and you went straight back to Lei."],
+        ["Buongiorno, dottor Bianchi. Procediamo con l'ordine del giorno.", "register", "Stiff formality with a founder in a hoodie reads as cold."]),
+      who: { name: "Lorenzo Bianchi", role: "founder and angel investor, Florence", persona: "Fast Florentine Italian, turns every c into an h, tu from the first second, decides on gut feel." },
+      deal: "A seed check and his network in Florence.", goal: "His investment and three intros." },
+    { id: "it3", ch: 3, city: "Milano", title: "Floor 30", place: "Porta Nuova, Milan", clock: "11:30 CEST", kind: "office", opts: { landmark: "duomo", sky: "day" }, npc: { hair: "#101014", skin: "#e8c09b", jacket: "#1c1f2b", shirt: "#f4f4f4", long: true },
+      opener: () => op("Ho venti minuti. Cosa mi portate?", "I have twenty minutes. What have you brought me?",
+        ["Vado al sodo: un'azienda che fattura già e cresce del 30 % all'anno.", "Straight to the point: a business that already bills and grows 30% a year.", "Numbers first. Milan loves that."],
+        ["Vado al sodo: un'azienda che fattura già e cresce di 30 % all'anno.", "grammar", "…cresce del 30 %…", "Percentages take the article: del 30 %."],
+        ["Allora, prima le racconto come è nato tutto…", "culture", "She said twenty minutes. Milan investors want numbers first."]),
+      who: { name: "Francesca Lombardi", role: "CEO, Lombardi Capital", persona: "Fast, blunt Milanese. Interrupts. Respects people who push back with data." },
+      deal: "A €3M growth round for your company.", goal: "A term sheet before lunch." },
+    { id: "it3b", ch: 3, city: "Milano", title: "Fashion week", place: "Brera, Milan", clock: "22:00 CEST", kind: "rooftop", opts: { night: true }, npc: { hair: "#101014", skin: "#d9a57b", jacket: "#101014", shirt: "#101014" },
+      opener: () => op("Bello il tuo look. Chi ti veste?", "Nice look. Who dresses you?",
+        ["Grazie! Oggi mi vesto da solo, ma accetto consigli.", "Thanks! Today I dress myself, but I take advice.", "Humble, witty, and it flatters his expertise."],
+        ["Grazie! Oggi mi vesto da solo, ma accetto i consiglio.", "grammar", "…ma accetto consigli.", "Consiglio is singular. With i it has to be consigli, or just drop the article."],
+        ["Il mio look? Costa più della tua collezione.", "register", "Insulting the designer's collection at his own show."]),
+      who: { name: "Alessandro Moretti", role: "CEO of a Milan fashion house", persona: "Aesthetic, ironic, tu, decides by whether you have taste." },
+      deal: "Your platform for VIP hospitality at Milan Fashion Week.", goal: "Exclusive rights for next season." },
+    { id: "it3c", ch: 3, city: "Milano", title: "The San Siro box", place: "Stadio San Siro, Milan", clock: "20:45 CEST", kind: "stadium", npc: { hair: "#6b3b1f", skin: "#e8c09b", jacket: "#1c2656", shirt: "#101014" },
+      opener: () => op("Che partita! Sei dell'Inter o del Milan?", "What a game! Are you Inter or Milan?",
+        ["Oggi tifo per chi mi ha invitato!", "Today I'm cheering for whoever invited me!", "Diplomatic, funny, and it flatters him."],
+        ["Oggi sono di Milan.", "grammar", "Sono del Milan.", "Clubs take the article: del Milan, dell'Inter."],
+        ["Il calcio non mi piace. Parliamo di affari?", "culture", "In his box, mid-derby? Read the room."]),
+      who: { name: "Massimo De Luca", role: "sports and hospitality investor", persona: "Charismatic, tu, mixes football and business, judges you by whether you celebrate the goals." },
+      deal: "Stadium hospitality across Serie A.", goal: "A handshake before the final whistle." },
+    { id: "it4", ch: 4, city: "Porto Cervo", title: "The villa", place: "Porto Cervo, Sardinia", clock: "23:50 CEST", kind: "villa", opts: { shore: "cays" }, npc: { hair: "#101014", skin: "#c99870", jacket: "#f4f4f4", shirt: "#e24b3b" },
+      opener: () => op("Eccoti, finalmente! Che bevi? Qui gli affari si chiudono in piscina.", "There you are, finally! What are you drinking? Here deals close in the pool.",
+        ["Quello che bevi tu. E se si chiudono in piscina, mi tuffo subito.", "Whatever you're drinking. And if they close in the pool, I'm diving in now.", "You kept up with him. That's the whole test."],
+        ["Quello che beve Lei.", "register", "Quello che bevi tu.", "Lei by the pool at midnight in Porto Cervo feels like a tax audit."],
+        ["Acqua frizzante. Domani mi alzo presto.", "culture", "He's testing whether you can keep up. Apparently you can't."]),
+      who: { name: "Rocco Serra", role: "nightlife mogul, six clubs on the Costa Smeralda", persona: "Charming, loud, half drunk, testing whether you can keep up. Deals happen by the pool, never at a table." },
+      deal: "Buy into his club empire.", goal: "His handshake before sunrise." },
+    { id: "it4b", ch: 4, city: "Portofino", title: "The broker's yacht", place: "Portofino", clock: "18:30 CEST", kind: "deck", opts: { sky: "sunset", shore: "portofino", deck: "teak" }, npc: { hair: "#e9d7a5", skin: "#e8c09b", jacket: "#f4f4f4", shirt: "#1c2656", long: true },
+      opener: () => op("Benvenuto a bordo. Questa è la barca che ho appena venduto a uno sceicco. Che ne dice?", "Welcome aboard. This is the boat I just sold to a sheikh. What do you think?",
+        ["Impressionante. Si vede che lei sa vendere yacht.", "Impressive. Clearly you know how to sell yachts.", "Compliment the seller, not just the boat."],
+        ["Impressionante. Si vede che lei sa vendere barchette.", "vocabulary", "…sa vendere yacht.", "Barchette are little boats. On a superyacht, that's an insult."],
+        ["Il mio è più grande.", "register", "A size contest with the broker who controls the charter market. Bold. Wrong."]),
+      who: { name: "Ginevra Pastore", role: "superyacht broker, Portofino", persona: "Elegant, fast, formal until you prove you're a buyer, then ruthless and funny." },
+      deal: "Your platform for her whole charter fleet.", goal: "Exclusive rights on the Riviera." },
+    { id: "it4c", ch: 4, city: "Verona", title: "The opera box", place: "Arena di Verona", clock: "21:15 CEST", kind: "stadium", npc: { hair: "#c9c9c9", skin: "#f0c8a4", jacket: "#7a1f2b", shirt: "#f5c542", long: true },
+      opener: () => op("Le piace l'opera, o è qui solo per farmi piacere?", "Do you like opera, or are you here just to please me?",
+        ["Per tutte e due le cose, contessa. E l'Aida all'Arena è un sogno.", "For both, Countess. And Aida at the Arena is a dream.", "Honest, charming, and you knew what was playing."],
+        ["Per tutti e due, contessa.", "grammar", "Per tutte e due le cose.", "Cose is feminine: tutte e due."],
+        ["Sinceramente l'opera mi annoia.", "culture", "Saying opera bores you, in the Arena di Verona. The chorus stops."]),
+      who: { name: "Contessa Beatrice Lanfranchi", role: "patron of the arts, Verona", persona: "Witty, formal, loves to argue, respects wit over deference." },
+      deal: "Her family office's stake in your company.", goal: "A yes before the final act." },
+    { id: "it5", ch: 5, title: "The island", place: "A private island off Positano", clock: "10:15 CEST", kind: "deck", opts: { sky: "day", shore: "amalfi", deck: "teak" }, npc: { hair: "#e8e8e8", skin: "#d9a57b", jacket: "#f4f1ea", shirt: "#8fb8de" }, secret: true,
+      opener: () => op("Benvenuto. Qui non c'è fretta. Si sieda.", "Welcome. There's no hurry here. Sit.",
+        ["La ringrazio molto. È un onore che mi abbia ricevuto.", "Thank you very much. It's an honor that you've received me.", "È un onore che + subjunctive. Impeccable."],
+        ["È un onore che mi ha ricevuto.", "grammar", "…che mi abbia ricevuto.", "È un onore che takes the subjunctive."],
+        ["Grazie. Sarò breve, ho un'altra riunione.", "culture", "He sent a boat for you. There is no other meeting."]),
+      who: { name: "Il Signore", role: "a man whose name is never said", persona: "Soft-spoken, ultra-formal, watches everything. One wrong word and the boat leaves without you." },
+      deal: "Private capital for your next ten years.", goal: "Leave the island with his trust." },
+    { id: "it5b", ch: 5, city: "Portofino", title: "Espresso at 40,000 feet", place: "Private jet to Genoa", clock: "16:00 CEST", kind: "jet", npc: { hair: "#c9c9c9", skin: "#e2b48c", jacket: "#262a33", shirt: "#f4f4f4" }, secret: true,
+      opener: () => op("Tenga, assaggi questo caffè. Quassù non c'è campo, quindi parliamo con calma.", "Here, try this coffee. There's no signal up here, so let's talk calmly.",
+        ["Grazie. Ottimo. Mi dica cosa cerca in un socio.", "Thanks. Excellent. Tell me what you look for in a partner.", "You took the coffee and asked about him."],
+        ["Grazie. Ha dello zucchero? E un po' di latte? E del cacao?", "culture", "Grazie, ottimo.", "Turning his espresso into a dessert. He winces."],
+        ["No grazie, il caffè dopo le undici non lo bevo.", "culture", "Refusing the host's coffee is refusing the host."]),
+      who: { name: "Vittorio Parodi", role: "Genoese shipping magnate", persona: "Calm, famously frugal, tests you with silence." },
+      deal: "A partnership across his Mediterranean ports.", goal: "An invitation to his villa in Portofino." },
+    { id: "it5c", ch: 5, city: "Lugano", title: "The vault", place: "Lugano, Switzerland", clock: "22:40 CEST", kind: "office", opts: { decor: "gold" }, npc: { hair: "#c9c9c9", skin: "#e8c09b", jacket: "#101014", shirt: "#f5c542" }, secret: true,
+      opener: () => op("Quello che si dice qui, resta qui. Intesi?", "What's said here stays here. Understood?",
+        ["Intesi, avvocato. Può contare sulla mia discrezione.", "Understood, avvocato. You can count on my discretion.", "Short, respectful, and it sounds true."],
+        ["Intesi. Può contare sulla mia discrezione totale, glielo prometto tantissimo.", "clarity", "Può contare sulla mia discrezione.", "Over-promising discretion sounds like the opposite."],
+        ["Certo, anche se il mio commercialista dovrà saperlo.", "culture", "You just told a private banker you'll repeat everything."]),
+      who: { name: "Avv. Aurelio Bassi", role: "private banker in Lugano to people who don't exist", persona: "Quiet, precise, formal, and he has already read your file." },
+      deal: "Park your fortune where nobody asks.", goal: "An account with no name on it." },
+  ],
+  circle: [
+    { id: "salvo", name: "Salvo Russo", g: "m", rank: 1, role: "gozzo skipper, Capri", persona: "sun-bleached flirt, slow Neapolitan Italian, knows every rumor in the harbour", pal: { hair: "#2a1a14", skin: "#c68a5e", jacket: "#f4f4f4", shirt: "#1e5aa8" }, secret: "it1" },
+    { id: "martina", name: "Martina De Rosa", g: "w", rank: 0, role: "lifeguard at a Positano lido", persona: "sunburnt, fearless, Neapolitan slang, teases you for being a tourist", pal: { hair: "#2a1a14", skin: "#c68a5e", jacket: "#e24b3b", shirt: "#e24b3b", long: true }, secret: "it0" },
+    { id: "giorgia", name: "Giorgia Esposito", g: "w", rank: 0, role: "bartender, Quartieri Spagnoli", persona: "quick-witted Napoletana, roasts tourists lovingly, gestures more than she talks", pal: { hair: "#101014", skin: "#d9a57b", jacket: "#f2c14e", shirt: "#f2c14e", long: true } },
+    { id: "nadia", name: "Nadia Amato", g: "w", rank: 1, role: "events manager, a Sorrento grand hotel", persona: "organized by day, flirty off duty, knows every guest's secrets", pal: { hair: "#6b3b1f", skin: "#e2b48c", jacket: "#1c2656", shirt: "#f4f4f4", long: true } },
+    { id: "federica", name: "Federica Galli", g: "w", rank: 2, role: "DJ on Roman rooftops", persona: "teasing, Roman slang, mocks your accent, dares you to dance", pal: { hair: "#101014", skin: "#c99870", jacket: "#ff6fae", shirt: "#ff6fae", long: true }, secret: "it2" },
+    { id: "ludovica", name: "Ludovica Neri", g: "w", rank: 2, role: "sommelier, Montalcino", persona: "Tuscan irony, judges you by how you hold a glass", pal: { hair: "#6b3b1f", skin: "#e8c09b", jacket: "#7a1f2b", shirt: "#7a1f2b", long: true } },
+    { id: "bianca", name: "Bianca Colombo", g: "w", rank: 3, role: "M&A lawyer, Milan", persona: "dry wit, flirts by correcting your subjunctive", pal: { hair: "#e9d7a5", skin: "#f0c8a4", jacket: "#1c1f2b", shirt: "#f4f4f4", long: true }, secret: "it3" },
+    { id: "greta", name: "Greta Fontana", g: "w", rank: 3, role: "fashion designer, Milan", persona: "judges your outfit before your Italian, secretly soft", pal: { hair: "#101014", skin: "#8d5a3b", jacket: "#e24b3b", shirt: "#101014", long: true } },
+    { id: "edo", name: "Edoardo Sala", g: "m", rank: 4, role: "sailor and heir, Porto Cervo", persona: "bored rich kid, outrageous compliments, secretly sharp", pal: { hair: "#e9d7a5", skin: "#e8c09b", jacket: "#ffffff", shirt: "#52c7b8" }, secret: "it4" },
+    { id: "vittoria", name: "Vittoria Rinaldi", g: "w", rank: 4, role: "model and yacht-club regular, Portofino", persona: "glamorous and competitive, only impressed by confidence and good Italian", pal: { hair: "#2a1a14", skin: "#c68a5e", jacket: "#f4f4f4", shirt: "#52c7b8", long: true } },
+    { id: "aurora", name: "Aurora Mancini", g: "w", rank: 4, role: "soprano, Arena di Verona", persona: "dramatic, funny, sings your name when you get something wrong", pal: { hair: "#7a1f2b", skin: "#e2b48c", jacket: "#b565c9", shirt: "#b565c9", long: true } },
+    { id: "elisa", name: "Elisa Ferretti", g: "w", rank: 5, role: "heiress, Lake Como", persona: "old money, bored by flattery, loves a challenge", pal: { hair: "#6b3b1f", skin: "#f0c8a4", jacket: "#f5c542", shirt: "#f4f4f4", long: true } },
+    { id: "sofia_it", name: "Sofia Marchetti", g: "w", rank: 4, role: "gallery owner, Capri", persona: "mysterious, speaks in half-sentences, knows where the island is", pal: { hair: "#101010", skin: "#8d5a3b", jacket: "#101014", shirt: "#f5c542", long: true }, secret: "it5" },
+  ],
+  secrets: [
+    { id: "it0", tier: "it0", title: "Gennaro's lease is up in June", text: "The town is re-tendering the beach concession. He needs bookings on paper before the council decides.", deal: 1 },
+    { id: "it1", tier: "it1", title: "Chiara's brother wants to sell", text: "Her brother owns half the boats and has an offer from a Neapolitan group. She needs a win to keep the family together.", deal: 1 },
+    { id: "it2", tier: "it2", title: "The Conte's daughter runs the numbers", text: "The old man decides, but only after Carlotta signs off the spreadsheet. Mention occupancy and RevPAR.", deal: 1 },
+    { id: "it3", tier: "it3", title: "Lombardi Capital missed its target", text: "Francesca's fund is 8% behind. She needs one breakout bet this year.", deal: 2 },
+    { id: "it4", tier: "it4", title: "Rocco owes the Guardia di Finanza €4M", text: "The tax police are circling. Cash on the table this week beats a bigger number next year.", deal: 2 },
+    { id: "it5", tier: "it5", title: "A motorboat leaves Positano at dawn", text: "On the first Sunday of the month, from the end of the pier. You don't need a yacht. You need this.", unlock: true },
+  ],
+  ports: ["Marina Grande, Capri", "Marina di Portofino", "Porto Cervo Marina", "Marina Piccola, Sorrento", "Marina di Stabia"],
+};
+
 function finalizeCareer(c) {
   if (!c || c._final) return c;
   const n = c.tiers.length;
@@ -1174,7 +1404,7 @@ function scriptFor(t) {
   if (!t) return null;
   if (t.script) return t.script;
   if (t._built) return t._built;
-  const lang = t.id.startsWith("zh") ? "zh" : t.id.startsWith("es") ? "es" : null;
+  const lang = ["zh", "es", "it"].find((k) => t.id.startsWith(k)) || null;
   if (!lang || !t.opener) return null;
   const bank = BANK[lang], r = rng(hash(t.id)), mids = [0, 1, 2, 3, 4].sort(() => r() - 0.5).slice(0, 3).sort((a, b) => a - b);
   t._built = [t.opener(), ...mids.map((k) => bank[k]), bank[5]];
@@ -1767,8 +1997,8 @@ const tierIdx = () => clamp(G.tier[G.lang] ?? 0, 0, (career()?.tiers.length || 1
 const tier = () => career()?.tiers[tierIdx()];
 const rankOf = (xp) => RANK_XP.reduce((r, t, i) => (xp >= t ? i : r), 0);
 const rank = (lang = G.lang) => rankOf(life(lang).xp);
-const shopName = (id, lang = G.lang) => (SHOP_NAMES[lang] || career(lang)?.shop || {})[id] || (lang === "zh" && XNAMES_ZH[id]) || (lang === "es" && XNAMES_ES[id]) || XNAMES[id] || GENERIC_NAMES[id];
-const termOf = (o, lang = G.lang) => (lang === "es" || lang === "zh" ? o[lang] : null);
+const shopName = (id, lang = G.lang) => (SHOP_NAMES[lang] || career(lang)?.shop || {})[id] || (lang === "zh" && XNAMES_ZH[id]) || (lang === "es" && XNAMES_ES[id]) || (lang === "it" && XNAMES_IT[id]) || XNAMES[id] || GENERIC_NAMES[id];
+const termOf = (o, lang = G.lang) => (lang === "es" || lang === "zh" || lang === "it" ? o[lang] : null);
 function upPrice(it, u) { return Math.max(50, Math.round(it.price * u.f)); }
 function perks(lang = G.lang) {
   const o = { pay: 0, xp: 0, fee: 0, deal: 0, chem: 0, hint: false, secret: false };
@@ -1923,6 +2153,28 @@ function phrase(action, a = {}) {
       invest: { t: "Quiero invertir en " + a.term + ".", en: "Tell your broker to invest in: " + a.en + "." },
       divest: { t: ("Quiero retirar mi dinero de " + a.term + ".").replace(" de el ", " del "), en: "Tell your broker to pull your money out of: " + a.en + "." },
       hire: { t: "Quiero contratar a " + String(a.term).replace(/^(El|La) /i, (m) => m.toLowerCase()) + ".", en: "Tell the agency you want to hire: " + a.en + "." },
+    }[action];
+  }
+  if (lang === "it") {
+    const n = a.it ? nounFor(a.it) : null;
+    return {
+      buy: { t: "Vorrei comprare " + n?.[0] + ".", en: "Tell the seller you want to buy " + n?.[1] + "." },
+      sell: { t: "Vorrei vendere " + n?.[0] + ".", en: "Tell the broker you want to sell " + n?.[1] + "." },
+      install: { t: "Vorrei aggiungere " + a.term + ".", en: "Ask the yard to add: " + a.en + "." },
+      paint: { t: "Vorrei cambiare " + a.term + ".", en: "Ask to change the " + String(a.en).toLowerCase() + "." },
+      name: { t: "Si chiama " + a.name + ".", en: "Tell the registrar it's called " + a.name + "." },
+      date: { t: "Ti va di uscire con me stasera?", en: "Ask " + a.who + " out tonight." },
+      night: { t: "Resti da me stanotte?", en: "Ask " + a.who + " to stay the night." },
+      fly: { t: "Un biglietto per " + a.city + ", per favore.", en: "Buy a ticket to " + a.city + "." },
+      order: { t: "Posso avere " + a.item + ", per favore?", en: "Order " + a.en + "." },
+      treat: { t: "Ti offro " + a.item + "?", en: "Offer to buy " + a.who + " " + a.en + "." },
+      exclusive: { t: a.g === "m" ? "Vuoi essere il mio ragazzo?" : "Vuoi essere la mia ragazza?", en: "Ask " + a.who + " to make it official." },
+      buyclothes: { t: "Prendo " + a.itTerm + ".", en: "Tell the shop assistant you'll take the " + a.en + "." },
+      vacation: { t: "Vorrei prenotare " + ({ 3: "tre", 7: "sette", 14: "quattordici" })[a.n] + " notti, per favore.", en: "Book " + a.n + " nights." },
+      checkin: { t: "Come va il progetto?", en: "Call " + a.who + " and ask how the project is going." },
+      hire: { t: "Vorrei assumere " + (a.itHire || a.term) + ".", en: "Tell the agency you want to hire: " + a.en + "." },
+      invest: { t: "Vorrei investire " + itPrep("in", a.term) + ".", en: "Tell your broker to invest in: " + a.en + "." },
+      divest: { t: "Vorrei vendere " + (a.sell || a.term) + ".", en: "Tell your broker to sell: " + a.en + "." },
     }[action];
   }
   if (lang === "zh") {
@@ -2235,6 +2487,13 @@ function drawOffice(c, t, st) {
     for (let k = 0; k < 8; k++) { const y = 44 - k * 4; R(c, 126, y, 14, 4, "#6f9a8a"); R(c, 125, y, 16, 1, "#8fbaa8"); }
     R(c, 129, 8, 8, 4, "#6f9a8a"); R(c, 132, 0, 2, 8, "#c9c9c9");
     for (let k = 0; k < 8; k++) if ((Math.floor(t / 400) + k) % 3) R(c, 132, 46 - k * 4, 2, 1, "#ffd98a");
+  } else if (L === "duomo") {
+    const mb = day ? "#e8e2d6" : "#8a8aa6", sh = day ? "#c9c2b4" : "#6a6a86";
+    R(c, 106, 40, 54, 24, mb); for (let k = 0; k < 27; k++) R(c, 106 + k * 2, 44 + (k % 3), 1, 20, sh);
+    for (let x = 106; x <= 158; x += 4) { const h = 10 + ((x / 4) % 3) * 3; R(c, x, 40 - h, 1, h, mb); R(c, x, 40 - h - 1, 1, 1, sh); }
+    R(c, 131, 14, 3, 26, mb); R(c, 132, 10, 1, 4, mb); R(c, 131, 8, 3, 3, "#f5c542");
+    for (let dy = -3; dy <= 3; dy++) { const w = Math.floor(Math.sqrt(9 - dy * dy)); R(c, 132 - w, 50 + dy, w * 2 + 1, 1, day ? "#7a6a8a" : "#ffd98a"); }
+    [[116, 54], [148, 54], [132, 58]].forEach(([dx, dy]) => R(c, dx - 2, dy, 4, 6, day ? "#5a4a3a" : "#ffd98a"));
   } else if (L === "cctv") {
     const col = day ? "#6b7a90" : "#2a3560";
     R(c, 116, 30, 9, 34, col); R(c, 142, 26, 9, 38, col); R(c, 116, 20, 35, 8, col); R(c, 125, 28, 17, 2, day ? "#a9d4ec" : "#171d48");
@@ -2305,6 +2564,20 @@ function drawDeck(c, t, st) {
     for (let i = 0; i < 3; i++) { R(c, 30 + i * 6, hy - 9 + i, 1, 7 - i, "#6b4a2a"); R(c, 27 + i * 6, hy - 10 + i, 7, 1, "#3f7a4a"); }
   } else if (o.shore === "vedra") {
     for (let x = 118; x < 176; x++) { const k = (x - 118) / 58; const h = Math.round(Math.max(0, 34 * (k < 0.45 ? k / 0.45 : (1 - k) / 0.55)) + (x % 5 === 0 ? 1 : 0)); R(c, x, hy - h, 1, h, "#2a1c3a"); }
+  } else if (o.shore === "faraglioni") {
+    [[112, 20, 12], [128, 26, 9], [140, 16, 10]].forEach(([x, h, w], k) => { for (let i = 0; i < w; i++) { const hh = Math.round(h * (0.75 + 0.25 * Math.sin((i / w) * Math.PI))); R(c, x + i, hy - hh, 1, hh, k === 1 ? "#6a6250" : "#7a705a"); } R(c, x + 1, hy - h + 2, 2, h - 4, "#8f8468"); });
+    R(c, 131, hy - 8, 3, 7, night ? "#0c1a3c" : "#2b6e86");
+    for (let x = 0; x < 70; x++) { const h = Math.round(22 - x * 0.25 + 3 * Math.sin(x / 6)); R(c, x, hy - h, 1, h, "#4f6a3f"); }
+  } else if (o.shore === "amalfi") {
+    for (let x = 0; x < 110; x++) { const h = Math.round(44 - x * 0.3 + 3 * Math.sin(x / 9)); R(c, x, hy - h, 1, h, "#5a6a4a"); }
+    const cols = ["#f2c14e", "#e86a92", "#f4efe6", "#e8a33a", "#8fd3ff", "#f4c7a0"];
+    for (let row = 0; row < 5; row++) for (let k = 0; k < 7 - row; k++) { const hx = 6 + k * 13 + row * 5, hh = 7, top = hy - 8 - row * 7 - (k % 2); R(c, hx, top, 10, hh, cols[(row * 3 + k) % cols.length]); R(c, hx + 2, top + 2, 2, 2, night ? "#ffd98a" : "#3a4a6a"); R(c, hx + 6, top + 2, 2, 2, night ? "#ffd98a" : "#3a4a6a"); }
+    R(c, 36, hy - 50, 8, 10, "#e8e2d6"); R(c, 38, hy - 56, 4, 6, "#3a8a5a");
+  } else if (o.shore === "portofino") {
+    for (let x = 0; x < 192; x++) { const h = Math.round(26 + 8 * Math.sin(x / 30) + 3 * Math.sin(x / 7)); R(c, x, hy - h, 1, h, "#3f6a3a"); }
+    const cols = ["#f2c14e", "#e86a92", "#e8a33a", "#f4efe6", "#c9704a", "#f4c7a0", "#b8d8c0"];
+    for (let k = 0; k < 16; k++) { const hx = 16 + k * 10, hh = 12 + ((k * 7) % 6); R(c, hx, hy - hh, 9, hh, cols[k % cols.length]); for (let yy = hy - hh + 2; yy < hy - 2; yy += 4) { R(c, hx + 2, yy, 2, 2, night ? "#ffd98a" : "#2f5a34"); R(c, hx + 5, yy, 2, 2, night ? "#ffd98a" : "#2f5a34"); } R(c, hx, hy - hh - 1, 9, 1, "#b5553a"); }
+    R(c, 150, hy - 40, 6, 12, "#e8e2d6"); R(c, 151, hy - 44, 4, 4, "#b5553a");
   } else if (o.shore === "generic") {
     for (let x = 0; x < 192; x++) { const h = Math.round(4 + 3 * Math.sin(x / 17) + 2 * Math.sin(x / 7)); R(c, x, hy - h, 1, h, night ? "#161a38" : "#4a5a6a"); }
   }
@@ -2927,7 +3200,7 @@ function renderExplore() {
   $("#ex-map").hidden = false; $("#ex-walk").hidden = true;
   $("#back-to-walk").hidden = !(L.here && tierById(L.here));
   const hc = L.here ? cityOfTier(L.here) : null;
-  $("#map-title").textContent = (G.lang === "es" ? "EL MAPA" : G.lang === "zh" ? "地图 DÌTÚ" : "THE MAP");
+  $("#map-title").textContent = (G.lang === "es" ? "EL MAPA" : G.lang === "zh" ? "地图 DÌTÚ" : G.lang === "it" ? "LA MAPPA" : "THE MAP");
   $("#map-here").textContent = hc ? "YOU: " + hc.name.toUpperCase() : "YOU: NOWHERE YET";
   mapSel ||= hc?.k || citiesFor()[0]?.k;
   $("#city-list").innerHTML = citiesFor().map((ct) => {
@@ -3103,6 +3376,10 @@ function menuFor(t) {
     const coffee = /Colombia|Medellín|Salento|Eje/.test(pl) ? ["un tinto", "a black coffee"] : ["un café", "a coffee"];
     const local = /Aruba|Curaçao/.test(pl) ? ["una Balashi", "a Balashi beer"] : /Mexico/.test(pl) ? ["un mezcal", "a mezcal"] : /Buenos Aires/.test(pl) ? ["un malbec", "a glass of malbec"] : ["una cerveza", "a beer"];
     return [{ t: coffee[0], en: coffee[1], price: 3, sharp: true }, { t: local[0], en: local[1], price: 7 }, { t: "una botella de champán", en: "a bottle of champagne", price: lux }];
+  }
+  if (G.lang === "it") {
+    const local = /Positano|Amalfi|Capri|Sorrento|Naples/.test(pl) ? ["un limoncello", "a limoncello"] : /Milan|Verona|Genoa|Portofino|Lugano/.test(pl) ? ["uno spritz", "an Aperol spritz"] : /Tuscany|Florence|Rome/.test(pl) ? ["un bicchiere di rosso", "a glass of red"] : ["una birra", "a beer"];
+    return [{ t: "un caffè", en: "an espresso", price: 3, sharp: true }, { t: local[0], en: local[1], price: 7 }, { t: "una bottiglia di champagne", en: "a bottle of champagne", price: lux }];
   }
   if (G.lang === "zh") {
     const coffee = /Singapore/.test(pl) ? ["一杯kopi", "yì bēi kopi", "a kopi"] : /Hangzhou|Lijiang|Beijing/.test(pl) ? ["一杯龙井", "yì bēi Lóngjǐng", "a Longjing tea"] : /Taipei/.test(pl) ? ["一杯珍奶", "yì bēi zhēnnǎi", "a bubble tea"] : ["一杯咖啡", "yì bēi kāfēi", "a coffee"];
@@ -3435,7 +3712,7 @@ function contactsHere(tid) { return (life().contacts || []).filter((c) => c.home
 function flirtFlow(n) {
   const bank = FLIRT[G.lang];
   if (!bank) { toast(sample ? "Flirting in this language happens in Circle chats for now." : "Flirting here needs Claude."); return; }
-  const closer = bank.findIndex((x) => /tengo que ir|得走了/.test(x[0]));
+  const closer = bank.findIndex((x) => /tengo que ir|得走了|devo andare/.test(x[0]));
   const r = rng(hash(n.id + n.name + today())), seq = bank.map((_, i) => i).filter((i) => i !== closer).sort(() => r() - 0.5).slice(0, 2).concat(closer);
   n.talked = true; n.score = 0; renderInteract();
   const pool = bank.map(toNode);
@@ -3780,7 +4057,7 @@ function renderStaff() {
   document.querySelectorAll("#circle-biz .item canvas").forEach((cv, k) => { const c = cv.getContext("2d"); R(c, 0, 0, 20, 20, "#2b2140"); drawPerson(c, 5, 3, genNpcPal(hash(STAFF[k].id + G.lang)), 0, false, 3); });
   document.querySelectorAll("[data-hire]").forEach((b) => b.addEventListener("click", async () => {
     const x = STAFF.find((y) => y.id === b.dataset.hire); if (L.cash < x.pay) return;
-    if (!(await sayIt("hire", { term: termOf(x) || x.en, en: x.en }, money(x.pay) + " / day")).ok) return;
+    if (!(await sayIt("hire", { term: termOf(x) || x.en, itHire: x.itHire, en: x.en }, money(x.pay) + " / day")).ok) return;
     L.cash -= x.pay; L.staff = { ...(L.staff || {}), [x.id]: today() }; save(); pop("-" + money(x.pay), b); sfx("buy"); renderHud(); renderStaff();
   }));
   document.querySelectorAll("[data-fire]").forEach((b) => b.addEventListener("click", () => { delete L.staff[b.dataset.fire]; save(); renderStaff(); }));
@@ -3825,7 +4102,7 @@ const GL = { rot: -60, tilt: 14, drag: null, auto: true, sel: null, hover: null 
 const GW = 320, GH = 180, GR = 76, GCX = 160, GCY = 90;
 function globeCities() {
   const out = [];
-  ["es", "zh"].forEach((lang) => (CITIES[lang] || []).forEach((ct) => { const g = GEO[ct.k]; if (g) out.push({ lang, k: ct.k, name: ct.name, lat: g[0], lon: g[1], won: ct.tiers.some((id) => (life(lang).cleared[id] ?? -1) >= 5) }); }));
+  ["es", "zh", "it"].forEach((lang) => (CITIES[lang] || []).forEach((ct) => { const g = GEO[ct.k]; if (g) out.push({ lang, k: ct.k, name: ct.name, lat: g[0], lon: g[1], won: ct.tiers.some((id) => (life(lang).cleared[id] ?? -1) >= 5) }); }));
   return out;
 }
 function projectG(lat, lon) {
@@ -3878,7 +4155,7 @@ function drawGlobe(c, t) {
   }
   cities.forEach((ct) => {
     const q = projectG(ct.lat, ct.lon); if (!q.vis) return;
-    const col = ct.lang === "es" ? "#ff9a5c" : "#ff6f6f", mine = ct.lang === G.lang && ct.k === hereK;
+    const col = ct.lang === "es" ? "#ff9a5c" : ct.lang === "it" ? "#7ee08a" : "#ff6f6f", mine = ct.lang === G.lang && ct.k === hereK;
     R(c, q.x - 1, q.y - 1, 3, 3, "#0b0e1a"); R(c, q.x, q.y, 1, 1, ct.won ? "#f5c542" : col);
     if (ct.won) { R(c, q.x - 1, q.y - 2, 3, 1, "#f5c542"); }
     if (mine || GL.sel === ct.lang + ":" + ct.k || GL.hover === ct.lang + ":" + ct.k) { const b = Math.floor(t / 300) % 2, cc = b ? "#f5c542" : col; R(c, q.x - 3, q.y - 3, 7, 1, cc); R(c, q.x - 3, q.y + 3, 7, 1, cc); R(c, q.x - 3, q.y - 3, 1, 7, cc); R(c, q.x + 3, q.y - 3, 1, 7, cc); }
@@ -4008,7 +4285,7 @@ function renderLook(host) {
 }
 function renderWardrobe() {
   const L = closet(), el = $("#wardrobe"), w = wornItem();
-  el.innerHTML = '<div class="row between"><h3>' + (G.lang === "es" ? "El armario · " : G.lang === "zh" ? "衣柜 yīguì · " : "") + 'Wardrobe</h3><span class="chip info">Wearing: ' + esc(w ? termOf(w) || w.en : "street clothes") + '</span></div><p class="muted small">Dress for the room. A suit at an office or banquet, linen or swim shorts at the beach, a sharp look on a yacht: +1 on the deal meter. Get it wrong and it costs you one.</p><div class="items">' +
+  el.innerHTML = '<div class="row between"><h3>' + (G.lang === "es" ? "El armario · " : G.lang === "it" ? "Il guardaroba · " : G.lang === "zh" ? "衣柜 yīguì · " : "") + 'Wardrobe</h3><span class="chip info">Wearing: ' + esc(w ? termOf(w) || w.en : "street clothes") + '</span></div><p class="muted small">Dress for the room. A suit at an office or banquet, linen or swim shorts at the beach, a sharp look on a yacht: +1 on the deal meter. Get it wrong and it costs you one.</p><div class="items">' +
     CLOTHES.map((x) => {
       const own = !!L.closet[x.id], tm = termOf(x), wearing = L.wear === x.id, on = x.slot === "acc" && L.acc[x.id];
       const perk = [x.perk.pay && "+" + Math.round(x.perk.pay * 100) + "% payouts", x.perk.chem && "+" + Math.round(x.perk.chem * 100) + "% chemistry", x.perk.rep && "+" + x.perk.rep + " rep"].filter(Boolean).join(" · ");
@@ -4022,7 +4299,7 @@ function renderWardrobe() {
   });
   el.querySelectorAll("[data-clbuy]").forEach((b) => b.addEventListener("click", async () => {
     const x = CLOTHES.find((y) => y.id === b.dataset.clbuy); if (L.cash < x.price) return;
-    if (!(await sayIt("buyclothes", { es: x.es, zhm: x.zhm, en: x.en.toLowerCase() }, money(x.price))).ok) return;
+    if (!(await sayIt("buyclothes", { es: x.es, zhm: x.zhm, itTerm: x.it, en: x.en.toLowerCase() }, money(x.price))).ok) return;
     L.cash -= x.price; L.closet[x.id] = true; if (x.slot === "acc") L.acc[x.id] = true; else L.wear = x.id; save(); pop("-" + money(x.price), b); sfx("buy"); renderHud(); renderWardrobe();
   }));
   el.querySelectorAll("[data-clwear]").forEach((b) => b.addEventListener("click", () => { L.wear = b.dataset.clwear || null; save(); renderWardrobe(); renderHud(); }));
@@ -4157,7 +4434,7 @@ function animateCash(target) {
 }
 function renderPassports() {
   const wrap = $("#passports");
-  const langs = ["es", "zh", ...Object.keys(G.langs).filter((k) => k !== "es" && k !== "zh")];
+  const langs = ["es", "zh", "it", ...Object.keys(G.langs).filter((k) => k !== "es" && k !== "zh" && k !== "it")];
   wrap.innerHTML = langs.map((k) => '<button class="passport" data-lang="' + k + '" aria-pressed="' + (k === G.lang) + '">' + esc(LANGS[k].name) + "<small>" + money(netWorth(k)) + (career(k) ? " · " + esc(career(k).ranks[rank(k)].split(" ")[0]) : " · unwritten") + "</small></button>").join("") +
     '<label class="passport" for="new-lang">New passport<small><select id="new-lang"><option value="">Pick a language</option>' + Object.entries(LANGS).filter(([k]) => !langs.includes(k)).map(([k, v]) => '<option value="' + k + '">' + esc(v.name) + "</option>").join("") + "</select></small></label>";
   wrap.querySelectorAll("button.passport").forEach((b) => b.addEventListener("click", () => switchLang(b.dataset.lang)));
@@ -4792,7 +5069,7 @@ function renderInvest() {
   let el = $("#invest");
   if (!el) { el = document.createElement("div"); el.id = "invest"; el.className = "box stack"; $("#shop").before(el); }
   const L = life(), inv = (L.inv ||= {}), total = portfolioValue(), basis = Object.values(inv).reduce((s, h) => s + (h.basis || 0), 0), pl = total - basis;
-  const word = G.lang === "es" ? "Inversiones · " : G.lang === "zh" ? "投资 tóuzī · " : "";
+  const word = G.lang === "es" ? "Inversiones · " : G.lang === "zh" ? "投资 tóuzī · " : G.lang === "it" ? "Investimenti · " : "";
   el.innerHTML = '<div class="row between"><h3>' + word + 'Investments</h3><span class="chip ' + (pl >= 0 ? "good" : "major") + '">Portfolio ' + money(total) + (basis ? " · " + (pl >= 0 ? "+" : "") + money(pl).replace("$-", "-$") : "") + "</span></div>" +
     '<p class="muted small">Prices move after every meeting and every day that passes, including days at sea. Dividends and rent land in your cash. Every buy and sale is spoken in ' + esc(LANGS[G.lang].name) + ".</p>" +
     '<canvas id="inv-cv" width="192" height="30" style="width:100%;max-width:520px;image-rendering:pixelated;background:#141a30;border:2px solid var(--line)"></canvas>' +
@@ -4818,7 +5095,7 @@ function renderInvest() {
   }));
   el.querySelectorAll("[data-div]").forEach((b) => b.addEventListener("click", async () => {
     const a = assetsFor().find((x) => x.id === b.dataset.div), h = inv[a.id]; if (!h?.v) return;
-    const r = await sayIt("divest", { term: a.term, en: a.en }, a.en + " · " + money(h.v)); if (!r.ok) return;
+    const r = await sayIt("divest", { term: a.term, sell: a.sell, en: a.en }, a.en + " · " + money(h.v)); if (!r.ok) return;
     const got = h.v; delete inv[a.id]; save(); addCash(got, b); toast("Sold for " + money(got) + (got >= h.basis ? " (+" + money(got - h.basis) + ")" : " (" + money(got - h.basis) + ")"));
     renderEmpire();
   }));
@@ -4933,7 +5210,7 @@ function openHighLife() {
   const m = $("#modal"), L = life(), list = HIGHLIFE[G.lang] || [];
   m.className = "modal wide"; $("#overlay").hidden = false;
   if (!list.length) { m.innerHTML = '<h2>High life</h2><p class="muted">The high life board is written for Spanish and Mandarin careers.</p><button class="btn" id="hl-x">Close</button>'; $("#hl-x").onclick = () => { m.className = "modal"; $("#overlay").hidden = true; }; return; }
-  m.innerHTML = '<div class="row between"><div><span class="label">' + (G.lang === "es" ? "La buena vida" : "上流生活 shàngliú shēnghuó") + '</span><h2>The High Life board</h2></div><button class="btn sm" id="hl-x">Close</button></div><p class="muted small">Three moments, each spoken in ' + esc(LANGS[G.lang].name) + ", then the afterparty where the deals happen. What you own changes the odds.</p>" +
+  m.innerHTML = '<div class="row between"><div><span class="label">' + (G.lang === "es" ? "La buena vida" : G.lang === "it" ? "La bella vita" : "上流生活 shàngliú shēnghuó") + '</span><h2>The High Life board</h2></div><button class="btn sm" id="hl-x">Close</button></div><p class="muted small">Three moments, each spoken in ' + esc(LANGS[G.lang].name) + ", then the afterparty where the deals happen. What you own changes the odds.</p>" +
     '<div class="stack" style="gap:10px">' + list.map((x, k) => { const need = hlNeed(x), cost = hlCost(x); return '<div class="card"><div class="row between"><div><div class="t">' + esc(x.name) + '</div><div class="small muted">' + esc(x.where) + '</div></div><div class="row">' + (need ? '<span class="chip info">' + esc(need) + "</span>" : '<button class="btn sm gold" data-hl="' + k + '"' + (L.cash < cost ? " disabled" : "") + ">Go · " + money(cost) + "</button>") + "</div></div></div>"; }).join("") + "</div>";
   $("#hl-x").onclick = () => { m.className = "modal"; $("#overlay").hidden = true; };
   m.querySelectorAll("[data-hl]").forEach((b) => b.addEventListener("click", async () => {
@@ -5101,7 +5378,7 @@ function openVoyage() {
   const comps = circleList().filter((p) => (L.chem[p.id] || 0) >= 35 && p.rank <= rank());
   const state = { route: null, comp: "" };
   const draw = () => {
-    m.innerHTML = '<div class="row between"><div><span class="label">' + (G.lang === "es" ? "La travesía" : G.lang === "zh" ? "航行 hángxíng" : "Voyage") + "</span><h2>" + (b ? "Take “" + esc(b.name) + "” out" : "No boat yet") + '</h2></div><button class="btn sm" id="voy-x">Cancel</button></div>' +
+    m.innerHTML = '<div class="row between"><div><span class="label">' + (G.lang === "es" ? "La travesía" : G.lang === "it" ? "La traversata" : G.lang === "zh" ? "航行 hángxíng" : "Voyage") + "</span><h2>" + (b ? "Take “" + esc(b.name) + "” out" : "No boat yet") + '</h2></div><button class="btn sm" id="voy-x">Cancel</button></div>' +
       (b ? '<p class="muted small">' + esc(capsLine(b.it)) + " · " + money(voyageDaily(b)) + "/day with crew, fuel and support.</p>" : '<p class="muted">Buy a boat in the Empire tab first.</p>') +
       (!routes.length ? '<p class="muted">Voyages are charted for Spanish and Mandarin careers.</p>' : '<div class="stack" style="gap:8px">' + routes.map((r) => { const why = voyageCheck(r, b), days = r.stops.length, cost = b ? voyageDaily(b) * days : 0; return '<div class="card"><div class="row between"><div><div class="t">' + esc(r.name) + '</div><div class="small muted">' + days + " days · " + r.stops.filter((s) => s[1]).map((s) => s[0].split(",")[0]).join(" → ") + '</div></div><div class="row">' + (why ? '<span class="chip info">' + esc(why) + "</span>" : '<button class="btn sm" data-rt="' + r.id + '" aria-pressed="' + (state.route === r.id) + '">' + (state.route === r.id ? "Selected" : "Choose") + " · " + money(cost) + "</button>") + "</div></div></div>"; }).join("") + "</div>") +
       (b && routes.length ? '<div class="field"><label class="label" for="voy-comp">Bring someone</label><select id="voy-comp"><option value="">Just you and the crew</option>' + comps.map((p) => '<option value="' + esc(p.id) + '"' + (state.comp === p.id ? " selected" : "") + ">" + esc(p.name) + "</option>").join("") + '</select></div><div class="row"><button class="btn primary" id="voy-go"' + (state.route ? "" : " disabled") + ">Cast off</button></div>" : "");
@@ -5188,7 +5465,7 @@ function playVoyage(route, b, comp) {
     const area = $("#voy-area");
     $("#voy-cap").textContent = feat.includes("sea") ? "No land in any direction. The crew fishes off the stern, the ocean goes by." : day === 0 ? "Engines warm. The crew casts off lines." : "You drop anchor at " + name + ". New bay, new people.";
     if (cc && prev && prev[1] && prev[1] !== cc) {
-      const say = VOY_SAY[G.lang], from = G.lang === "zh" ? COUNTRY.zh[prev[1]] : COUNTRY.es[prev[1]];
+      const say = VOY_SAY[G.lang], from = (COUNTRY[G.lang] || COUNTRY.es)[prev[1]];
       if (say && from) {
         area.innerHTML = '<div class="card"><div class="label">Customs</div><p class="muted small">New country. An officer in white boards from a launch.</p><button class="btn primary" id="voy-cust">Clear customs</button></div>';
         await new Promise((res) => { $("#voy-cust").onclick = async () => { const r = await sayIt("raw", { ph: say.customs(from) }, name); if (r.ok) { xpT += 8; res(); } }; });
@@ -5251,6 +5528,212 @@ function playVoyage(route, b, comp) {
   };
   startDay();
 }
+
+/* =========================================================
+   ITALIAN: everything else in the life
+   ========================================================= */
+/* a/da/di/in/su + article contract in Italian: in + il = nel, da + l'Italia = dall'Italia */
+function itPrep(p, s) {
+  s = String(s); const base = { di: "de", a: "a", da: "da", in: "ne", su: "su" }[p];
+  let m = s.match(/^l'(.*)$/i); if (m) return base + "ll'" + m[1];
+  m = s.match(/^(il|lo|la|i|gli|le) (.*)$/i);
+  if (!m) return p + " " + s;
+  return base + { il: "l", lo: "llo", la: "lla", i: "i", gli: "gli", le: "lle" }[m[1].toLowerCase()] + " " + m[2];
+}
+GENERAL_PACKS.it = {
+  phrases: [
+    { t: "Piacere di conoscerla.", en: "Pleased to meet you.", tip: "Conoscerla with Lei, conoscerti with tu." },
+    { t: "La ringrazio per l'invito.", en: "Thank you for the invitation.", tip: "Formal. La ringrazio with Lei, ti ringrazio with tu." },
+    { t: "Cosa ne pensa?", en: "What do you think?", tip: "Ask it after every proposal." },
+    { t: "Potremmo iniziare con un progetto pilota.", en: "We could start with a pilot project.", tip: "The conditional softens the ask." },
+    { t: "Sono molto entusiasta del progetto.", en: "I'm very excited about the project.", tip: "Never eccitato. That means aroused." },
+    { t: "Se i risultati non sono buoni, potete disdire.", en: "If the results aren't good, you can cancel.", tip: "Present indicative after se for a real condition." },
+    { t: "Le mando la proposta per email.", en: "I'll email you the proposal.", tip: "Present tense for a near promise." },
+    { t: "Facciamo un giro in barca?", en: "Shall we take a spin on the boat?", tip: "La barca is any boat, lo yacht a yacht, il gommone a RIB, il gozzo the wooden fishing boat." },
+  ],
+  pitfalls: [
+    { q: "\"Actually, I have a question.\"", choices: ["Attualmente ho una domanda.", "In realtà ho una domanda.", "Attuale, ho una domanda."], a: 1, why: "Attualmente means currently." },
+    { q: "You want to say you're excited about the deal.", choices: ["Sono eccitato.", "Sono entusiasta.", "Sono eccitante."], a: 1, why: "Eccitato means aroused." },
+    { q: "A client says \"Sono raffreddato.\"", choices: ["They have a cold", "They're cold-hearted", "They want the AC off"], a: 0, why: "Raffreddato means you've caught a cold." },
+    { q: "It's 3pm and you order at the bar.", choices: ["Un cappuccino, per favore.", "Un caffè, per favore.", "Un latte, per favore."], a: 1, why: "Cappuccino is a morning drink, and un latte gets you a glass of milk." },
+    { q: "\"Please pass me the folder.\"", choices: ["Mi passa la cartella?", "Mi passa il folder?", "Mi passa la carta?"], a: 0, why: "Cartella is a folder. Carta is paper." },
+    { q: "She says \"Possiamo darci del tu.\"", choices: ["Speak slower", "Let's switch to tu", "The meeting is over"], a: 1, why: "Darsi del tu: to switch to the informal you." },
+    { q: "Which gift should you never bring an Italian host?", choices: ["Pastries", "Chrysanthemums", "A good bottle of wine"], a: 1, why: "Chrysanthemums are for funerals and cemeteries." },
+    { q: "\"The meeting is at three.\"", choices: ["La riunione è alle tre.", "La riunione è a le tre.", "La riunione è in tre."], a: 0, why: "A + le contracts to alle." },
+  ],
+};
+SMALLTALK.it = [
+  ["Di dove sei?", "Where are you from?", ["Vengo dagli Stati Uniti, ma qui mi trovo benissimo.", "I'm from the US, but I love it here.", "Friendly and warm."], ["Vengo da Stati Uniti.", "grammar", "Vengo dagli Stati Uniti.", "Countries take the article: dagli Stati Uniti."], ["Non sono affari tuoi.", "register", "Rude answer to a friendly question."]],
+  ["È la prima volta che vieni qui?", "Is this your first time here?", ["Sì, e già non me ne voglio più andare.", "Yes, and I already don't want to leave.", "Charming."], ["Sì, è il mio primo volta.", "grammar", "È la mia prima volta.", "Volta is feminine: la mia prima volta."], ["Sì. Dov'è un McDonald's?", "culture", "Nothing says tourist like that."]],
+  ["Che caldo oggi!", "It's so hot today!", ["Sì, sto morendo di caldo!", "Yes, I'm dying of heat!", "The natural exaggeration."], ["Sì, fa tanta calda!", "grammar", "Fa tanto caldo!", "Weather caldo is masculine: fa tanto caldo."], ["Sì, sono molto caldo.", "vocabulary", "Sono caldo can mean you're aroused. Feeling hot is ho caldo."]],
+  ["Che lavoro fai?", "What do you do?", ["Mi occupo di affari. Metto in contatto aziende e turisti.", "I'm in business. I connect companies with tourists.", "Clear and friendly."], ["Mi occupo in affari.", "grammar", "Mi occupo di affari.", "Occuparsi di, not in."], ["Sono milionario, ovviamente.", "register", "Bragging to a stranger."]],
+  ["Hai già provato la cucina di qui?", "Have you tried the food here yet?", ["Non ancora. Cosa mi consigli?", "Not yet. What do you recommend?", "Asking for a tip makes people love you."], ["Non ancora. Cosa mi consiglia?", "register", "Cosa mi consigli?", "They used tu. Match it."], ["Io la pizza la mangio con l'ananas.", "culture", "In Italy, pineapple on pizza is a declaration of war."]],
+  ["Parli benissimo l'italiano!", "You speak Italian so well!", ["Grazie! Sto ancora imparando.", "Thanks! I'm still learning.", "Humble and true."], ["Grazie! Sto ancora imparo.", "grammar", "Sto ancora imparando.", "Progressive: stare + gerund."], ["Lo so, meglio di te.", "register", "They were being nice."]],
+  ["Vieni alla festa stasera?", "Coming to the party tonight?", ["Certo! A che ora comincia?", "Of course! What time does it start?", "Enthusiastic and practical."], ["Certo! A che ora cominci?", "grammar", "A che ora comincia?", "The party starts: comincia, third person."], ["Solo se è VIP.", "register", "Snobbery kills invitations."]],
+  ["Scusa, sai che ore sono?", "Sorry, do you know what time it is?", ["Sì, sono le cinque e mezza.", "Yes, it's half past five.", "Clean."], ["Sì, è le cinque e mezza.", "grammar", "Sono le cinque e mezza.", "Hours are plural: sono le."], ["No, ma ho un Rolex.", "register", "Flexing instead of answering."]],
+  ["Ti va un caffè?", "Fancy a coffee?", ["Volentieri, un espresso.", "Gladly, an espresso.", "After lunch, an espresso. Correct."], ["Volentieri, un cappuccino.", "culture", "Volentieri, un espresso.", "A cappuccino after noon marks you as a tourist."], ["Un americano grande con latte di soia, da portare via.", "culture", "You just ordered a Starbucks in a Neapolitan bar."]],
+];
+RIVAL_TALK.it = ["Guarda chi si vede. Ancora con quella barchetta?", "Look who's here. Still with that little boat?", ["Piccola ma pagata. E la tua?", "Small but paid off. And yours?", "Cool, and it lands."], ["Piccola ma pagando.", "grammar", "Piccola ma pagata.", "Pagata means paid off. Pagando means still paying. Oops."], ["(te ne vai senza dire niente)", "register", "Silence reads as defeat."]];
+FLIRT.it = [
+  ["Ti sei perso o cercavi proprio qualcuno come me?", "Are you lost, or were you looking for someone like me?", ["Credo di aver appena trovato quello che cercavo.", "I think I've just found what I was looking for.", "Smooth, and grammatically clean."], ["Credo di aver appena trovato che cercavo.", "grammar", "…quello che cercavo.", "As a relative, 'what' is quello che."], ["No, ho il navigatore.", "register", "Technically correct. Romantically dead."]],
+  ["Mi piace il tuo stile. Di dove sei?", "I like your style. Where are you from?", ["Grazie, neanche tu sei niente male. Vengo dagli Stati Uniti.", "Thanks, you're not bad yourself. I'm from the US.", "Compliment returned, question answered."], ["Grazie, neanche tu sei niente male. Vengo da Stati Uniti.", "grammar", "Vengo dagli Stati Uniti.", "Countries take the article: dagli Stati Uniti."], ["Lo so.", "register", "That's arrogance, not confidence."]],
+  ["Balli?", "Do you dance?", ["Male, ma con te rischio volentieri.", "Badly, but with you I'll happily risk it.", "Self-deprecating and flirty."], ["Male, ma con tu rischio.", "grammar", "…con te.", "After con it's te, not tu."], ["No, ballare è da turisti.", "culture", "You just insulted the whole dance floor."]],
+  ["Adoro questa canzone.", "I love this song.", ["Anch'io. Mi insegni a ballarla?", "Me too. Will you teach me to dance to it?", "An invitation disguised as a question."], ["Anch'io. Mi insegni a ballarlo?", "grammar", "Mi insegni a ballarla?", "Canzone is feminine: ballarla."], ["Davvero? È orribile.", "register", "Never trash their song."]],
+  ["E cosa fai da queste parti?", "So what are you doing around here?", ["Affari di giorno e, di sera… cerco buona compagnia.", "Business by day, and by night… looking for good company.", "Mysterious in exactly the right amount."], ["Affari di giorno e di sera cerco buono compagnia.", "grammar", "…cerco buona compagnia.", "Compagnia is feminine: buona."], ["Cerco qualcuno con i soldi.", "register", "Honest, maybe. Charming, no."]],
+  ["La tua faccia mi dice qualcosa. Ci conosciamo?", "Your face looks familiar. Do we know each other?", ["Non ancora, ma possiamo rimediare subito.", "Not yet, but we can fix that right now.", "Quick and smooth."], ["Non ancora, ma possiamo rimediarlo subito.", "grammar", "…possiamo rimediare subito.", "Rimediare takes no object pronoun here."], ["No, non ti ho mai visto.", "register", "Correct, and you just killed the moment."]],
+  ["Cosa stai bevendo?", "What are you drinking?", ["Uno spritz. Te ne ordino uno?", "A spritz. Shall I order you one?", "Generous and direct."], ["Un spritz. Te ne ordino uno?", "grammar", "Uno spritz.", "Before s + consonant, the article is uno."], ["Perché? Me lo offri tu?", "register", "Cheap vibes."]],
+  ["Hai un accento carinissimo.", "You have a really cute accent.", ["Grazie. È che mi sto esercitando con te.", "Thanks. It's because I'm practicing on you.", "Playful and true."], ["Grazie. Mi sto esercitando con tu.", "grammar", "…con te.", "After a preposition, te."], ["Quale accento? Parlo perfettamente.", "register", "Defensive, and not true."]],
+  ["Beh… ora devo andare.", "Well… I have to go now.", ["Peccato. Mi lasci il tuo numero, così continuiamo a parlare?", "Too bad. Will you leave me your number so we can keep talking?", "The close. Clean."], ["Peccato. Mi lasci il tuo numero per continuiamo a parlare?", "grammar", "…per continuare a parlare?", "Per needs an infinitive: per continuare."], ["Ok, ciao.", "culture", "You let them walk away."]],
+];
+NETWORK.it = [
+  ["E Lei di cosa si occupa?", "And what do you do?", ["Aiuto gli hotel a vendere direttamente. Cresciamo del 30 % all'anno.", "I help hotels sell direct. We grow 30% a year.", "A 30-second pitch with a number."], ["Aiuto gli hotel di vendere direttamente.", "grammar", "Aiuto gli hotel a vendere direttamente.", "Aiutare a + infinitive."], ["È complicato da spiegare.", "clarity", "If you can't explain it, they won't invest."]],
+  ["Interessante. Ha un biglietto da visita?", "Interesting. Do you have a business card?", ["Certo, ecco a Lei. Mi farebbe piacere prendere un caffè questa settimana.", "Of course, here you are. I'd love to have a coffee this week.", "Card plus a concrete next step."], ["Certo, ecco a te.", "register", "Ecco a Lei.", "They used Lei. Match it."], ["Non uso biglietti, mi cerchi su internet.", "register", "Making them do the work."]],
+  ["Chi altro investe con voi?", "Who else is investing with you?", ["C'è un fondo di Milano in trattativa, ma non abbiamo ancora firmato niente.", "A Milan fund is in talks, but we haven't signed anything yet.", "Honest, and it creates urgency."], ["C'è un fondo di Milano in trattativa, ma non abbiamo ancora firmata niente.", "grammar", "…non abbiamo ancora firmato niente.", "With avere the participle stays firmato."], ["Tutti. Siamo il meglio del meglio.", "clarity", "Hype makes investors reach for their coats."]],
+];
+CONTACT_NAMES.it = { w: ["Giulia", "Chiara", "Francesca", "Martina", "Sofia", "Alessia", "Beatrice", "Aurora", "Camilla", "Noemi"], m: ["Luca", "Matteo", "Alessandro", "Lorenzo", "Davide", "Andrea", "Riccardo", "Tommaso"] };
+LOCAL_NAMES.it = ["Gennaro", "Rosa", "Salvatore", "Lucia", "Peppe", "Carla", "Nino", "Titti"];
+MORNINGS.it = [[true, "Ieri sera è stata bellissima. Ti devo un caffè."], [true, "Non abituarti. (Ma torna.)"], [true, "Il tuo italiano migliora di notte."], [false, "Caffè o altro sonno? Io ho già scelto: caffè."], [false, "Buongiorno, dormiglione. La colazione non si fa da sola."], [true, "La tua camicia me la prendo in prestito."]];
+MENTORS.it = { name: "Commendator Vittorio Amato", role: "retired hotelier, Sorrento. Built the first grand hotel on the coast after the war.", pal: { hair: "#e8e8e8", skin: "#e2b48c", jacket: "#f4efe6", shirt: "#8fb8de" } };
+PROVERBS.it = [
+  ["Chi dorme non piglia pesci.", "Whoever sleeps catches no fish.", "Stay sharp or someone else lands the deal."],
+  ["Meglio un uovo oggi che una gallina domani.", "Better an egg today than a hen tomorrow.", "Take the sure deal over the fantasy one."],
+  ["Dimmi con chi vai e ti dirò chi sei.", "Tell me who you go with and I'll tell you who you are.", "Your circle is your reputation."],
+  ["Chi va piano va sano e va lontano.", "Who goes slowly goes safely, and far.", "Don't rush the relationship."],
+  ["Tra il dire e il fare c'è di mezzo il mare.", "Between saying and doing lies the sea.", "Promises are cheap. Deliver."],
+  ["L'appetito vien mangiando.", "Appetite comes with eating.", "Start small. They'll want more."],
+  ["Patti chiari, amicizia lunga.", "Clear agreements, long friendship.", "Put it in writing and friends stay friends."],
+];
+GIFTS.it = [["Una bottiglia di Brunello", "A bottle of Brunello", 12, "Classic, generous, welcome."], ["Un vassoio di pasticcini per la famiglia", "A tray of pastries for their family", 10, "Thoughtful: family matters here."], ["Un orologio di lusso", "A luxury watch", 5, "Nice, but it can feel like you're buying them."], ["Un mazzo di crisantemi", "A bunch of chrysanthemums", -25, "In Italy chrysanthemums are for funerals. Mortifying."]];
+VAC_DAYS.it = ["You rent a Vespa and get lost. “Scusi, per la spiaggia?” gets you there.", "Breakfast standing at the bar: “Un cornetto e un cappuccino, per favore.”", "At the market: “Me ne dà mezzo chilo?” The fruit seller throws in two peaches.", "A fisherman teaches you “Mare calmo, pesca buona.”", "You call your clients from a sunbed: “Sì, ci sentiamo lunedì.”", "Sunday lunch lasts four hours. You follow every joke."];
+VAC_WITH.it = ["{name} orders for both of you and makes you repeat it.", "{name} teaches you the hand gestures. They're harder than the subjunctive.", "You and {name} miss the last ferry from Capri on purpose.", "{name} introduces you to their nonna, who feeds you twice."];
+RIVALS.it = [
+  { id: "gianmarco", name: "Gianmarco Ricci", from: "Milan", col: "#e24b3b", ratio: 2.4, floor: 6000, boats: ["La Belva", "Squalo", "Ricci Uno"], vibe: "closes loud, dresses louder" },
+  { id: "alessia", name: "Alessia Greco", from: "Naples", col: "#52c7b8", ratio: 1.25, floor: 900, boats: ["Sirena", "Zefiro", "'O Tesoro"], vibe: "quiet, relentless, remembers every name" },
+  { id: "hans", name: "Hans Weber", from: "Zürich", col: "#8fd3ff", ratio: 0.85, floor: 350, boats: ["Präzision", "Pünktlich", "Ordnung"], vibe: "still says sono eccitato in meetings" },
+  { id: "camilla", name: "Camilla Sforzini", from: "Florence", col: "#f5c542", ratio: 0.45, floor: 140, boats: ["Capriccio", "Eredità", "Dolce Far Niente"], vibe: "inherited money, learning to make her own" },
+];
+Object.assign(CIRCLE_HOME, { martina: "it0", giorgia: "it0b", salvo: "it1", nadia: "it1b", federica: "it2", ludovica: "it2b", bianca: "it3", greta: "it3b", edo: "it4", vittoria: "it4b", aurora: "it4c", elisa: "it5b" });
+
+/* Map and globe */
+CITIES.it = [
+  { k: "positano", name: "Positano", x: 128, y: 70, tiers: ["it0"] },
+  { k: "napoli", name: "Napoli", x: 122, y: 63, tiers: ["it0b"] },
+  { k: "amalfi", name: "Amalfi", x: 134, y: 72, tiers: ["it0c"] },
+  { k: "capri", name: "Capri", x: 116, y: 75, tiers: ["it1", "it1c"] },
+  { k: "sorrento", name: "Sorrento", x: 120, y: 69, tiers: ["it1b"] },
+  { k: "roma", name: "Roma", x: 110, y: 55, tiers: ["it2"] },
+  { k: "montalcino", name: "Montalcino", x: 102, y: 46, tiers: ["it2b"] },
+  { k: "firenze", name: "Firenze", x: 100, y: 38, tiers: ["it2c"] },
+  { k: "milano", name: "Milano", x: 86, y: 22, tiers: ["it3", "it3b", "it3c"] },
+  { k: "portocervo", name: "Porto Cervo", x: 70, y: 52, tiers: ["it4"] },
+  { k: "portofino", name: "Portofino", x: 80, y: 31, tiers: ["it4b", "it5b"] },
+  { k: "verona", name: "Verona", x: 102, y: 22, tiers: ["it4c"] },
+  { k: "galli", name: "Li Galli", x: 130, y: 77, tiers: ["it5"] },
+  { k: "lugano", name: "Lugano", x: 82, y: 14, tiers: ["it5c"] },
+];
+LAND.it = [[92, 13, 46, 7], [92, 23, 34, 8], [80, 30, 10, 3], [100, 40, 12, 10], [112, 52, 10, 9], [122, 64, 9, 8], [118, 44, 6, 9], [132, 78, 6, 10], [136, 90, 4, 5], [146, 64, 12, 5], [156, 72, 5, 5], [124, 100, 14, 6], [68, 62, 7, 13], [68, 40, 4, 8]];
+Object.assign(GEO, { positano: [40.63, 14.48], napoli: [40.85, 14.27], amalfi: [40.63, 14.6], capri: [40.55, 14.24], sorrento: [40.63, 14.37], roma: [41.9, 12.5], montalcino: [43.06, 11.49], firenze: [43.77, 11.26], milano: [45.46, 9.19], portocervo: [41.14, 9.53], portofino: [44.3, 9.21], verona: [45.44, 10.99], galli: [40.58, 14.43], lugano: [46.0, 8.95] });
+
+/* Shop */
+SHOP_NAMES.it = {
+  ride1: ["Rented Vespa", "Top speed 60 km/h, downhill."], ride2: ["'07 Fiat Panda", "Survives every alley in Naples."],
+  ride3: ["Fiat Panda 4x4", "Climbs any vineyard track in Tuscany."], ride4: ["Alfa Romeo Giulia Quadrifoglio", "Rosso Alfa, of course."],
+  ride5: ["Ferrari 296 GTB", "Built forty minutes from where you had lunch."], ride6: ["Pagani Zonda", "Hand-built near Modena. There's a waiting list for the waiting list."],
+  water1: ["Inflatable swan", "Technically a vessel."], water2: ["Sorrento gozzo", "The wooden boat every fisherman on the coast owns."], water5: ["45' flybridge", "Upper helm, bimini, cold drinks up top."], water6: ["60' long-range trawler", "Eight knots, three thousand miles, zero hurry."], water7: ["24m flybridge motor yacht", "Three decks, built in Viareggio."], water8: ["42m explorer yacht", "Steel hull, tender garage, goes anywhere."], water9: ["Shadow vessel", "Carries the helicopter, the sub and the toys."],
+  water3: ["Riva Aquarama", "Mahogany and chrome. The most beautiful boat ever built."], water4: ["55m superyacht", "Built in La Spezia. Gets you invitations."],
+  crib1: ["Monolocale in the Quartieri Spagnoli", "Laundry across the alley. Authentic."], crib2: ["Flat in Trastevere, Rome", "Ivy on the balcony, church bells at seven."],
+  crib3: ["Penthouse in Brera, Milan", "The doorman knows your espresso order."], crib4: ["Villa on Lake Como", "A boat landing and lemon trees in the garden."],
+  wrist1: ["Swatch", "Swiss, plastic, iconic."], wrist2: ["Steel diver watch", "Looks expensive from far away."],
+  wrist3: ["Rolex Daytona", "Clients read your wrist before your deck."], wrist4: ["Panerai Luminor", "Designed for Italian navy frogmen."],
+  sky1: ["Gulfstream G700, tail I-DOLC", "Italian registrations start with I."], flex1: ["Gold-plated Vespa", "Blinding at noon."], flex2: ["Your own island", "Name it after yourself."],
+};
+CAR_TYPES.it = { ride1: "scooter", ride2: "hatch", ride3: "crossover", ride4: "sports", ride5: "supercar", ride6: "hypercar" };
+LEGACY_CARS.it = { ride1: { hp: 5, kmh: 60, seats: 2, cls: "eco" }, ride2: { hp: 69, kmh: 160, seats: 5, cls: "daily" }, ride3: { hp: 85, kmh: 165, seats: 5, cls: "offroad", offroad: true }, ride4: { hp: 520, kmh: 307, seats: 5, cls: "sport" }, ride5: { hp: 830, kmh: 330, seats: 2, cls: "exotic" }, ride6: { hp: 760, kmh: 350, seats: 2, cls: "hyper" } };
+BOAT_LANG.it = { water2: { type: "panga", len: 7, daily: 150, hull: "#3fa7d6", kn: 12, nm: 100, guests: 8, shallow: true } };
+NOUN.it = { ride1: ["questa Vespa", "this Vespa"], ride: ["questa macchina", "this car"], water1: ["questo cigno gonfiabile", "this inflatable swan"], water2: ["questo gozzo", "this gozzo"], water: ["questa barca", "this boat"], crib1: ["questo monolocale", "this studio"], crib: ["questa casa", "this house"], wrist: ["questo orologio", "this watch"], sky: ["questo aereo", "this plane"], flex1: ["questa Vespa d'oro", "this gold Vespa"], flex2: ["quest'isola", "this island"], flex: ["questo", "this"] };
+XNOUN.it = { boat: ["questa barca", "this boat"], sail: ["questa barca a vela", "this sailboat"], cat: ["questo catamarano", "this catamaran"], sub: ["questo sottomarino", "this submarine"], jetski: ["questa moto d'acqua", "this jet ski"], kayak: ["questo kayak", "this kayak"],
+  car: ["questa macchina", "this car"], moto: ["questa moto", "this motorbike"], truck: ["questo pick-up", "this pickup"],
+  plane: ["questo aereo", "this plane"], heli: ["questo elicottero", "this helicopter"], seaplane: ["questo idrovolante", "this seaplane"], balloon: ["questa mongolfiera", "this balloon"], airship: ["questo dirigibile", "this airship"],
+  flex: ["questo", "this"], horse: ["questo cavallo", "this horse"], painting: ["questo quadro", "this painting"], bottle: ["questa bottiglia", "this bottle"], dog: ["questo cane", "this dog"], gem: ["questo gioiello", "this jewel"] };
+const XNAMES_IT = { f05: ["A vineyard in Montalcino", "Harvest parties, your own label."], f33: ["Your own limoncello brand", "Your name on the bottle, a bar in every city."], f34: ["A castle in Tuscany", "Towers, a moat, terrible heating."], f17: ["Box at San Siro", "Where the real deals happen at half-time."], f27: ["Signed shirt of a Napoli legend", "Framed, lit, insured."], f09: ["A string of polo ponies", "Six horses, a groom, and an invitation."] };
+
+/* Workshop, wardrobe and staff terms */
+const IT_TERMS = {
+  "Hull color": "lo scafo", "Boat name": "il nome della barca", "Home port": "il porto di armamento", "Prime berth at the marina": "il posto barca", "Full-time crew": "l'equipaggio", "Big-game fishing rig": "l'attrezzatura da pesca", "Deck sound system": "l'impianto audio",
+  "Paddleboards and kayaks": "i SUP e i kayak", "Seabobs": "i seabob", "Inflatable slide off the top deck": "lo scivolo gonfiabile", "Tender garage": "il garage per i tender", "Tender boat": "il tender", "Pair of jet skis": "le moto d'acqua", "Onboard chef": "lo chef di bordo",
+  "DJ booth on the sundeck": "la consolle del DJ", "Deck jacuzzi": "l'idromassaggio in coperta", "Helipad": "la piazzola per l'elicottero", "Fold-down beach club": "il beach club a poppa", "Two-person submarine": "il sottomarino", "Hidden vault below the waterline": "la cassaforte segreta",
+  "Paint": "la vernice", "Vanity plate": "la targa", "Blacked-out windows": "i vetri oscurati", "Forged gold wheels": "i cerchi forgiati", "Sport exhaust": "lo scarico sportivo", "Carbon rear wing": "l'alettone posteriore", "Hand-stitched leather": "gli interni in pelle", "Chauffeur (study in the back seat)": "l'autista",
+  "Facade": "la facciata", "Name the place": "il nome della casa", "Infinity pool": "la piscina a sfioro", "Home cinema (films in your target language)": "la sala cinema", "Wine cellar": "la cantina", "Butler": "il maggiordomo", "Collector's garage": "il garage da collezione", "Rooftop helipad": "l'eliporto sul tetto", "Secret room behind the bookcase": "la stanza segreta",
+  "Livery": "la livrea", "Tail number": "l'immatricolazione", "Satellite Wi-Fi (close deals mid-air)": "il wi-fi satellitare", "Club lounge with a bar": "il salotto con bar", "Dedicated crew on standby": "l'equipaggio dedicato", "Master bedroom with a shower": "la camera padronale", "Boardroom (rehearse meetings in the air)": "la sala riunioni",
+};
+Object.values(CUSTOM).forEach((cfg) => { ["paint", "name", "port"].forEach((k) => { if (cfg[k]) cfg[k].it = IT_TERMS[cfg[k].en]; }); cfg.ups.forEach((u) => { u.it = IT_TERMS[u.en]; }); });
+const IT_CLOTHES = { linen: "la camicia di lino", swim: "il costume da bagno", navy: "l'abito blu", silk: "la camicia di seta", dinner: "lo smoking bianco", savile: "l'abito su misura", shades: "gli occhiali da sole", chain: "la catena d'oro", sneakers: "le sneakers dorate" };
+CLOTHES.forEach((x) => { x.it = IT_CLOTHES[x.id]; });
+const IT_STAFF = { assistant: ["Assistente personale", "un assistente personale"], tutor: ["Insegnante privata", "un'insegnante privata"], bodyguard: ["Guardia del corpo", "una guardia del corpo"], fixer: ["Faccendiere", "un faccendiere"], publicist: ["Addetto stampa", "un addetto stampa"] };
+STAFF.forEach((x) => { x.it = IT_STAFF[x.id]?.[0]; x.itHire = IT_STAFF[x.id]?.[1]; });
+
+/* Investments */
+ASSETS.it = [
+  { id: "bot", term: "BOT", sell: "i miei BOT", en: "Italian Treasury bills (BOT)", min: 100, y: 0.035, d: 0, v: 0.0004, risk: "Safe" },
+  { id: "indice", term: "un fondo indicizzato", sell: "le mie quote del fondo", en: "Global index fund", min: 500, y: 0.015, d: 0.07, v: 0.011, risk: "Medium" },
+  { id: "oro", term: "oro", sell: "il mio oro", en: "Gold", min: 1000, y: 0, d: 0.05, v: 0.009, risk: "Medium" },
+  { id: "cripto", term: "criptovalute", sell: "le mie criptovalute", en: "Crypto basket", min: 1000, y: 0, d: 0.06, v: 0.055, risk: "Wild" },
+  { id: "startup", term: "una startup fintech", sell: "la mia quota della startup", en: "Milan fintech, Series A", min: 50000, y: 0, d: 0.2, v: 0.05, risk: "Wild", moon: true },
+  { id: "case", term: "appartamenti a Napoli", sell: "gli appartamenti", en: "Rental flats in Naples", min: 80000, y: 0.06, d: 0.03, v: 0.003, risk: "Low" },
+  { id: "pizza", term: "una catena di pizzerie", sell: "la mia quota della catena", en: "Pizzeria chain, fifteen locations", min: 150000, y: 0.13, d: 0, v: 0.025, risk: "High" },
+  { id: "cantina", term: "una cantina in Toscana", sell: "la mia quota della cantina", en: "Winery in Tuscany", min: 250000, y: 0.07, d: 0.02, v: 0.012, risk: "Medium" },
+  { id: "hotel", term: "un gruppo alberghiero", sell: "le mie azioni del gruppo", en: "Boutique hotel group, Amalfi Coast", min: 2000000, y: 0.06, d: 0.05, v: 0.005, risk: "Low" },
+  { id: "charter", term: "una flotta di charter", sell: "la mia quota della flotta", en: "Yacht charter fleet, Sardinia", min: 5000000, y: 0.1, d: 0.02, v: 0.012, risk: "Medium" },
+  { id: "leone", term: "il Fondo Leone", sell: "le mie quote del Fondo Leone", en: "Fondo Leone hedge fund (invitation only)", min: 10000000, y: 0, d: 0.14, v: 0.016, risk: "Medium", rank: 4 },
+  { id: "squadra", term: "una squadra di calcio", sell: "la mia quota della squadra", en: "Serie B football club", min: 20000000, y: 0.02, d: 0.08, v: 0.02, risk: "High", rank: 5 },
+];
+
+/* High life */
+HIGHLIFE.it = [
+  { id: "convoy", name: "Supercar convoy: the Amalfi Coast road", where: "Sorrento to Ravello", scene: "convoy", land: "coast", cost: 25000, need: "car", after: { name: "Afterparty at a villa in Ravello", type: "network", theme: { far: "sea", ground: "terracotta", props: "lights" } },
+    beats: ["Twenty supercars rumble out of Sorrento at dawn. Phones come out on every balcony.", "The Amalfi road: hairpins, tour buses, a sheer drop to the sea on your right.", "Sunset in Ravello. The cars line up in the piazza for photos."],
+    lines: [{ t: "Si parte!", en: "Call the start." }, { t: "Ci fermiamo a fare benzina.", en: "Tell the convoy you're stopping to refuel." }, { t: "Brindiamo alla strada!", en: "Propose a toast to the road." }] },
+  { id: "regatta", name: "Superyacht regatta, Porto Cervo", where: "Costa Smeralda, Sardinia", scene: "regatta", cost: 10000, need: "boat", after: { name: "Sunset club on the Costa Smeralda", type: "party", theme: { far: "sea", ground: "sand", props: "palms" } },
+    beats: ["Horns at the start line. Every rival you have brought their boat.", "The course runs through the Maddalena islands, granite and emerald water.", "Finish line off Porto Cervo. Someone has already opened the champagne."],
+    lines: [{ t: "Tutti a bordo!", en: "Call everyone aboard." }, { t: "Attenzione alla boa!", en: "Warn: watch the buoy!" }, { t: "Il prossimo giro lo offro io!", en: "Say the next round is on you." }] },
+  { id: "paddock", name: "Grand Prix paddock, Monza", where: "Autodromo Nazionale Monza", scene: "paddock", cost: 120000, need: "f1", after: { name: "Team party in Milan", type: "party", theme: { far: "city", ground: "plaza", props: "lights" } },
+    beats: ["The paddock smells of hot tyres and expensive cologne. The tifosi are already singing.", "Lights out. Twenty cars scream down the straight at 350 km/h.", "The crowd floods the track under the podium. A sea of red."],
+    lines: [{ t: "Posso vedere il box?", en: "Ask if you can see the garage." }, { t: "Che gomme montate?", en: "Ask which tyres they're running." }, { t: "Complimenti per il podio!", en: "Congratulate them on the podium." }] },
+  { id: "ski", name: "Heli-skiing in Cortina", where: "Cortina d'Ampezzo, Dolomites", scene: "ski", cost: 60000, need: "ski", after: { name: "Après-ski at a mountain baita", type: "party", theme: { far: "mountain", ground: "wood", props: "lanterns" } },
+    beats: ["The helicopter drops you on a ridge. The Dolomites glow pink.", "Fresh powder, no tracks, a guide who says piano piano too often.", "Evening. Grappa and polenta in a wooden hut."],
+    lines: [{ t: "Questo pendio è sicuro?", en: "Ask if this slope is safe." }, { t: "Prima tu!", en: "Tell them: you first!" }, { t: "Che vista incredibile.", en: "Say the view is incredible." }] },
+  { id: "gala", name: "Biennale gala, Venice", where: "A palazzo on the Grand Canal", scene: "gala", cost: 50000, need: "art", after: { name: "Collectors' dinner over the canal", type: "network", theme: { far: "lake", ground: "stone", props: "lanterns" } },
+    beats: ["Gondolas deliver the guests. Tintorettos on the ceiling, gossip everywhere.", "The auctioneer opens the headline lot. Your rival raises a paddle.", "Speeches, then everyone spills onto the terrace over the canal."],
+    lines: [{ t: "Quest'opera mi interessa.", en: "Say you're interested in this piece." }, { t: "Rilancio a un milione.", en: "Raise the bid to a million." }, { t: "È per una buona causa.", en: "Say it's for a good cause." }] },
+  { id: "palio", name: "The Palio di Siena", where: "Piazza del Campo, Siena", scene: "derby", cost: 20000, need: "racehorse", after: { name: "Victory dinner in the winning contrada", type: "network", theme: { far: "facades", ground: "terracotta", props: "lanterns" } },
+    beats: ["Piazza del Campo, packed shoulder to shoulder. Flags everywhere.", "Ninety seconds, three laps, no saddles. The noise is physical.", "The winning contrada floods the square, crying and singing."],
+    lines: [{ t: "Tifo per l'Oca!", en: "Say you're cheering for the Goose contrada." }, { t: "Dai! Dai! Dai!", en: "Shout: go go go!" }, { t: "Stasera offro io.", en: "Say tonight is on you." }] },
+  { id: "casino", name: "High-roller room, Casinò di Venezia", where: "Ca' Vendramin Calergi, Venice", scene: "casino", cost: 50000, need: "rank2", after: { name: "Suite party on the Grand Canal", type: "party", theme: { far: "lake", ground: "carpet", props: "lights" } },
+    beats: ["The oldest casino in the world. You arrive by water taxi.", "The shoe is running hot. The whale across the table is watching you.", "Four in the morning. The chips are still on the table."],
+    lines: [{ t: "Rilancio.", en: "Raise the bet." }, { t: "Oggi mi sento fortunato.", en: "Say you're feeling lucky today." }, { t: "Meglio fermarsi finché si vince.", en: "Say: better to stop while you're winning." }] },
+  { id: "rave", name: "Full-moon party in a Puglia masseria", where: "A fortified farmhouse near Ostuni", scene: "rave", cost: 3000, need: "rank1", after: { name: "Sunrise swim on the Adriatic", type: "party", theme: { far: "sea", ground: "sand", props: "palms" } },
+    beats: ["Lanterns in the olive trees, a DJ on the old stone walls.", "The bass is inside your ribs. Someone hands you a glass of Primitivo.", "The sky goes pink over the Adriatic."],
+    lines: [{ t: "Dov'è la festa?", en: "Ask where the party is." }, { t: "Adoro questa canzone!", en: "Say you love this song." }, { t: "Guardiamo l'alba insieme?", en: "Ask to watch the sunrise together." }] },
+  { id: "dinner", name: "Three-star chef's table, Modena", where: "Modena, Emilia-Romagna", scene: "dinner", cost: 8000, need: "rank2", after: { name: "Balsamic cellar tasting, after hours", type: "network", theme: { far: "walls", ground: "wood", props: "lanterns" } },
+    beats: ["Twelve courses. The first one is a single tortellino on a white plate.", "Your neighbour owns a luxury car brand. Their spouse owns the other one.", "The chef comes out and asks what you thought. In Italian."],
+    lines: [{ t: "Cosa ci consiglia lo chef?", en: "Ask what the chef recommends." }, { t: "Questo abbinamento è perfetto.", en: "Say the pairing is perfect." }, { t: "Brindo ai nuovi affari.", en: "Toast to new business." }] },
+  { id: "mask", name: "The Ballo delle Maschere: a secret masked ball in Venice", where: "A palazzo you'll never find again", scene: "mask", cost: 100000, need: "secret", after: { name: "The water garden after midnight", type: "party", theme: { far: "lake", ground: "stone", props: "lanterns" } },
+    beats: ["Black gondolas, gold masks, candles floating in the courtyard.", "No names. Just whispers, and deals that will never be written down.", "At dawn the host hands you a key and a gondola home."],
+    lines: [{ t: "Chi sei dietro la maschera?", en: "Ask who they are behind the mask." }, { t: "Balliamo.", en: "Say: let's dance." }, { t: "Ci vediamo all'alba.", en: "Say: see you at dawn." }] },
+];
+
+/* Voyages */
+COUNTRY.it = { IT: "l'Italia", MC: "Monaco", FR: "la Francia", HR: "la Croazia", GR: "la Grecia", GI: "Gibilterra", AG: "Antigua" };
+ROUTES.it = [
+  { id: "amalfi", name: "Amalfi Coast and Capri", nm: 80, stops: [["Sorrento", "IT", "town club"], ["The Faraglioni, Capri", "IT", "reef club"], ["Positano", "IT", "beach club"], ["Amalfi", "IT", "town"], ["Li Galli", "IT", "reef wild"]] },
+  { id: "sardegna", name: "Costa Smeralda and La Maddalena", nm: 150, shallow: true, stops: [["Porto Cervo", "IT", "town club"], ["La Maddalena", "IT", "reef beach"], ["Budelli, the pink beach", "IT", "beach wild"], ["Cala di Volpe", "IT", "club"], ["Tavolara", "IT", "wild reef"]] },
+  { id: "eolie", name: "The Aeolian Islands", nm: 200, stops: [["Milazzo", "IT", "town"], ["Vulcano", "IT", "beach wild"], ["Lipari", "IT", "town"], ["Panarea", "IT", "club reef"], ["Stromboli", "IT", "wild"]] },
+  { id: "riviera", name: "The Riviera to Monaco", nm: 150, stops: [["Portofino", "IT", "town club"], ["Cinque Terre", "IT", "wild town"], ["Sanremo", "IT", "town club"], ["Monaco", "MC", "club town"], ["Saint-Tropez", "FR", "club beach"]] },
+  { id: "croazia", name: "Across to Croatia's islands", nm: 300, stops: [["Ancona", "IT", "town"], ["Open Adriatic", null, "sea"], ["Vis", "HR", "reef wild"], ["Hvar", "HR", "club"], ["Korčula", "HR", "town"], ["Mljet", "HR", "wild"]] },
+  { id: "grecia", name: "Puglia to the Ionian islands", nm: 400, rank: 3, stops: [["Otranto", "IT", "town"], ["Open Ionian", null, "sea"], ["Corfu", "GR", "town club"], ["Paxos", "GR", "reef"], ["Lefkada", "GR", "beach"], ["Ithaca", "GR", "wild"]] },
+  { id: "atlantic", name: "Transatlantic: Genoa to Antigua", nm: 3500, stops: [["Genova", "IT", "town"], ["Open Mediterranean", null, "sea"], ["Gibraltar", "GI", "town"], ["Open Atlantic", null, "sea"], ["Open Atlantic", null, "sea"], ["Open Atlantic", null, "sea"], ["Open Atlantic", null, "sea"], ["English Harbour, Antigua", "AG", "club town"]] },
+];
+VOY_SAY.it = { castoff: { t: "Molliamo gli ormeggi!", en: "Give the order to cast off." }, customs: (from) => ({ t: "Veniamo " + itPrep("da", from) + ". Ecco i passaporti.", en: "Clear customs: say where you came from and hand over the passports." }), market: { t: "Quanto costa il pesce al chilo?", en: "Ask the price of fish per kilo." }, anchor: { t: "Diamo fondo qui.", en: "Tell the captain to drop anchor here." } };
 
 /* =========================================================
    DEBRIEF
@@ -5369,7 +5852,7 @@ function drawMarina(c, boats, t) {
 function renderMarina() {
   const boats = fleet().sort((a, b) => (b.len || 0) - (a.len || 0)), mine = boats.find((b) => b.me);
   const bigger = mine?.none ? boats.filter((b) => !b.none && !b.me).length : boats.filter((b) => !b.none && !b.me && b.len > mine.len).length;
-  const word = G.lang === "es" ? "La marina" : G.lang === "zh" ? "码头 mǎtou" : "The marina";
+  const word = G.lang === "es" ? "La marina" : G.lang === "zh" ? "码头 mǎtou" : G.lang === "it" ? "Il porto" : "The marina";
   $("#marina").innerHTML = '<div class="row between"><h3>' + esc(word) + '</h3><span class="chip ' + (bigger ? "major" : "gold") + '">' + (mine?.none ? "You don't have a boat" : bigger ? bigger + " bigger than yours" : "Biggest in the marina") + '</span></div>' +
     '<canvas class="px" id="marina-cv" width="192" height="108" data-marina="1"></canvas>' +
     '<div class="tablewrap"><table class="marina-table"><thead><tr><th>Owner</th><th>Boat</th><th style="text-align:right">Length</th><th style="text-align:right">Extras</th><th>Verdict</th></tr></thead><tbody>' +
@@ -5414,7 +5897,9 @@ $("#pref").addEventListener("change", (e) => { G.pref = e.target.value; save(); 
 function dateOptions() {
   const L = life(), boat = SHOP_BASE.filter((x) => x.cat === "water" && L.owned[x.id] && lvlOf(x.id) >= 2).pop();
   const k = Math.pow(rank() + 1, 3);
-  const base = G.lang === "zh"
+  const base = G.lang === "it"
+    ? [["Pizza fritta at 2am", 25 * (rank() + 1), 4], ["Aperitivo on a Trastevere rooftop", 400, 9], ["Private chef dinner in a palazzo", 12000, 16], ["Jet to Paris for dinner", 250000, 30]]
+    : G.lang === "zh"
     ? [["Kaya toast breakfast", 25 * (rank() + 1), 4], ["Bar at the top of a tower", 400, 9], ["Omakase for two", 12000, 16], ["Jet to Kyoto for the weekend", 250000, 30]]
     : [["Street arepas at 2am", 25 * (rank() + 1), 4], ["Rooftop cocktails", 400, 9], ["Private chef dinner", 12000, 16], ["Fly to Paris for dinner", 250000, 30]];
   if (boat) base.splice(2, 0, ["Sunset on " + ownedLabel(boat), Math.round(boat.price * 0.002) + 200, 14]);
@@ -5468,7 +5953,7 @@ function dateLine(p, d) {
 }
 function nightLine(p) {
   const first = p.name.split(" ")[0];
-  const notes = G.lang === "es" ? ["Anoche fue increíble. Te debo un café.", "No te acostumbres. (Pero vuelve.)", "Tu español mejora de noche."] : G.lang === "zh" ? ["昨晚很开心。下次你请我吃早餐。", "别太得意哦。", "你的中文晚上说得更好。"] : ["Last night was fun.", "Don't get used to it.", "Call me."];
+  const notes = G.lang === "it" ? ["Ieri sera è stata bellissima. Ti devo un caffè.", "Non abituarti. (Ma torna.)", "Il tuo italiano migliora di notte."] : G.lang === "es" ? ["Anoche fue increíble. Te debo un café.", "No te acostumbres. (Pero vuelve.)", "Tu español mejora de noche."] : G.lang === "zh" ? ["昨晚很开心。下次你请我吃早餐。", "别太得意哦。", "你的中文晚上说得更好。"] : ["Last night was fun.", "Don't get used to it.", "Call me."];
   return "The door closes. The city keeps going without you. In the morning " + first + " is gone, with a note on the pillow: “" + notes[hash(first + life().chem[p.id]) % notes.length] + "”";
 }
 function pushMsg(p, m) { const L = life(); (L.chats[p.id] ||= []).push(m); L.chats[p.id] = L.chats[p.id].slice(-40); save(); }

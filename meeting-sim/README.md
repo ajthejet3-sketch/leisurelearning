@@ -10,7 +10,10 @@ superyachts and private jets. It is a single self-contained page:
 - **Career**: 18 stops per language in six chapters of three, each a real place with a counterpart,
   stakes and local etiquette. Winning a stop opens the next; a new chapter also needs the next rank. Spanish runs from a beach bar in Aruba to an
   invitation-only island; Mandarin from a hawker stall in Singapore to a
-  private jet. Other languages get a career written by Claude.
+  private jet; Italian ("La Dolce Vita") from a Positano beach club through
+  Capri, Rome, Montalcino, Milan, Porto Cervo, Portofino and the Arena di
+  Verona to a private bank in Lugano. Other languages get a career written by
+  Claude.
 - **Explore**: a pixel world map per language. Fly to any place in your
   current chapter or earlier, then walk around (arrow keys, A/D, tap or the
   on-screen buttons). Order from vendors in the language (coffee sharpens you
@@ -53,12 +56,19 @@ superyachts and private jets. It is a single self-contained page:
     salon, the Singapore night race, Happy Valley, Sanya yacht week, Niseko
     heli-skiing, a Bund art gala, a Moutai cellar dinner and the Jade
     Masquerade.
+  - Italian: a supercar convoy along the Amalfi Coast road, a Porto Cervo
+    regatta, the Monza paddock, heli-skiing in Cortina, a Venice Biennale
+    gala, the Palio di Siena, the Casinò di Venezia, a Puglia masseria
+    party, a three-star table in Modena and a secret masked ball in Venice.
 - **Voyages**: new day, new island, new connections, on your own boat.
   Routes are gated by range, draft and ice class:
   - Spanish: the ABC islands, Los Roques, San Blas, the Balearics,
     Galápagos, a transatlantic crossing and Cape Horn.
   - Mandarin: Tioman, Hong Kong to Sanya, around Taiwan, the Andaman Sea,
     Palau and Komodo.
+  - Italian: the Amalfi Coast and Capri, Costa Smeralda, the Aeolian
+    Islands, the Riviera to Monaco, Croatia, the Ionian islands and a
+    Genoa to Antigua crossing.
 
   Each day you pick one of three activities built from what the stop and
   your boat allow: snorkel, toys out, tender to the beach club (flirt), raft
